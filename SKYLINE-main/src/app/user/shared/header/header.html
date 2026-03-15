@@ -1,0 +1,48 @@
+<!-- Header -->
+<header class="header">
+    <div class="container">
+        <div class="header-content">
+            <div class="logo">
+                <a href="/home">
+                    <img src="assets/images/logongang.png" alt="Skyline" class="header-logo-img">
+                </a>
+            </div>
+            <nav class="nav">
+                <a routerLink="/home" routerLinkActive="active" class="nav-link">Trang chủ</a>
+                <a routerLink="/intro" routerLinkActive="active" class="nav-link">Giới thiệu</a>
+                <a routerLink="/promotion" routerLinkActive="active" class="nav-link">Khuyến mãi</a>
+                
+                @if (!isLoggedIn) {
+                    <a routerLink="/customer-sign-in" routerLinkActive="active" class="nav-link">Đăng nhập</a>
+                    <a routerLink="/customer-sign-up" routerLinkActive="active" class="nav-link">Đăng ký</a>
+                } @else {
+                    <div class="user-menu" (click)="toggleDropdown(); $event.stopPropagation()">
+                        <span class="user-name">{{ userName }}</span>
+                        <svg class="dropdown-icon" [class.active]="showDropdown" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M6 9l6 6 6-6"></path>
+                        </svg>
+                    </div>
+                    
+                    <!-- Dropdown outside nav for better positioning -->
+                    <div class="dropdown-menu" [class.show]="showDropdown" *ngIf="showDropdown">
+                        <a routerLink="/information" class="dropdown-item" (click)="navigateToInformation($event)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            Hồ sơ
+                        </a>
+                        <a (click)="logout()" class="dropdown-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                <polyline points="16 17 21 12 16 7"></polyline>
+                                <line x1="21" y1="12" x2="9" y2="12"></line>
+                            </svg>
+                            Đăng xuất
+                        </a>
+                    </div>
+                }
+            </nav>
+        </div>
+    </div>
+</header>

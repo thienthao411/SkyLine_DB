@@ -1,0 +1,139 @@
+.profile-container {
+  width: 100%; 
+  display: flex;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f8f8f8;
+  min-height: 100vh;
+}
+
+
+.main-content {
+  flex: 1;
+  padding: 30px 50px;
+  background-color: #fff;
+  color: #375578;
+  width: 100%; 
+  max-width: 100%;
+  overflow-x: hidden; 
+  overflow-y: auto; 
+}
+
+h2 {
+  margin-bottom: 25px;
+  font-weight: 600;
+  color: #375578;
+}
+
+/* --- FORM STYLE --- */
+form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.form-group {
+  width: 100%;
+}
+
+.form-group.half {
+  width: calc(50% - 10px);
+}
+
+/* --- LABELS --- */
+label {
+  display: block;
+  font-size: 14px;
+  color: #375578;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+/* --- INPUTS --- */
+input,
+select {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-bottom: 1px solid #a9a9a9;
+  font-size: 14px;
+  color: #333;
+  background: #fafafa;
+  outline: none;
+  box-sizing: border-box;
+}
+
+input[readonly],
+select[disabled] {
+  background-color: #fdfdfd;
+  color: #555;
+}
+
+/* --- ACTIONS --- */
+.actions {
+  width: 100%;
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-edit,
+.btn-save {
+  background-color: #6366F1;
+  color: #fff;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+/* --- RESPONSIVE ADJUSTMENTS --- */
+@media (max-width: 768px) {
+  .main-content {
+      padding: 20px; 
+  }
+  
+  h2 {
+
+      font-size: 20px;
+      margin-bottom: 15px;
+  }
+
+  .form-group.half {
+      width: 100%; 
+  }
+  
+  label {
+      font-size: 13px; 
+  }
+
+  input, select {
+      font-size: 13px;
+      padding: 8px 10px;
+  }
+  
+  button {
+      font-size: 13px;
+      padding: 8px 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+      padding: 15px; 
+  }
+  
+  h2 {
+      font-size: 18px;
+  }
+}

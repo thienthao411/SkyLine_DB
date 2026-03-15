@@ -1,0 +1,507 @@
+<app-header></app-header>
+<!-- =====FORM  ===== -->
+<form (ngSubmit)="search()" #frm="ngForm" class="mb-4 fs-form" [class.fs-form-emphasis]="!hasSearched()">
+
+  <!-- Toolbar -->
+  <div class="d-flex justify-content-end mb-2">
+    <div class="trip-tabs">
+      <button type="button" class="tab" [class.active]="tripType()==='oneway'" (click)="setTrip('oneway')">Một
+        chiều</button>
+      <button type="button" class="tab" [class.active]="tripType()==='round'" (click)="setTrip('round')">Khứ
+        hồi</button>
+    </div>
+  </div>
+
+  <!-- HÀNG 1 -->
+  <div class="fs-grid">
+    <div class="fs-cell">
+      <div class="fs-tile">
+        <div class="fs-label">From</div>
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-airplane-engines"></i>
+          <select class="form-select p-0 border-0 bg-transparent" [ngModel]="from()" (ngModelChange)="from.set($event)"
+            name="from" required>
+            <option value="" disabled>Chọn điểm đi…</option>
+            <option *ngFor="let a of airports" [value]="a.code">{{a.code}} ({{a.name}})</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="fs-swap-col">
+      <button type="button" class="fs-swap-btn" (click)="swap()" aria-label="Đổi chiều">
+        <i class="bi bi-arrow-left-right"></i>
+      </button>
+    </div>
+
+    <div class="fs-cell">
+      <div class="fs-tile">
+        <div class="fs-label">To</div>
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-airplane plane-down"></i>
+          <select class="form-select p-0 border-0 bg-transparent" [ngModel]="to()" (ngModelChange)="to.set($event)"
+            name="to" required>
+            <option value="" disabled>Chọn điểm đến…</option>
+            <option *ngFor="let a of airports" [value]="a.code">{{a.code}} ({{a.name}})</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="fs-cell position-relative">
+      <div class="fs-tile cursor-pointer" (click)="showCabinOut.set(!showCabinOut())">
+        <div class="fs-label">Hạng ghế (chặng đi)</div>
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-person-seat"></i>
+          <div class="fw-medium">{{ cabinLabelOrPlaceholder(cabinOut()) }}</div>
+          <i class="bi bi-caret-down-fill ms-auto"></i>
+        </div>
+      </div>
+      <div class="fs-menu" *ngIf="showCabinOut()">
+        <button type="button" class="list-group-item list-group-item-action" [class.active]="cabinOut()==='Economy'"
+          (click)="setCabinOut('Economy')">Phổ thông</button>
+        <button type="button" class="list-group-item list-group-item-action" [class.active]="cabinOut()==='Business'"
+          (click)="setCabinOut('Business')">Thương gia</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HÀNG 1B: khứ hồi -->
+  <div class="fs-grid mt-3" *ngIf="tripType()==='round'">
+    <div class="fs-cell">
+      <div class="fs-tile">
+        <div class="fs-label">From</div>
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-airplane-engines"></i>
+          <select class="form-select p-0 border-0 bg-transparent" [ngModel]="rtFrom()"
+            (ngModelChange)="rtFrom.set($event)" name="rtFrom">
+            <option value="" disabled>Chọn điểm đi…</option>
+            <option *ngFor="let a of airports" [value]="a.code">{{a.code}} ({{a.name}})</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="fs-swap-col">
+      <button type="button" class="fs-swap-btn" (click)="swapReturn()" aria-label="Đổi chiều chặng về">
+        <i class="bi bi-arrow-left-right"></i>
+      </button>
+    </div>
+
+    <div class="fs-cell">
+      <div class="fs-tile">
+        <div class="fs-label">To</div>
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-airplane"></i>
+          <select class="form-select p-0 border-0 bg-transparent" [ngModel]="rtTo()" (ngModelChange)="rtTo.set($event)"
+            name="rtTo">
+            <option value="" disabled>Chọn điểm đến…</option>
+            <option *ngFor="let a of airports" [value]="a.code">{{a.code}} ({{a.name}})</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hạng ghế (về) -->
+    <div class="fs-cell position-relative">
+      <div class="fs-tile cursor-pointer" (click)="showCabinBack.set(!showCabinBack())">
+        <div class="fs-label">Hạng ghế (chặng về)</div>
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-person-seat"></i>
+          <div class="fw-medium">{{ cabinLabelOrPlaceholder(cabinBack()) }}</div>
+          <i class="bi bi-caret-down-fill ms-auto"></i>
+        </div>
+      </div>
+      <div class="fs-menu" *ngIf="showCabinBack()">
+        <button type="button" class="list-group-item list-group-item-action" [class.active]="cabinBack()==='Economy'"
+          (click)="setCabinBack('Economy')">Phổ thông</button>
+        <button type="button" class="list-group-item list-group-item-action" [class.active]="cabinBack()==='Business'"
+          (click)="setCabinBack('Business')">Thương gia</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HÀNG 2 -->
+  <div class="fs-grid mt-3">
+    <div class="fs-cell">
+      <div class="fs-tile">
+        <div class="fs-label">Ngày khởi hành</div>
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-calendar3"></i>
+          <input class="form-control p-0 border-0 bg-transparent" type="date" [ngModel]="departDate()"
+            (ngModelChange)="departDate.set($event)" name="departDate" required>
+        </div>
+      </div>
+    </div>
+
+    <div class="fs-swap-col"></div>
+
+    <div class="fs-cell">
+      <div *ngIf="tripType()==='round'; else toPlaceholder" class="fs-tile">
+        <div class="fs-label">Ngày khứ hồi</div>
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-calendar3"></i>
+          <input class="form-control p-0 border-0 bg-transparent" type="date" [min]="departDate()"
+            [ngModel]="returnDate()" (ngModelChange)="returnDate.set($event)" name="returnDate">
+        </div>
+      </div>
+      <ng-template #toPlaceholder>
+        <div class="fs-tile fs-placeholder"></div>
+      </ng-template>
+    </div>
+
+    <div class="fs-cell position-relative">
+      <div class="fs-tile cursor-pointer" (click)="showPax.set(!showPax())">
+        <div class="fs-label">Số hành khách</div>
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-people"></i>
+          <div class="fw-medium">{{ paxLabel() }}</div>
+          <i class="bi bi-caret-down-fill ms-auto"></i>
+        </div>
+      </div>
+      <div class="fs-menu" *ngIf="showPax()">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="fw-semibold">Người lớn</div>
+            <div class="text-muted small">Từ 12 tuổi</div>
+          </div>
+          <div class="fs-stepper">
+            <button type="button" class="btn btn-outline-secondary btn-sm" (click)="dec('adults')">−</button>
+            <span class="mx-2">{{ adults() }}</span>
+            <button type="button" class="btn btn-outline-secondary btn-sm" (click)="inc('adults')">+</button>
+          </div>
+        </div>
+        <div class="d-flex align-items-center justify-content-between mt-2">
+          <div>
+            <div class="fw-semibold">Trẻ em</div>
+            <div class="text-muted small">2–11 tuổi</div>
+          </div>
+          <div class="fs-stepper">
+            <button type="button" class="btn btn-outline-secondary btn-sm" (click)="dec('children')">−</button>
+            <span class="mx-2">{{ children() }}</span>
+            <button type="button" class="btn btn-outline-secondary btn-sm" (click)="inc('children')">+</button>
+          </div>
+        </div>
+        <div class="d-flex align-items-center justify-content-between mt-2">
+          <div>
+            <div class="fw-semibold">Em bé</div>
+            <div class="text-muted small">&lt; 2 tuổi</div>
+          </div>
+          <div class="fs-stepper">
+            <button type="button" class="btn btn-outline-secondary btn-sm" (click)="dec('infants')">−</button>
+            <span class="mx-2">{{ infants() }}</span>
+            <button type="button" class="btn btn-outline-secondary btn-sm" (click)="inc('infants')">+</button>
+          </div>
+        </div>
+        <div class="d-flex justify-content-end mt-3">
+          <button type="button" class="btn btn-primary" (click)="showPax.set(false)">Xong</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end mt-3 gap-2">
+    <button type="button" class="btn btn-outline-primary rounded-pill btn-clear-all" (click)="from.set(''); to.set(''); departDate.set(''); returnDate.set('');
+               rtFrom.set(''); rtTo.set(''); cabinOut.set(''); cabinBack.set('');
+               hasSearched.set(false); autoDateMsg.set(null); clearFilters();">
+      Xoá tất cả
+    </button>
+    <button type="submit" class="btn btn-lg rounded-pill px-4 fs-search-btn" [disabled]="frm.invalid">Tìm chuyến
+      bay</button>
+  </div>
+
+  <div *ngIf="autoDateMsg()" class="alert alert-info mt-2">{{ autoDateMsg() }}</div>
+</form>
+
+<!-- ===== 3. LAYOUT: Filter + Results ===== -->
+<div class="row g-4 align-items-start">
+
+  <!-- FILTER -->
+  <aside class="col-12 col-lg-3 order-1 order-lg-1">
+    <div class="card filter-card shadow-sm">
+
+      <!-- Header -->
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <span class="fw-bold">BỘ LỌC</span>
+        <button type="button" class="filter-reset" (click)="clearFilters()" aria-label="Reset bộ lọc"
+          title="Reset bộ lọc">
+          <i class="bi bi-arrow-counterclockwise"></i>
+        </button>
+      </div>
+
+      <div class="card-body p-3">
+        <div class="filter-section">
+          <div class="section-title">Hãng hàng không</div>
+          <div class="chip-group">
+            <ng-container *ngFor="let a of airlines; let i = index">
+              <input type="checkbox" class="btn-check" [id]="'al_'+i" [checked]="airlineSel().includes(a)"
+                (change)="toggleAirline(a)">
+              <label class="btn filter-chip" [for]="'al_'+i">{{ a }}</label>
+            </ng-container>
+          </div>
+        </div>
+
+        <div class="filter-section">
+          <div class="section-title">Mức giá (triệu VND)</div>
+          <div class="chip-group">
+            <input type="checkbox" class="btn-check" id="p1" [checked]="priceSel().includes('p_u1500')"
+              (change)="togglePrice('p_u1500')"><label class="btn filter-chip" for="p1">&lt; 1.5</label>
+            <input type="checkbox" class="btn-check" id="p2" [checked]="priceSel().includes('p_1500_2500')"
+              (change)="togglePrice('p_1500_2500')"><label class="btn filter-chip" for="p2">1.5 – 2.5</label>
+            <input type="checkbox" class="btn-check" id="p3" [checked]="priceSel().includes('p_2500_4000')"
+              (change)="togglePrice('p_2500_4000')"><label class="btn filter-chip" for="p3">2.5 – 4</label>
+            <input type="checkbox" class="btn-check" id="p4" [checked]="priceSel().includes('p_o4000')"
+              (change)="togglePrice('p_o4000')"><label class="btn filter-chip" for="p4">&ge; 4</label>
+          </div>
+        </div>
+
+        <div class="filter-section">
+          <div class="section-title">Khung giờ cất cánh</div>
+          <div class="chip-group">
+            <input type="checkbox" class="btn-check" id="t1" [checked]="timeSel().includes('t_morning')"
+              (change)="toggleTime('t_morning')"><label class="btn filter-chip" for="t1">Sáng (00–10:59)</label>
+            <input type="checkbox" class="btn-check" id="t2" [checked]="timeSel().includes('t_noon')"
+              (change)="toggleTime('t_noon')"><label class="btn filter-chip" for="t2">Trưa/Chiều (11–16:59)</label>
+            <input type="checkbox" class="btn-check" id="t3" [checked]="timeSel().includes('t_evening')"
+              (change)="toggleTime('t_evening')"><label class="btn filter-chip" for="t3">Tối (17–23:59)</label>
+          </div>
+        </div>
+
+        <div class="filter-section">
+          <div class="section-title">Thời lượng bay</div>
+          <div class="chip-group">
+            <input type="checkbox" class="btn-check" id="d1" [checked]="durSel().includes('d_u60')"
+              (change)="toggleDur('d_u60')"><label class="btn filter-chip" for="d1">&lt; 60'</label>
+            <input type="checkbox" class="btn-check" id="d2" [checked]="durSel().includes('d_60_120')"
+              (change)="toggleDur('d_60_120')"><label class="btn filter-chip" for="d2">60 – 120'</label>
+            <input type="checkbox" class="btn-check" id="d3" [checked]="durSel().includes('d_o120')"
+              (change)="toggleDur('d_o120')"><label class="btn filter-chip" for="d3">&gt; 120'</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- RESULTS -->
+  <section class="col-12 col-lg-9 order-2 order-lg-2">
+    <ng-container *ngIf="hasSearched()">
+
+      <!-- ONEWAY -->
+      <ng-container *ngIf="tripType()!=='round'; else roundTpl">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="fw-bold" *ngIf="resultsOut().length">Tất cả các chuyến bay:</div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="text-muted small">Sắp xếp giá:</span>
+            <div class="btn-group" role="group" aria-label="Sort price">
+              <button type="button" class="btn btn-outline-secondary btn-sm" [class.active]="sortOrder()==='price_desc'"
+                (click)="setSort('price_desc')">Cao → Thấp</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" [class.active]="sortOrder()==='price_asc'"
+                (click)="setSort('price_asc')">Thấp → Cao</button>
+            </div>
+          </div>
+        </div>
+        <div *ngFor="let f of othersOut()" class="card rc2-card border-0 mb-3">
+          <div class="rc2-grid">
+            <div class="rc2-logo">
+              <ng-container *ngIf="logoOf(f) as logo; else initials">
+                <img [src]="logo" [alt]="f.airline || getCarrierCode(f)" loading="lazy">
+              </ng-container>
+              <ng-template #initials>
+                <span class="logo-text">{{ getCarrierCode(f) }}</span>
+              </ng-template>
+            </div>
+
+            <div class="rc2-mid">
+              <div class="rc2-time-row">
+                <div class="rc2-time">{{ timeHM(f.departTime) }}</div>
+                <div class="rc2-line">
+                  <span class="rc2-dot left"></span>
+                  <i class="bi bi-airplane-fill rc2-plane"></i>
+                  <span class="rc2-dot right"></span>
+                  <span class="rc2-duration">{{ durationStr(f.durationMin) }}</span>
+                </div>
+                <div class="rc2-time text-end">{{ timeHM(f.arriveTime) }}</div>
+              </div>
+              <div class="rc2-route">
+                <div>
+                  <div class="rc2-code">{{ f.from }}</div>
+                </div>
+                <div class="text-end">
+                  <div class="rc2-code">{{ f.to }}</div>
+                </div>
+              </div>
+              <div class="rc2-meta text-muted">
+                {{ f.airline }} • {{ f.flightNo }} • {{ dateVN(f.departTime) }}
+              </div>
+              <div class="rc2-links">
+                <a href="javascript:void(0)">Khuyến mãi</a>
+                <a href="javascript:void(0)">Lịch trình</a>
+                <a href="javascript:void(0)">Lợi ích đi kèm</a>
+              </div>
+            </div>
+            <div class="rc2-price">
+              <div class="rc2-note">Giá ưu đãi</div>
+              <div *ngIf="oldPrice(f) as op" class="rc2-old">{{ priceStr(op, f.currency, 'code') }}</div>
+              <div class="rc2-now">{{ priceStr(f.price, f.currency, 'code') }}</div>
+              <a class="btn rc2-cta" [routerLink]="['/chon-chuyen-bay', f.id]"
+                [state]="{ search: snapshotSearch() }">Chọn</a>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex justify-content-center my-3" *ngIf="resultsOut().length > othersOut().length">
+          <button class="btn btn-secondary px-4 rounded-pill" (click)="showMoreOut()">Xem thêm</button>
+        </div>
+
+        <!-- EMPTY STATE oneway -->
+        <div *ngIf="!isLoading() && !loadError() && resultsOut().length===0" class="empty-state">
+          <div class="empty-icon">!</div>
+          <div class="empty-title">KHÔNG CÓ CHUYẾN BAY NÀO ĐƯỢC TÌM THẤY.</div>
+          <div class="empty-sub">XIN VUI LÒNG THỬ LẠI!</div>
+        </div>
+      </ng-container>
+
+      <!-- ROUND TRIP -->
+      <ng-template #roundTpl>
+        <!-- CHẶNG ĐI -->
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="fw-bold">Chặng đi: {{ from() }} → {{ to() }} • {{ departDate() }}</div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="text-muted small">Sắp xếp giá:</span>
+            <div class="btn-group" role="group" aria-label="Sort price">
+              <button type="button" class="btn btn-outline-secondary btn-sm" [class.active]="sortOrder()==='price_desc'"
+                (click)="setSort('price_desc')">Cao → Thấp</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" [class.active]="sortOrder()==='price_asc'"
+                (click)="setSort('price_asc')">Thấp → Cao</button>
+            </div>
+          </div>
+        </div>
+
+        <div *ngFor="let f of othersOut()" class="card rc2-card border-0 mb-3">
+          <div class="rc2-grid">
+            <div class="rc2-logo">
+              <ng-container *ngIf="logoOf(f) as logo; else initials">
+                <img [src]="logo" [alt]="f.airline || getCarrierCode(f)" loading="lazy">
+              </ng-container>
+              <ng-template #initials>
+                <span class="logo-text">{{ getCarrierCode(f) }}</span>
+              </ng-template>
+            </div>
+            <div class="rc2-mid">
+              <div class="rc2-time-row">
+                <div class="rc2-time">{{ timeHM(f.departTime) }}</div>
+                <div class="rc2-line">
+                  <span class="rc2-dot left"></span>
+                  <i class="bi bi-airplane-fill rc2-plane"></i>
+                  <span class="rc2-dot right"></span>
+                  <span class="rc2-duration">{{ durationStr(f.durationMin) }}</span>
+                </div>
+                <div class="rc2-time text-end">{{ timeHM(f.arriveTime) }}</div>
+              </div>
+              <div class="rc2-route">
+                <div>
+                  <div class="rc2-code">{{ f.from }}</div>
+                </div>
+                <div class="text-end">
+                  <div class="rc2-code">{{ f.to }}</div>
+                </div>
+              </div>
+              <div class="rc2-meta text-muted">
+                {{ f.airline }} • {{ f.flightNo }} • {{ dateVN(f.departTime) }}
+              </div>
+              <div class="rc2-links">
+                <a href="javascript:void(0)">Khuyến mãi</a>
+                <a href="javascript:void(0)">Lịch trình</a>
+                <a href="javascript:void(0)">Lợi ích đi kèm</a>
+              </div>
+            </div>
+            <div class="rc2-price">
+              <div class="rc2-note">Giá ưu đãi</div>
+              <div *ngIf="oldPrice(f) as op" class="rc2-old">{{ priceStr(op, f.currency, 'code') }}</div>
+              <div class="rc2-now">{{ priceStr(f.price, f.currency, 'code') }}</div>
+              <a class="btn rc2-cta" [routerLink]="['/chon-chuyen-bay', f.id]"
+                [state]="{ search: snapshotSearch() }">Chọn</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-center my-3" *ngIf="resultsOut().length > othersOut().length">
+          <button class="btn btn-secondary px-4 rounded-pill" (click)="showMoreOut()">Xem thêm</button>
+        </div>
+
+        <div *ngIf="!isLoading() && !loadError() && resultsOut().length===0" class="empty-state">
+          <div class="empty-icon">!</div>
+          <div class="empty-title">CHẶNG ĐI: KHÔNG CÓ CHUYẾN BAY.</div>
+          <div class="empty-sub">Vui lòng đổi ngày hoặc bộ lọc.</div>
+        </div>
+
+        <hr class="my-4">
+
+        <!-- CHẶNG VỀ (KHÔNG có thanh sắp xếp) -->
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="fw-bold">Chặng về: {{ rtFrom() || to() }} → {{ rtTo() || from() }} • {{ returnDate() || '—' }}
+          </div>
+        </div>
+
+        <div *ngFor="let f of othersBack()" class="card rc2-card border-0 mb-3">
+          <div class="rc2-grid">
+            <div class="rc2-logo">
+              <ng-container *ngIf="logoOf(f) as logo; else initials">
+                <img [src]="logo" [alt]="f.airline || getCarrierCode(f)" loading="lazy">
+              </ng-container>
+              <ng-template #initials>
+                <span class="logo-text">{{ getCarrierCode(f) }}</span>
+              </ng-template>
+            </div>
+            <div class="rc2-mid">
+              <div class="rc2-time-row">
+                <div class="rc2-time">{{ timeHM(f.departTime) }}</div>
+                <div class="rc2-line">
+                  <span class="rc2-dot left"></span>
+                  <i class="bi bi-airplane-fill rc2-plane"></i>
+                  <span class="rc2-dot right"></span>
+                  <span class="rc2-duration">{{ durationStr(f.durationMin) }}</span>
+                </div>
+                <div class="rc2-time text-end">{{ timeHM(f.arriveTime) }}</div>
+              </div>
+              <div class="rc2-route">
+                <div>
+                  <div class="rc2-code">{{ f.from }}</div>
+                </div>
+                <div class="text-end">
+                  <div class="rc2-code">{{ f.to }}</div>
+                </div>
+              </div>
+              <div class="rc2-meta text-muted">
+                {{ f.airline }} • {{ f.flightNo }} • {{ dateVN(f.departTime) }}
+              </div>
+              <div class="rc2-links">
+                <a href="javascript:void(0)">Khuyến mãi</a>
+                <a href="javascript:void(0)">Lịch trình</a>
+                <a href="javascript:void(0)">Lợi ích đi kèm</a>
+              </div>
+            </div>
+            <div class="rc2-price">
+              <div class="rc2-note">Giá ưu đãi</div>
+              <div *ngIf="oldPrice(f) as op" class="rc2-old">{{ priceStr(op, f.currency, 'code') }}</div>
+              <div class="rc2-now">{{ priceStr(f.price, f.currency, 'code') }}</div>
+              <a class="btn rc2-cta" [routerLink]="['/chon-chuyen-bay', f.id]"
+                [state]="{ search: snapshotSearch() }">Chọn</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-center my-3" *ngIf="resultsBack().length > othersBack().length">
+          <button class="btn btn-secondary px-4 rounded-pill" (click)="showMoreBack()">Xem thêm</button>
+        </div>
+
+        <div *ngIf="!isLoading() && !loadError() && returnDate() && resultsBack().length===0" class="empty-state">
+          <div class="empty-icon">!</div>
+          <div class="empty-title">CHẶNG VỀ: KHÔNG CÓ CHUYẾN BAY.</div>
+          <div class="empty-sub">Vui lòng đổi ngày hoặc bộ lọc.</div>
+        </div>
+      </ng-template>
+      <div *ngIf="!isLoading() && loadError()" class="alert alert-danger mt-3">{{ loadError() }}</div>
+    </ng-container>
+  </section>
+</div>
+<app-footer></app-footer>

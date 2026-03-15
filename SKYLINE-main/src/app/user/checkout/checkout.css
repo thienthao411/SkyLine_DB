@@ -1,0 +1,93 @@
+.content {
+    background-color: #375578;
+}
+
+.checkout-container {
+    background-color: #ffffff;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 30px 100px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.payment-header {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.payment-logo {
+    width: 150px;
+}
+
+.payment-info p {
+    margin: 4px 0;
+}
+
+.payment-info .deadline {
+    font-weight: bold;
+    color: red;
+}
+
+.ticket-details h3 {
+    border-bottom: 2px solid #f0f0f0;
+    padding: 10px;
+}
+
+.ticket-content {
+    display: flex;
+    gap: 30px;
+}
+
+.loading-state {
+    padding: 40px;
+    text-align: center;
+    color: #888;
+}
+
+.qr-code {
+    display: flex;
+    align-items: center;
+}
+
+.qr-code qrcode canvas {
+    width: 200px !important;
+    height: 200px !important;
+    display: block;
+}
+
+.ticket-info-list {
+    flex-grow: 1;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+}
+
+.info-row:not(:last-of-type) {
+    border-bottom: 1px dashed #e0e0e0;
+}
+
+.info-row strong {
+    font-weight: bold;
+}
+
+.total-amount {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 2px solid #375578;
+}
+
+.total-amount span {
+    font-size: 20px;
+    font-weight: bold;
+}

@@ -1,0 +1,102 @@
+<app-header></app-header>
+
+<div class="deals-page">
+    <div class="deals-header">
+        <div class="header-content">
+            <div class="header-text">
+                <h2>Mã giảm giá ở gần đây chứ đâu xa!</h2>
+                <p>Áp mã liền tay, đặt vé du lịch ngay!</p>
+            </div>
+
+            <div class="search-bar">
+                <i class="fa fa-search search-icon" (click)="applyFilter()"></i>
+                <input 
+                    type="text" 
+                    placeholder="Nhập khuyến mãi mà bạn muốn"
+                    [(ngModel)]="searchTerm"
+                    (keyup.enter)="applyFilter()"
+                />
+            </div>
+        </div>
+    </div>
+
+    <div class="deals-tabs-wrapper">
+        <div class="deals-tabs">
+            <button (click)="scrollTo('special')" class="active">
+                <i class="fa fa-bullhorn"></i> <span>Chiến dịch đặc biệt</span>
+            </button>
+            <button (click)="scrollTo('payment')">
+                <i class="fa fa-credit-card"></i> <span>Thanh toán & Trả sau</span>
+            </button>
+            <button (click)="scrollTo('related')">
+                <i class="fa fa-tags"></i> <span>Ưu đãi liên quan</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="deals-container">
+        <div *ngIf="sections.length === 0" class="loading-message">
+             Đang tải khuyến mãi...
+        </div>
+        
+        <div *ngIf="sections.length > 0 && filteredSections.length === 0" class="loading-message">
+            Không tìm thấy ưu đãi nào phù hợp với từ khóa **"{{ searchTerm }}"**.
+        </div>
+
+        <div *ngFor="let section of filteredSections; let i = index" [id]="section.id" class="deal-section">
+            <div class="section-header">
+                <h2><i class="{{ section.icon }}"></i> {{ section.title }}</h2>
+            </div>
+
+            <div class="deal-grid">
+                <div *ngFor="let item of getVisibleItems(i)" class="deal-card">
+                    <img [src]="item.image" alt="Deal image" onerror="this.onerror=null; this.src='https://placehold.co/400x200/cccccc/333333?text=Promo';" />
+                    <div class="deal-info">
+                        <p class="deal-date-title">{{ item.date }}</p>
+                        <p class="deal-details">{{ item.details }}</p>
+                        <button class="deal-btn" (click)="openPopup(item)">Xem khuyến mãi</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="view-more" *ngIf="hasMoreItems(i) || canCollapse(i)">
+                <button *ngIf="hasMoreItems(i)" (click)="toggleSection(i)" class="view-more-btn primary-btn">
+                    Xem thêm
+                </button>
+                <button *ngIf="canCollapse(i)" (click)="toggleSection(i)" class="collapse-btn secondary-btn">
+                    Thu gọn
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="popup-overlay" *ngIf="selectedDeal" (click)="closePopup()"></div>
+
+<div class="popup" *ngIf="selectedDeal">
+    <div class="popup-content">
+        <button class="close-btn" (click)="closePopup()">×</button>
+        <img [src]="selectedDeal.image" alt="Promotion detail" onerror="this.onerror=null; this.src='https://placehold.co/400x250/cccccc/333333?text=Detail';" />
+        <div class="popup-details">
+            <h3>🎉 {{ selectedDeal.date }}</h3>
+            <p><strong>Chi tiết ưu đãi:</strong> {{ selectedDeal.details }}</p>
+            <p><strong>Đối tượng áp dụng:</strong> {{ selectedDeal.target }}</p>
+            <p><strong>Thời gian áp dụng:</strong> <span class="apply-time-tag">{{ selectedDeal.applyTime }}</span></p>
+        </div>
+           <div class="promo-code-box">
+               <div class="code-display">
+                 <span class="code-label">Mã khuyến mãi:</span>
+                 <span class="code-value">{{ selectedDeal.promoCode }}</span>
+               </div>
+               <button class="copy-btn" (click)="copyCode(selectedDeal.promoCode)">
+                 <i class="fa fa-copy"></i> Sao chép
+               </button>
+        </div>
+    </div>
+</div>
+
+<div *ngIf="copyStatusMessage" class="copy-toast">
+    {{ copyStatusMessage }}
+</div>
+
+<app-footer></app-footer>

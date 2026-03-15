@@ -1,0 +1,213 @@
+
+<!-- Header -->
+<app-header></app-header>
+
+<!-- Hero Section with X Pattern -->
+<section class="hero">
+    <div class="hero-overlay">
+        <div class="container">
+            <h1 class="hero-title">Kết nối<br>mọi chuyến bay</h1>
+            
+            <!-- Search Form -->
+            <form class="search-form" (ngSubmit)="onSearch()">
+                <div class="search-row">
+                    <div class="form-group">
+                        <label>
+                            <img src="assets/icons/department.png" alt="From" width="16" height="16">
+                        </label>
+                        <select 
+                            class="search-input" 
+                            [(ngModel)]="departureCity" 
+                            name="departureCity"
+                            (change)="onDepartureChange()"
+                            required>
+                            <option value="" disabled selected>Chọn điểm đi...</option>
+                            @for (city of getAvailableDepartureCities(); track city.code) {
+                                <option [value]="city.code">{{ city.name }}</option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <img src="assets/icons/union.png" alt="To" width="16" height="16">
+                        </label>
+                        <select 
+                            class="search-input" 
+                            [(ngModel)]="arrivalCity" 
+                            name="arrivalCity"
+                            (change)="onArrivalChange()"
+                            required>
+                            <option value="" disabled selected>Chọn điểm đến...</option>
+                            @for (city of getAvailableArrivalCities(); track city.code) {
+                                <option [value]="city.code">{{ city.name }}</option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <img src="assets/icons/calendar.png" alt="Date" width="16" height="16">
+                        </label>
+                        <input 
+                            type="date" 
+                            class="search-input" 
+                            [(ngModel)]="travelDate"
+                            name="travelDate"
+                            placeholder="Ngày đi"
+                            required>
+                    </div>                   
+                    <button type="submit" class="search-btn">Tìm kiếm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+    <!-- Deals Section -->
+<section class="deals-section">
+    <div class="container">
+        <div class="section-header">
+            <p class="section-subtitle">Khám phá hành trình tiếp theo của bạn với những <strong>ưu đãi chuyến bay</strong> hấp dẫn</p>
+            <a href="/promotion" class="view-all-link">Tất cả →</a>
+        </div>
+        
+        <div class="deals-grid">
+            <!-- Small Cards -->
+            <div class="deal-card small">
+                <div class="deal-image">
+                    <img src="assets/images/hcm.png" alt="TP Hồ Chí Minh">
+                </div>
+                <div class="deal-content">
+                    <h3>TP Hồ Chí Minh</h3>
+                    <p class="deal-price">1.900.000</p>
+                    <p class="deal-desc">Trung tâm mua sắm</p>
+                </div>
+            </div>
+
+            <div class="deal-card small">
+                <div class="deal-image">
+                    <img src="assets/images/hanoi.webp" alt="TP Hà Nội">
+                </div>
+                <div class="deal-content">
+                    <h3>TP Hà Nội</h3>
+                    <p class="deal-price">1.999.000</p>
+                    <p class="deal-desc">Thủ đô</p>
+                </div>
+            </div>
+
+            <div class="deal-card small">
+                <div class="deal-image">
+                    <img src="assets/images/danang.webp" alt="TP Đà Nẵng">
+                </div>
+                <div class="deal-content">
+                    <h3>TP Đà Nẵng</h3>
+                    <p class="deal-price">1.000.000</p>
+                    <p class="deal-desc">Thành phố Huế</p>
+                </div>
+            </div>
+
+            <!-- Large Card -->
+            <div class="deal-card large">
+                <div class="deal-image">
+                    <img src="assets/images/hue.webp" alt="TP Huế">
+                </div>
+                <div class="deal-content">
+                    <h3>TP Huế</h3>
+                    <p class="deal-price">1.000.000</p>
+                    <p class="deal-desc">Nối tiếng về kinh thành Huế</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+    <!-- Airlines Section -->
+<section class="airlines-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Đối tác hàng không <strong>tiêu biểu</strong></h2>
+        </div>
+        
+        <div class="airlines-grid">
+            <div class="airline-card">
+                <div class="airline-logo">
+                    <img src="assets/images/vietjet.jpg" alt="VietJet Air" width="200" height="200">
+                </div>
+                <p class="airline-desc">Hãng hàng không giá rẻ với mạng lưới đường bay rộng khắp, uy tín và tin cậy trong phục vụ khách hàng, mang đến trải nghiệm bay tuyệt vời cho bạn trên từng hành trình.</p>
+            </div>
+            
+            <div class="airline-card">
+                <div class="airline-logo">
+                    <img src="assets/images/VietnamAirlines.jpg" alt="Vietnam Airlines">
+                </div>
+                <p class="airline-desc">Hãng hàng không giá rẻ với mạng lưới đường bay rộng khắp, uy tín và tin cậy trong phục vụ khách hàng, mang đến trải nghiệm bay tuyệt vời cho bạn trên từng hành trình.</p>
+            </div>
+            
+            <div class="airline-card">
+                <div class="airline-logo">
+                    <img src="assets/images/bamboo.png" alt="Bamboo Airways">
+                </div>
+                <p class="airline-desc">Hãng hàng không giá rẻ với mạng lưới đường bay rộng khắp, uy tín và tin cậy trong phục vụ khách hàng, mang đến trải nghiệm bay tuyệt vời cho bạn trên từng hành trình.</p>
+            </div>
+
+            <div class="airline-card">
+                <div class="airline-logo">
+                    <img src="assets/images/pacific.png" alt="Pacific Airlines">
+                </div>
+                <p class="airline-desc">Hãng hàng không với dịch vụ chuyên nghiệp, cam kết mang đến sự hài lòng tối đa cho hành khách với giá cả phải chăng và chất lượng dịch vụ xuất sắc.</p>
+            </div>
+
+            <div class="airline-card">
+                <div class="airline-logo">
+                    <img src="assets/images/viettravel.jpg" alt="VietTravel Airlines">
+                </div>
+                <p class="airline-desc">Hãng hàng không quốc tế uy tín hàng đầu thế giới, mang đến trải nghiệm bay đẳng cấp với dịch vụ 5 sao và đội ngũ tiếp viên chuyên nghiệp.</p>
+            </div>
+
+            <div class="airline-card">
+                <div class="airline-logo">
+                    <img src="assets/images/jetstar.png" alt="Jestar Pacific">
+                </div>
+                <p class="airline-desc">Hãng hàng không quốc gia Thái Lan với truyền thống phục vụ lâu đời, kết hợp giữa sự thân thiện và chuyên nghiệp trong từng chuyến bay.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+    <!-- Reviews Section -->
+<section class="reviews-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Đánh giá từ khách hàng</h2>
+        </div>
+        
+        <div class="reviews-grid">
+            @for (review of displayedReviews; track review.id) {
+                <div class="review-card">
+                    <div class="review-header">
+                        <img [src]="review.avatar" [alt]="review.name" class="review-avatar">
+                        <div class="review-info">
+                            <h4>{{ review.name }}</h4>
+                            <p class="review-date">{{ review.date }}</p>
+                            <div class="review-stars">{{ getStars(review.rating) }}</div>
+                        </div>
+                    </div>
+                    <p class="review-text">{{ review.review }}</p>
+                </div>
+            }
+        </div>
+        
+        <div class="view-more">
+            @if (hasMoreReviews()) {
+                <button (click)="loadMoreReviews()" class="view-more-btn">Xem thêm</button>
+            }
+            @if (canCollapse()) {
+                <button (click)="collapseReviews()" class="collapse-btn">Thu gọn</button>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<app-footer></app-footer>

@@ -1,0 +1,414 @@
+.checkticket-container {
+  max-width: 1100px;
+  margin: 30px auto;
+  padding: 30px;
+  background: #f8f9fb;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  color: #333;
+  font-family: "Segoe UI", sans-serif;
+  transition: all 0.3s ease;
+}
+
+.ticket-detail-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+/* --- THÔNG TIN VÉ --- */
+.ticket-summary-area h3 {
+  color: #375578;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.ticket-summary-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1.2fr 1fr 1fr 1fr;
+  gap: 10px;
+  align-items: center;
+  word-wrap: break-word;
+  white-space: normal;
+  font-size: 16px;
+}
+
+.grid-header-row {
+  font-weight: 600;
+  color: #375578;
+  background: #eaf0fa;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.summary-data-row {
+  background: #fff;
+  padding: 12px;
+  border-radius: 8px;
+  line-height: 1.4;
+}
+
+.summary-line {
+  margin: 15px 0;
+  border: none;
+  height: 1px;
+  background: #ddd;
+}
+
+.status-value-summary {
+  font-weight: 600;
+  text-align: center;
+}
+
+.status-value-summary.paid {
+  color: #2b8a3e;
+}
+
+.status-value-summary.unpaid {
+  color: #d6336c;
+}
+
+/* --- CHI TIẾT CHUYẾN BAY --- */
+.flight-detail-block {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 100%;
+  transition: all 0.3s ease;
+}
+
+.flight-main-info {
+  display: grid;
+  grid-template-columns: 100px 1fr 0.5fr 1fr 0.6fr;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+/* Ô QR code */
+.qr-placeholder {
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.qr-placeholder img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+  border: none;
+}
+
+/* Thời gian & thành phố */
+.time-col .time {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.city {
+  font-size: 14px;
+  color: #666;
+}
+
+.duration-label {
+  background: #eaf0fa;
+  color: #375578;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.seat-label {
+  font-size: 13px;
+  color: #777;
+}
+
+.seat-value {
+  font-weight: 600;
+  color: #375578;
+}
+
+/* --- NÚT HÀNH ĐỘNG --- */
+.flight-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.link-action {
+  text-decoration: none;
+  color: #375578;
+  font-weight: 500;
+  transition: 0.2s;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.link-action:hover {
+  text-decoration: underline;
+}
+
+.btn-swap,
+.btn-cancel {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.25s;
+}
+
+.btn-swap {
+  background: #4dabf7;
+  color: #fff;
+}
+
+.btn-swap:hover {
+  background: #1c7ed6;
+}
+
+.btn-cancel {
+  background: #f03e3e;
+  color: #fff;
+}
+
+.btn-cancel:hover {
+  background: #c92a2a;
+}
+
+/* --- NÚT QUAY LẠI --- */
+.home-btn {
+  align-self: center;
+  background: #375578;
+  color: #fff;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.25s;
+}
+
+.home-btn:hover {
+  background: #2c4463;
+}
+
+/* --- PHẦN KHÔNG TÌM THẤY --- */
+.not-found {
+  text-align: center;
+  padding: 50px;
+  font-size: 16px;
+  color: #888;
+}
+
+/* --- MODAL & POPUP --- */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-box {
+  background: #fff;
+  padding: 20px 25px;
+  border-radius: 12px;
+  min-width: 280px;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  animation: fadeIn 0.25s ease-out;
+}
+
+.modal-box p {
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-around;
+  gap: 10px;
+}
+
+.modal-actions .btn-confirm {
+  background: #4dabf7;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.modal-actions .btn-cancel {
+  background: #f03e3e;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.modal-actions .btn-confirm:hover {
+  background: #1c7ed6;
+}
+
+.modal-actions .btn-cancel:hover {
+  background: #c92a2a;
+}
+
+.feedback-popup {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 12px 25px;
+  border-radius: 10px;
+  font-weight: 500;
+  z-index: 1000;
+  animation: slideUp 0.3s ease-out;
+}
+
+/* --- POPUP KHUYẾN MÃI / LỢI ÍCH --- */
+.info-popup-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+}
+
+.info-popup-box {
+  background: #fff;
+  padding: 25px 30px;
+  border-radius: 12px;
+  max-width: 450px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  animation: popupFadeIn 0.3s ease-out;
+}
+
+.info-popup-box h4 {
+  font-size: 18px;
+  color: #375578;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.info-popup-box p {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.info-popup-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.info-popup-actions .btn-ok,
+.info-popup-actions .btn-close {
+  border: none;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.info-popup-actions .btn-ok {
+  background: #4dabf7;
+  color: #fff;
+}
+
+.info-popup-actions .btn-ok:hover {
+  background: #1c7ed6;
+}
+
+.info-popup-actions .btn-close {
+  background: #f03e3e;
+  color: #fff;
+}
+
+.info-popup-actions .btn-close:hover {
+  background: #c92a2a;
+}
+
+.info-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.info-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes popupFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

@@ -1,0 +1,136 @@
+.profile-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f7f8fa;
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+/* ===== NỘI DUNG CHÍNH ===== */
+.content {
+    flex-grow: 1;
+    padding: 40px;
+  }
+  
+  .content h2 {
+      flex: 1;
+      padding: 30px 5px;
+      background-color: #fff;
+      color: #375578;
+    }
+  
+  .notification-settings {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 0 6px rgba(0,0,0,0.1);
+  }
+  
+  .setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 16px;
+    color: #444;
+  }
+  
+  .setting-item:last-child {
+    border-bottom: none;
+  }
+  
+  .setting-text { 
+    flex-grow: 1; 
+    word-wrap: break-word;
+    white-space: normal;
+    margin-right: 15px; 
+}
+  /* Switch */
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+  
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    background-color: #ccc;
+    border-radius: 34px;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transition: 0.3s;
+  }
+  
+  .slider::before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.3s;
+  }
+  
+  input:checked + .slider {
+    background-color: #22C3A6;
+  }
+  
+  input:checked + .slider::before {
+    transform: translateX(22px);
+  }
+  
+  /* --- RESPONSIVE ADJUSTMENTS (THU NHỎ KHI MÀN HÌNH HẸP) --- */
+@media (max-width: 768px) {
+  .content {
+      padding: 25px; 
+  }
+  
+  h2 {
+      font-size: 20px;
+      margin-bottom: 15px;
+  }
+}
+
+@media (max-width: 500px) {
+  .content {
+      padding: 15px; 
+  }
+  
+  .setting-item {
+      font-size: 14px; 
+      padding: 10px 0;
+  }
+  
+  .setting-text {
+      margin-right: 10px; 
+  }
+  
+  .switch {
+      width: 44px; 
+      height: 22px;
+  }
+   
+  .slider::before {
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+  }
+  
+  input:checked + .slider::before {
+      transform: translateX(20px); 
+  }
+}

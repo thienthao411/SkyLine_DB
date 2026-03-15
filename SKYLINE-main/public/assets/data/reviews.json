@@ -1,0 +1,68 @@
+{
+  "reviews": [
+    {
+      "id": 1,
+      "name": "Trường Vũ",
+      "avatar": "https://i.pravatar.cc/150?img=1",
+      "rating": 5,
+      "review": "Mọi dữ liệu trên web rất nhanh, giá hiển thị rõ ràng không có bất kỳ hành động lừa gạt khách hàng. Rất nhiều khuyến mãi được thực hiện cho người dùng mới lần đầu sử dụng.",
+      "date": "April 2019"
+    },
+    {
+      "id": 2,
+      "name": "Tuấn Anh",
+      "avatar": "https://i.pravatar.cc/150?img=5",
+      "rating": 5,
+      "review": "Trang web dễ dùng, dễ tìm các vé từ rẻ tới chọn chuyến bay phù hợp. Có nhiều ưu đãi cho các lựa chọn bay thẳng từ nhiều sân bay khác cho hành khách lựa chọn.",
+      "date": "February 2017"
+    },
+    {
+      "id": 3,
+      "name": "Minh Kính",
+      "avatar": "https://i.pravatar.cc/150?img=9",
+      "rating": 5,
+      "review": "Dịch vụ hỗ trợ phục vụ rất nhanh, luôn được hỗ trợ và hướng dẫn rõ ràng. Luôn cảm thấy hài lòng và đánh giá cao với mức 4.9/5 sao.",
+      "date": "April 2019"
+    },
+    {
+      "id": 4,
+      "name": "Nguyễn Văn A",
+      "avatar": "https://i.pravatar.cc/150?img=12",
+      "rating": 5,
+      "review": "Dịch vụ tuyệt vời! Tôi đã đặt vé rất dễ dàng và nhận được hỗ trợ nhiệt tình từ đội ngũ CSKH. Giá cả hợp lý và có nhiều chương trình ưu đãi.",
+      "date": "January 2020"
+    },
+    {
+      "id": 5,
+      "name": "Trần Thị B",
+      "avatar": "https://i.pravatar.cc/150?img=20",
+      "rating": 4,
+      "review": "Giao diện đẹp, dễ sử dụng. Thanh toán nhanh chóng và an toàn. Tuy nhiên cần cải thiện thêm về tốc độ tải trang trong giờ cao điểm.",
+      "date": "March 2020"
+    },
+    {
+      "id": 6,
+      "name": "Lê Minh C",
+      "avatar": "https://i.pravatar.cc/150?img=33",
+      "rating": 5,
+      "review": "Website rất chuyên nghiệp, thông tin chi tiết và đầy đủ. Tôi đã sử dụng nhiều lần và luôn hài lòng với chất lượng dịch vụ.",
+      "date": "May 2020"
+    },
+    {
+      "id": 7,
+      "name": "Phạm Thu D",
+      "avatar": "https://i.pravatar.cc/150?img=45",
+      "rating": 5,
+      "review": "Highly recommended! Đã sử dụng dịch vụ cho nhiều chuyến bay và luôn được xử lý nhanh chóng, chính xác. Đội ngũ hỗ trợ rất tận tâm.",
+      "date": "June 2020"
+    },
+    {
+      "id": 8,
+      "name": "Hoàng Văn E",
+      "avatar": "https://i.pravatar.cc/150?img=52",
+      "rating": 4,
+      "review": "Tốt, nhưng cần thêm nhiều hình thức thanh toán hơn. Ngoài ra thì mọi thứ đều ổn, giao diện đẹp và dễ sử dụng.",
+      "date": "July 2020"
+    }
+  ]
+}

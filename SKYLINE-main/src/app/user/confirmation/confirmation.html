@@ -1,0 +1,198 @@
+<header class="sidebar-header">
+
+  <ng-container *ngIf="isLoading()">
+    <div class="header-box">
+      <div class="hightlight">Đang tải...</div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="selectedFlight() as flight">
+    <div class="header-box">
+      <div class="hightlight">{{ flight.from }}</div>
+    </div>
+
+    <div class="header-box">
+      <div class="hightlight">&rarr;</div>
+    </div>
+
+    <div class="header-box">
+      <div class="hightlight">{{ flight.to }}</div>
+    </div>
+
+    <div class="header-box">
+      <div>{{ dateVN(flight.departTime) }} | {{ timeHM(flight.departTime) }}</div>
+      <div>Departing</div>
+    </div>
+
+    <div class="header-box">
+      <div>{{ dateVN(flight.arriveTime) }} | {{ timeHM(flight.arriveTime) }}</div>
+      <div>Arriving</div>
+    </div>
+
+    <div class="header-box" *ngIf="selectedSeat">
+      <div class="hightlight">{{ selectedSeat }}</div>
+      <div>Ghế đã chọn</div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="!isLoading() && !selectedFlight()">
+    <div class="header-box">
+      <div class="hightlight" style="color: red;">Lỗi</div>
+      <div>Không tìm thấy chuyến bay.</div>
+    </div>
+  </ng-container>
+</header>
+
+<div class="payment-page">
+  <div class="payment-container">
+    <div class="payment-left">
+      <h3>Phương thức thanh toán</h3>
+      <p class="note">
+        Chọn phương thức thanh toán bên dưới. Skyline xử lý thanh toán của bạn một cách an toàn
+        với mã hóa đầu cuối.
+      </p>
+
+      <div class="method-group">
+        <button class="method-btn" [class.active]="paymentMethod() === 'credit'" (click)="selectMethod('credit')">
+          <i class="bi bi-credit-card"></i> VISA
+        </button>
+        <button class="method-btn" [class.active]="paymentMethod() === 'google'" (click)="selectMethod('google')">
+          <i class="bi bi-google"></i> Google Pay
+        </button>
+        <button class="method-btn" [class.active]="paymentMethod() === 'apple'" (click)="selectMethod('apple')">
+          <i class="bi bi-apple"></i> Apple Pay
+        </button>
+        <button class="method-btn" [class.active]="paymentMethod() === 'paypal'" (click)="selectMethod('paypal')">
+          <i class="bi bi-paypal"></i> Paypal
+        </button>
+      </div>
+
+      <form #paymentForm="ngForm">
+        <div class="payment-details">
+          <h4>Chi tiết thẻ thanh toán</h4>
+
+          <label>
+            <input type="checkbox" (change)="focusCardName($event)" /> Địa chỉ thanh toán:
+          </label>
+
+          <div class="form-field">
+            <input #cardNameInput type="text" name="nameOnCard" [(ngModel)]="nameOnCard" placeholder="Tên trên thẻ"
+              required #cardNameRef="ngModel"
+              [class.invalid-field]="cardNameRef.invalid && (cardNameRef.dirty || cardNameRef.touched)" />
+            <div *ngIf="cardNameRef.invalid && (cardNameRef.dirty || cardNameRef.touched)" class="error-message">
+              <span *ngIf="cardNameRef.errors?.['required']">Tên trên thẻ là bắt buộc.</span>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <input type="text" name="cardNumber" [(ngModel)]="cardNumber" placeholder="Số thẻ" required
+              pattern="^\d{10}$" #cardNumberRef="ngModel"
+              [class.invalid-field]="cardNumberRef.invalid && (cardNumberRef.dirty || cardNumberRef.touched)" />
+            <div *ngIf="cardNumberRef.invalid && (cardNumberRef.dirty || cardNumberRef.touched)" class="error-message">
+              <span *ngIf="cardNumberRef.errors?.['required']">Vui lòng nhập số thẻ.</span>
+              <span *ngIf="cardNumberRef.errors?.['pattern']">Số thẻ phải gồm 10 chữ số.</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field small">
+              <input type="date" name="expiry" [(ngModel)]="expiry" required #expiryRef="ngModel"
+                [class.invalid-field]="expiryRef.invalid && (expiryRef.dirty || expiryRef.touched)" />
+              <div *ngIf="expiryRef.invalid && (expiryRef.dirty || expiryRef.touched)" class="error-message-small">
+                <span *ngIf="expiryRef.errors?.['required']">Hạn là bắt buộc.</span>
+              </div>
+            </div>
+
+            <div class="form-field small">
+              <input type="password" name="cvv" [(ngModel)]="cvv" placeholder="CVV" required pattern="^\d{3}$"
+                #cvvRef="ngModel" [class.invalid-field]="cvvRef.invalid && (cvvRef.dirty || cvvRef.touched)" />
+              <div *ngIf="cvvRef.invalid && (cvvRef.dirty || cvvRef.touched)" class="error-message-small">
+                <span *ngIf="cvvRef.errors?.['required']">CVV là bắt buộc.</span>
+                <span *ngIf="cvvRef.errors?.['pattern']">CVV phải gồm 3 chữ số.</span>
+              </div>
+            </div>
+          </div>
+
+          <p class="powered"><span>Skyline</span></p>
+
+          <div class="policy">
+            <h4>Chính sách hủy</h4>
+            <p>
+              Chuyến bay này có chính sách hủy linh hoạt. Nếu bạn hủy hoặc thay đổi chuyến bay trong
+              vòng 30 ngày trước ngày khởi hành, bạn sẽ được hoàn tiền miễn phí. Vui lòng xem
+              <a href="#">chính sách hủy đầy đủ</a> để biết thêm chi tiết.
+            </p>
+          </div>
+
+          <div class="action-buttons">
+            <button class="btn-secondary" type="button" (click)="backToBaggageSelection()">Quay lại</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="payment-right">
+      <div class="flight-card">
+        <div class="flight-item">
+          <img src="/assets/media/mainLogo.png" alt="plane" />
+          <div>
+            <p class="airline">{{ flightName() }}</p>
+            <p class="flight-no">{{ flight()?.flightNo }}</p>
+            <p class="detail">
+              {{ flight()?.departTime | date:'shortTime' }} -
+              {{ flight()?.arriveTime | date:'shortTime' }} •
+              {{ flight()?.durationMin }} phút
+              <span class="seat-info">Ghế: {{ seat() }}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary">
+        <div class="row">
+          <span>Tạm tính</span>
+          <span>{{ flightPrice() | number:'1.0-0' }} đ</span>
+        </div>
+        <div class="row">
+          <span>Thuế và Phí</span>
+          <span>{{ getTaxes() | number:'1.0-0' }} đ</span>
+        </div>
+        <div class="row" *ngIf="baggageFee() > 0">
+          <span>Phí hành lý</span>
+          <span>{{ baggageFee() | number:'1.0-0' }} đ</span>
+        </div>
+
+        <hr />
+
+        <div class="coupon">
+          <input type="text" placeholder="Mã giảm giá" [(ngModel)]="couponCode" />
+          <button type="button" (click)="applyCoupon()">Sử dụng</button>
+        </div>
+
+        <div class="total">
+          <span>Tổng cộng</span>
+          <span>{{ totalPrice() | number:'1.0-0' }} đ</span>
+        </div>
+
+        <div class="coupon-alert-overlay" *ngIf="showCouponAlert().show">
+          <div class="coupon-alert-box">
+            <p>{{ showCouponAlert().message }}</p>
+          </div>
+        </div>
+
+        <div class="payment-alert" *ngIf="showPaymentAlert()">
+          <div class="payment-alert-box">
+            <p>Vui lòng nhập đầy đủ thông tin địa chỉ thanh toán.</p>
+            <button (click)="closeAlert()">Đóng</button>
+          </div>
+        </div>
+
+        <div class="confirm-btn-wrapper">
+          <button class="btn-primary" (click)="confirmPayment(paymentForm)">
+            Xác nhận và thanh toán
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

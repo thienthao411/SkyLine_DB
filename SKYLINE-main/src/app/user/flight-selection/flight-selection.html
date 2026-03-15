@@ -1,0 +1,132 @@
+<app-header></app-header>
+<div class="wrap" *ngIf="!isLoading(); else loading">
+  <ng-container *ngIf="!loadError(); else err">
+    <h2 class="page-title">CHI TIẾT CHUYẾN BAY</h2>
+
+    <div class="card rc2-card border-0 mb-3" *ngIf="flight() as f">
+      <div class="rc2-grid rc2-no-price">
+        <div class="rc2-logo">
+          <ng-container *ngIf="logoOf(f) as logo; else initials">
+            <img [src]="logo" [alt]="f.airline || getCarrierCode(f)" loading="lazy">
+          </ng-container>
+          <ng-template #initials>
+            <span class="logo-text">{{ getCarrierCode(f) }}</span>
+          </ng-template>
+        </div>
+
+        <div class="rc2-mid">
+          <div class="rc2-time-row">
+            <div class="rc2-time">{{ timeHM(f.departTime) }}</div>
+            <div class="rc2-line">
+              <span class="rc2-dot left"></span>
+              <span class="rc2-dot right"></span>
+              <span class="rc2-duration">{{ durationStr(f.durationMin) }}</span>
+            </div>
+            <div class="rc2-time text-end">{{ timeHM(f.arriveTime) }}</div>
+          </div>
+
+          <div class="rc2-route">
+            <div>
+              <div class="rc2-code">{{ f.from }}</div>
+            </div>
+            <div class="text-end">
+              <div class="rc2-code">{{ f.to }}</div>
+            </div>
+          </div>
+
+          <div class="rc2-meta-row">
+            <div class="rc2-meta-left text-muted">
+              {{ f.airline }} • {{ f.flightNo }}
+            </div>
+            <div class="rc2-meta-right text-muted">
+              {{ dateVN(f.departTime) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="block">
+      <div class="block-title">THÔNG TIN CHUYẾN BAY:</div>
+      <div class="card info-card">
+        <div class="info-grid" *ngIf="flight() as f">
+          <div class="info-item">
+            <span class="label">Hành trình:</span>
+            <span class="value">
+              {{ airportName(f.from) }} ({{ f.from }})
+              →
+              {{ airportName(f.to) }} ({{ f.to }})
+            </span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">Thời gian bay:</span>
+            <span class="value">{{ timeRangeText(f) }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">Ngày bay:</span>
+            <span class="value">{{ dateVN(f.departTime) }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">Số điểm dừng:</span>
+            <span class="value">{{ stopsText() }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">Hạng ghế:</span>
+            <span class="value">{{ cabinListText() }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="block" *ngIf="perks().length">
+      <div class="block-title">CÁC LỢI ÍCH ĐI KÈM:</div>
+      <div class="perks">
+        <div class="perk" *ngFor="let p of perks()">
+          <i class="bi bi-check-circle"></i><span>{{ p }}</span>
+        </div>
+      </div>
+    </div>
+
+    <section class="block">
+      <div class="block-title">MỘT SỐ LƯU Ý:</div>
+      <div class="card notes-card">
+        <ul class="notes">
+          <li>Giá hiển thị có thể chưa bao gồm phí chọn chỗ và hành lý ký gửi (nếu có).</li>
+          <li>Nên có mặt tại sân bay trước giờ khởi hành tối thiểu 120 phút (chuyến nội địa).</li>
+          <li>Giấy tờ tuỳ thân (CCCD/Hộ chiếu) phải còn hiệu lực và trùng khớp với thông tin đặt vé.</li>
+          <li>Điều kiện đổi/hoàn vé phụ thuộc hãng bay và hạng vé đã chọn.</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="sel-actions d-flex justify-content-end gap-2">
+      <button type="button" class="btn rounded-pill btn-back" (click)="goBack()">
+        <i class="bi bi-arrow-left"></i> Quay lại
+      </button>
+      <button type="button" class="btn rounded-pill btn-cabin" (click)="goChooseCabin()">
+        <i class="bi bi-person-seat"></i> Chọn hạng ghế
+      </button>
+    </div>
+  </ng-container>
+</div>
+
+<ng-template #loading>
+  <div class="wrap">
+    <div class="skeleton title"></div>
+    <div class="skeleton lg"></div>
+    <div class="skeleton md"></div>
+    <div class="skeleton row">
+      <div class="skeleton card"></div>
+      <div class="skeleton card"></div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #err>
+  <div class="alert alert-danger mt-3">{{ loadError() }}</div>
+</ng-template>
+<app-footer></app-footer>

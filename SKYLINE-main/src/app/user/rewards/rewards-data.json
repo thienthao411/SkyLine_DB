@@ -1,0 +1,40 @@
+{
+
+    "ranks": {
+      "Đồng": {
+        "name": "★ Hạng Đồng",
+        "benefits": [
+          "Tích điểm theo giá vé (mức cơ bản)",
+          "Ưu tiên hỗ trợ khách hàng cấp độ 1",
+          "Giảm ~2% phí dịch vụ đổi vé/hủy hoàn",
+          "Ưu tiên check-in sớm hơn khách thường"
+        ]
+      },
+      "Bạc": {
+        "name": "★★ Hạng Bạc",
+        "benefits": [
+          "Tích điểm theo giá vé (mức tiêu chuẩn)",
+          "Ưu tiên hỗ trợ khách hàng cấp độ 2",
+          "Giảm ~5% phí dịch vụ đổi vé/hủy hoàn",
+          "Ưu tiên check-in online nhanh hơn",
+          "Giữ vé trong thời gian dài hơn so với khách thường",
+          "Nhận ưu đãi & voucher dành riêng cho thành viên bạc",
+          "Quà sinh nhật thân thiện (coupon/ưu đãi nhỏ)"
+        ]
+      },
+      "Vàng": {
+        "name": "★★★ Hạng Vàng",
+        "benefits": [
+          "Tích điểm thưởng cao hơn (+50% hoặc 125–150%)",
+          "Hỗ trợ ưu tiên cao cấp / hotline riêng",
+          "Ưu tiên xử lý khi đổi vé/hủy hoàn",
+          "Ưu đãi sinh nhật VIP",
+          "Ưu tiên hạng ghế khi có chỗ",
+          "Check-in & boarding ưu tiên (Fast lane)",
+          "Thêm 5–10kg hành lý miễn phí",
+          "Miễn/giảm phí đổi lịch (theo điều kiện vé)"
+        ]
+      }
+    }
+  }
+  

@@ -1,0 +1,604 @@
+.sidebar-header {
+  width: 100%;
+  background-color: #375578;
+  color: #f0f0f0;
+  display: flex;
+  padding: 1.5vh 2vw;
+  font-size: 1.2vw;
+  align-items: center;
+}
+
+.header-box {
+  flex: 1;
+  text-align: center;
+}
+
+.header-box:nth-child(2) {
+  flex: 0.5;
+}
+
+.header-box:nth-child(4),
+.header-box:nth-child(5) {
+  flex: 1.25;
+}
+
+.hightlight {
+  font-size: 2.4vw;
+  font-weight: bold;
+}
+
+.payment-page {
+  font-family: "Inter", sans-serif;
+  color: #375578;
+  padding: 40px 80px;
+  background-color: #fafafa;
+}
+
+/* ===== LAYOUT ===== */
+.payment-container {
+  display: flex;
+  gap: 40px;
+}
+
+.payment-left {
+  flex: 2;
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.payment-right {
+  flex: 1;
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== TEXT ===== */
+.note {
+  color: #375578;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+/* ===== PAYMENT METHODS ===== */
+.method-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 25px;
+}
+
+.method-btn {
+  flex: 1 1 48%;
+  padding: 10px 20px;
+  justify-content: center;
+  align-items: center;
+  color: #375578;
+  border: 1px solid #ccc;
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+@media (min-width: 900px) {
+  .method-btn {
+    flex: 1 1 22%;
+  }
+}
+
+.method-btn.active {
+  border-color: #606DEC;
+  background: #eaf0ff;
+  color: #606DEC;
+}
+
+/* ===== FORM FIELDS ===== */
+.payment-details h4 {
+  margin-bottom: 12px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.form-field label {
+  font-size: 13px;
+  margin-bottom: 5px;
+}
+
+.form-field input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border 0.2s, background 0.2s;
+}
+
+.form-field input:focus {
+  border-color: #606DEC;
+  outline: none;
+}
+
+.form-field input.invalid-field {
+  border-color: #dc3545;
+  background-color: #fff8f8;
+}
+
+.form-row {
+  display: flex;
+  gap: 20px;
+}
+
+.form-field.small {
+  flex: 1;
+}
+
+/* ===== ERROR MESSAGES ===== */
+.error-message,
+.error-message-small {
+  color: #dc3545;
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 6px;
+}
+
+/* ===== POWERED BY ===== */
+.powered {
+  text-align: center;
+  margin-top: 20px;
+  border-bottom: 1px solid #ccc;
+  line-height: 0.1em;
+  color: #375578;
+}
+
+.powered span {
+  background: #fff;
+  padding: 0 10px;
+}
+
+/* ===== POLICY ===== */
+.policy {
+  margin-top: 30px;
+  font-size: 14px;
+  color: #375578;
+  line-height: 20px;
+}
+
+.policy a {
+  color: #606DEC;
+  text-decoration: none;
+}
+
+/* ===== BUTTONS ===== */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.btn-primary {
+  background-color: #606DEC;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 28px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #4f5edc;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: #eee;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 28px;
+  cursor: pointer;
+  color: #375578;
+  transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+  background-color: #ddd;
+}
+
+/* ===== FLIGHT INFO (RIGHT COLUMN) ===== */
+.flight-card {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 30px;
+  padding: 10px;
+  background-color: #f5f7ff;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.flight-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.flight-item img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.flight-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.airline {
+  font-size: 18px;
+  font-weight: 700;
+  color: #375578;
+}
+
+.flight-no {
+  font-size: 16px;
+  font-weight: 600;
+  color: #606DEC;
+}
+
+.time {
+  font-size: 15px;
+  font-weight: 500;
+  color: #375578;
+}
+
+.seat-info {
+  display: block;
+  margin-top: 2px;
+}
+
+.detail {
+  font-size: 14px;
+  color: #375578;
+}
+
+.flight-item div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.flight-item p {
+  margin: 0;
+}
+
+/* ===== SUMMARY ===== */
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.summary .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  padding: 2px 0;
+}
+
+.summary .row span {
+  white-space: nowrap;
+  font-size: 16px;
+}
+
+.summary .row span:first-child {
+  flex: 1;
+}
+
+.summary .row span:last-child {
+  flex: 0;
+  text-align: right;
+}
+
+.coupon {
+  display: flex;
+  gap: 8px;
+  margin: 15px 0;
+}
+
+.coupon input {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.coupon button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #606DEC;
+  color: #fff;
+  cursor: pointer;
+}
+
+.coupon button:hover {
+  background: #4f5edc;
+}
+
+.total {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  margin: 10px 0 20px;
+}
+
+/* ===== CONFIRM BUTTON RIGHT ===== */
+.confirm-btn-wrapper {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.confirm-btn-wrapper .btn-primary {
+  padding: 10px 24px;
+}
+
+/* ===== ALERTS ===== */
+.payment-alert,
+.coupon-alert-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+.payment-alert {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.coupon-alert-overlay {
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.payment-alert-box,
+.coupon-alert-box {
+  background: #fff;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
+}
+
+.payment-alert-box {
+  padding: 20px 25px;
+  min-width: 250px;
+  max-width: 300px;
+}
+
+.payment-alert-box p {
+  margin: 0 0 15px;
+  font-size: 14px;
+  color: #375578;
+}
+
+.payment-alert-box button {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  background-color: #606DEC;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.payment-alert-box button:hover {
+  background-color: #4f5edc;
+}
+
+/* ===== POPUP COUPON BOX ===== */
+.coupon-alert-box {
+  background: #f0f4ff;
+  color: #375578;
+  padding: 20px 28px;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: center;
+  min-width: 260px;
+  max-width: 320px;
+  transform: scale(0.9);
+  animation: popupScale 0.2s forwards;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
+}
+
+.coupon-alert-box p {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.coupon-alert-box p.success::before {
+  content: "🎉";
+}
+
+.coupon-alert-box p.error::before {
+  content: "⚠️";
+}
+
+.coupon-alert-box button {
+  margin-top: 12px;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  background-color: #606DEC;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.coupon-alert-box button:hover {
+  background-color: #4f5edc;
+}
+
+.method-btn i {
+  margin-right: 8px;
+  font-size: 16px;
+  vertical-align: middle;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes popupScale {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .sidebar-header {
+    font-size: 1vw;
+    padding: 1vh 1.5vw;
+  }
+
+  .hightlight {
+    font-size: 2vw;
+  }
+
+  .payment-page {
+    padding: 30px 50px;
+  }
+
+  .method-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .form-field input {
+    padding: 8px;
+    font-size: 13px;
+  }
+
+  .form-field label {
+    font-size: 12px;
+  }
+
+  .summary .row {
+    font-size: 13px;
+  }
+
+  .summary .row span {
+    font-size: 14px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+
+  .coupon input {
+    padding: 6px;
+    font-size: 13px;
+  }
+
+  .coupon button {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .flight-item img {
+    width: 100px;
+    height: 100px;
+  }
+
+  .airline {
+    font-size: 16px;
+  }
+
+  .flight-no {
+    font-size: 14px;
+  }
+
+  .time,
+  .detail {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .payment-container {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .payment-left,
+  .payment-right {
+    padding: 20px;
+  }
+
+  .method-btn {
+    flex: 1 1 45%;
+  }
+}
+
+@media (max-width: 480px) {
+  .method-btn {
+    flex: 1 1 100%;
+  }
+
+  .payment-page {
+    padding: 15px 20px;
+  }
+
+  .sidebar-header {
+    font-size: 0.9vw;
+  }
+
+  .hightlight {
+    font-size: 1.8vw;
+  }
+}

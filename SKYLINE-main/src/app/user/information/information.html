@@ -1,0 +1,64 @@
+<div class="profile-container">
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <h2>Thông tin cá nhân</h2>
+    
+        <form *ngIf="user" (ngSubmit)="onSave()">
+          <div class="form-group">
+            <label><i class="fa fa-user"></i> Họ và tên</label>
+            <input [(ngModel)]="user.fullName" name="fullName" [readonly]="!isEditing" />
+          </div>
+    
+          <div class="form-group">
+            <label><i class="fa fa-envelope"></i> Email</label>
+            <input [(ngModel)]="user.email" name="email" [readonly]="!isEditing" />
+          </div>
+    
+          <div class="form-group">
+            <label><i class="fa fa-phone"></i> Số điện thoại</label>
+            <input [(ngModel)]="user.phone" name="phone" [readonly]="!isEditing" />
+          </div>
+    
+          <div class="form-group half">
+            <label><i class="fa fa-calendar"></i> Ngày sinh</label>
+            <input [(ngModel)]="user.birthday" name="birthday" [readonly]="!isEditing" />
+          </div>
+    
+          <div class="form-group half">
+            <label><i class="fa fa-venus-mars"></i> Giới tính</label>
+            <select [(ngModel)]="user.gender" name="gender" [disabled]="!isEditing">
+              <option>Nam</option>
+              <option>Nữ</option>
+              <option>Khác</option>
+            </select>
+          </div>
+    
+          <div class="form-group">
+            <label><i class="fa fa-id-card"></i> CMND/Passport</label>
+            <input [(ngModel)]="user.passport" name="passport" [readonly]="!isEditing" />
+          </div>
+    
+          <div class="form-group half">
+            <label><i class="fa fa-clock"></i> Ngày hết hạn passport</label>
+            <input [(ngModel)]="user.passportExpiry" name="passportExpiry" [readonly]="!isEditing" />
+          </div>
+    
+          <div class="form-group half">
+            <label><i class="fa fa-globe"></i> Quốc tịch</label>
+            <select [(ngModel)]="user.country" name="country" [disabled]="!isEditing">
+              <option *ngFor="let country of countries" [value]="country">{{ country }}</option>
+            </select>
+          </div>
+    
+          <div class="form-group">
+            <label><i class="fa fa-map-marker-alt"></i> Địa chỉ</label>
+            <input [(ngModel)]="user.address" name="address" [readonly]="!isEditing" />
+          </div>
+    
+          <div class="actions">
+            <button type="button" class="btn-edit" *ngIf="!isEditing" (click)="onEdit()">Chỉnh sửa thông tin</button>
+            <button type="submit" class="btn-save" *ngIf="isEditing">Lưu thay đổi</button>
+          </div>
+        </form>
+      </main>
+    </div>

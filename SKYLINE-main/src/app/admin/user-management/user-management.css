@@ -1,0 +1,707 @@
+/* =================== CHUNG =================== */
+.content {
+    margin-left: 250px;
+    overflow-y: auto;
+    background: #375578;
+    color: #fff;
+    padding: 0;
+    min-height: 100vh;
+    font-size: 14px;
+    transition: margin-left 0.3s ease; 
+}
+
+
+.header {
+    margin-top: 10px; 
+    padding: 10px 10px 0 30px;
+    flex-direction: column;
+    gap: 15px;
+    margin-left: 0; 
+}
+.header h1 {.content {
+    margin-left: 250px;
+    overflow-y: visible; /* Thay đổi từ auto sang visible */
+    background: #375578;
+    color: #fff;
+    padding: 0;
+    min-height: 100vh;    .main-content-panel table {
+        width: 100%;
+        border-collapse: collapse; /* Đảm bảo không có khoảng cách giữa các ô */
+    }    .main-content-panel {
+        position: relative; /* Đảm bảo bảng nằm trên cùng */
+        z-index: 1;
+    }
+    
+    .main-content-panel td {
+        border-bottom: 1px solid #ddd; /* Thêm đường kẻ dưới */
+        padding: 10px; /* Thêm khoảng cách bên trong ô */
+        vertical-align: middle; /* Căn giữa nội dung theo chiều dọc */
+        background-color: #fff; /* Đảm bảo nền trắng để dễ nhìn */
+    }
+    font-size: 14px;
+    transition: margin-left 0.3s ease;
+}
+    font-size: 28px;
+    margin: 0;
+}
+.subtitle {
+    font-style: italic;
+    margin-top: 10px;
+    color: #f0f4f8; 
+}
+
+
+.main-content-panel {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin: 30px;
+}
+
+/* =================== TAB HEADER & TOOLBAR (Giữ nguyên) =================== */
+.tab-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px 10px 10px;
+}
+
+.tabs {
+    display: flex;
+}
+
+.tabs button {
+    padding: 10px 20px;
+    color: #6B7280;
+    cursor: pointer;
+    border: none;
+    background: none;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.tabs button:hover {
+    color: #375578;
+}
+
+.tabs button.active {
+    color: #375578;
+    font-weight: bold;
+    border-bottom: 3px solid #375578;
+}
+
+.list-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.search-wrap {
+    display: flex;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid #D1D5DB;
+    border-radius: 5px;
+    padding: 0 10px;
+}
+
+.search-wrap input {
+    border: none;
+    padding: 8px;
+    outline: none;
+    background: none;
+}
+
+.search-wrap input::placeholder {
+    color: #9CA3AF;
+}
+
+.filter-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.filter-wrap select {
+    appearance: none;
+    padding: 8px 30px 8px 12px;
+    border: 1px solid #D1D5DB;
+    border-radius: 5px;
+    color: #375578;
+    background: #f8fafc;
+    cursor: pointer;
+}
+
+.filter-wrap select:focus {
+    border-color: #375578;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(55, 85, 120, 0.2);
+}
+
+.filter-wrap::after {
+    content: ' ';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%) rotate(45deg);
+    width: 6px;
+    height: 6px;
+    border-right: 2px solid #375578;
+    border-bottom: 2px solid #375578;
+    pointer-events: none;
+}
+
+.btn {
+    min-width: 110px;
+    padding: 9px 18px;
+    font-weight: bold;
+    font-size: 14px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn:disabled {
+    background: #D1D5DB;
+    color: #9CA3AF;
+    cursor: not-allowed;
+}
+
+.btn-add-new {
+    background: #375578;
+    white-space: nowrap;
+}
+
+.btn-add-new:hover {
+    background: #2c445e;
+}
+
+/* =================== BẢNG (FIX CĂN CHỈNH) =================== */
+.list-container {
+    padding: 20px;
+}
+
+.table-wrapper {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow-x: auto;
+}
+
+.table-wrapper table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #375578;
+}
+
+.table-wrapper th,
+.table-wrapper td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: center;
+    vertical-align: middle; 
+    white-space: nowrap;
+}
+
+.table-wrapper th {
+    background: #99BBFF;
+    color: #375578;
+    font-weight: bold;
+}
+
+.table-wrapper tr:last-child td {
+    border-bottom: none;
+}
+
+.table-wrapper tr:hover {
+    background-color: #fafdff;
+}
+
+.table-wrapper .no-data {
+    color: #9CA3AF;
+    font-style: italic;
+    padding: 30px 0;
+}
+
+/* --- AVATAR & INFO --- */
+.user-avatar-cell {
+    width: 100px;
+    text-align: center;
+}
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #99BBFF;
+}
+.user-info-cell {
+    text-align: left !important;
+    font-weight: 500;
+}
+.user-info-cell .small-text {
+    font-size: 12px;
+    color: #6B7280;
+    font-weight: normal;
+}
+
+/* 🟢 --- STATUS (ĐÃ FIX LỖI LỆCH TRÊN) --- 🟢 */
+.table-wrapper td:nth-child(5) { 
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    padding: 12px 15px; 
+    height: 100%;
+    margin-top: 15px;
+    white-space: nowrap;
+}
+
+.table-wrapper tr:not(:last-child) td {
+    border-bottom: 1px solid #e2e8f0;
+}
+.status-cell {
+    /* Đã sửa: Không cần position: relative hay top nữa */
+    display: inline-block; 
+    padding: 6px 8px; 
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    min-width: 60px;
+    line-height: 1.2; 
+    text-align: center;
+    position: static;
+    top: unset;
+}
+
+.status-cell.hoạt-động {
+    background-color: #D1FAE5;
+    color: #065F46;
+}
+
+.status-cell.khóa {
+    background-color: #FEE2E2;
+    color: #B91C1C;
+}
+
+/* 🟢 --- HÀNH ĐỘNG (ĐÃ FIX XẾP NGANG & CĂN GIỮA) --- 🟢 */
+.table-wrapper td:last-child {
+    vertical-align: middle; 
+    position: unset; 
+    padding: 12px 15px; 
+    display: table-cell; 
+}
+
+.actions {
+    display: block; 
+    text-align: center;
+    height: 100%;
+}
+
+.action-btn {
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 6px;
+    color: #6B7280;
+    background: none;
+    display: inline-block; 
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    margin: 0 3px; 
+}
+
+.action-btn:hover {
+    background: #f0f4f8;
+}
+
+.action-btn.view:hover {
+    color: #3B82F6;
+}
+
+.action-btn.edit:hover {
+    color: #F59E0B;
+}
+
+.action-btn.delete:hover {
+    color: #EF4444;
+}
+
+
+/* =================== FORM (Giữ nguyên) =================== */
+.form-container {
+    padding: 20px;
+}
+
+.flight-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 30px;
+}
+
+.user-form { 
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 30px;
+    margin-bottom: 20px;
+}
+
+.form-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.user-form label,
+.notes-field label,
+.time-fields-wrapper label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: #375578;
+}
+
+.user-form input[type="text"],
+.user-form input[type="email"],
+.user-form input[type="tel"],
+.user-form input[type="number"],
+.user-form select,
+.flight-form input[type="text"],
+.flight-form input[type="number"],
+.flight-form select,
+.notes-field input[type="text"],
+.time-fields-wrapper select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #D1D5DB;
+    border-radius: 5px;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.user-form input:focus,
+.user-form select:focus,
+.flight-form input:focus,
+.flight-form select:focus,
+.notes-field input:focus,
+.time-fields-wrapper select:focus {
+    border-color: #375578;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(55, 85, 120, 0.2);
+}
+
+.time-inputs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+@media (min-width: 1024px) {
+    .time-inputs {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+.notes-field {
+    margin-top: 20px;
+}
+
+.form-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 32px;
+    border-top: 1px solid #E5E7EB;
+    padding-top: 24px;
+}
+
+.form-btn-cancel {
+    background: #fff;
+    color: #374151;
+    border: 1px solid #D1D5DB;
+}
+
+.form-btn-cancel:hover {
+    background: #F9FAFB;
+}
+
+.form-btn-save {
+    background: #375578;
+}
+
+.form-btn-save:hover:not(:disabled) {
+    background: #2c445e;
+}
+
+.form-btn-edit {
+    background: #22C3A6;
+}
+
+.form-btn-edit:hover:not(:disabled) {
+    background: #1B9781;
+}
+
+.form-btn-edit:disabled {
+    background: #e0e0e0;
+    cursor: not-allowed;
+}
+
+/* =================== MODAL (Giữ nguyên) =================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 15px;
+}
+
+.modal-content {
+    background: #fff;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+    color: #333;
+}
+
+.modal-content h4 {
+    margin-top: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.modal-content p {
+    font-size: 15px;
+    color: #4B5563;
+    margin-bottom: 24px;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.btn-modal-cancel {
+    background: #fff;
+    color: #374151;
+    border: 1px solid #D1D5DB;
+}
+
+.btn-modal-cancel:hover {
+    background: #F9FAFB;
+}
+
+.btn-modal-delete {
+    background: #EF4444;
+    color: #fff;
+    border: 1px solid #EF4444;
+}
+
+.btn-modal-delete:hover {
+    background: #DC2626;
+    border-color: #DC2626;
+}
+
+.modal-content.modal-view {
+    max-width: 550px;
+    text-align: left;
+}
+
+.modal-view .view-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.modal-view .detail-item {
+    font-size: 14px;
+    background: #f8fafc;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #eef2f7;
+}
+
+.modal-view .detail-item label {
+    display: block;
+    font-weight: 600;
+    color: #6B7280;
+    font-size: 12px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.modal-view .detail-item span {
+    color: #111827;
+    word-wrap: break-word;
+    font-weight: 500;
+}
+
+.modal-view .detail-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.btn-modal-close {
+    width: 100%;
+    background: #111827;
+}
+
+.btn-modal-close:hover {
+    background: #374151;
+}
+
+/* =================== RESPONSIVE (FIX LỖI KHUẤT) =================== */
+@media (max-width: 1024px) {
+    .content {
+        margin-left: 220px;
+    }
+    .header {
+        margin-top: 65px; 
+    }
+}
+
+
+@media (max-width: 900px) {
+    .content {
+        margin-left: 200px; 
+    }
+    .header {
+        margin-top: 5px; 
+        flex-direction: column;
+        gap: 15px;
+    }
+
+
+    .tab-header-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+        padding: 10px;
+    }
+
+    .tabs {
+        justify-content: center;
+    }
+
+    .list-toolbar {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .search-wrap {
+        flex-grow: 1;
+    }
+    
+    .flight-form {
+        grid-template-columns: 1fr;
+    }
+    
+    .table-wrapper th:nth-child(3),
+    .table-wrapper td:nth-child(3),
+    .table-wrapper th:nth-child(6),
+    .table-wrapper td:nth-child(6) {
+        display: none;
+    }
+
+    .form-buttons {
+        justify-content: center;
+    }
+    
+    .time-inputs {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .table-wrapper th:nth-child(4),
+    .table-wrapper td:nth-child(4) {
+        display: none;
+    }
+    
+    .user-form { 
+        grid-template-columns: 1fr;
+    }
+
+    .form-buttons {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 500px) {
+    .content {
+        margin-left: 180px; 
+        padding: 10px;
+    }
+    .header {
+        padding: 10px;
+        margin-top: 130px; 
+    }
+
+
+    .list-toolbar {
+        flex-direction: column;
+        align-items: stretch;        /* Đảm bảo tất cả các ô trong bảng đều có đường kẻ dưới */
+        .table-wrapper td {
+            border-bottom: 1px solid #e2e8f0; /* Đường kẻ dưới mặc định */
+        }
+        
+        /* Cụ thể cho cột "Trạng Thái" (giả sử là cột thứ 5) */
+        .table-wrapper td:nth-child(5) {
+            border-bottom: 1px solid #e2e8f0; /* Đường kẻ dưới cho cột "Trạng Thái" */
+            display: table-cell; /* Đảm bảo ô hiển thị như một ô bảng */
+            vertical-align: middle; /* Căn giữa nội dung theo chiều dọc */
+        }        .content {
+            margin-left: 250px;
+            overflow-y: visible; /* Thay đổi từ auto sang visible */
+            background: #375578;
+            color: #fff;
+            padding: 0;
+            min-height: 100vh;
+            font-size: 14px;
+            transition: margin-left 0.3s ease;
+        }
+    }
+
+    .btn-add-new {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .modal-view .view-details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-buttons {
+        flex-direction: column;
+    }
+
+    .form-buttons .btn {
+        width: 100%;
+    }
+
+    .tabs button {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+
+    .time-inputs {
+        grid-template-columns: 1fr;
+    }
+}

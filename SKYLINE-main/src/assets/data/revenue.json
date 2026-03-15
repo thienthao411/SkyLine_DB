@@ -1,0 +1,229 @@
+{
+  "currency": "VND",
+  "generatedAt": "2025-11-09T08:10:09",
+  "monthly": [
+    {
+      "year": 2024,
+      "month": 1,
+      "revenueActual": 387496900,
+      "revenuePlan": 426246590,
+      "ticketsSold": 285,
+      "growthMoMPct": null,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2024,
+      "month": 2,
+      "revenueActual": 423597000,
+      "revenuePlan": 465956700,
+      "ticketsSold": 314,
+      "growthMoMPct": 9.32,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2024,
+      "month": 3,
+      "revenueActual": 630840400,
+      "revenuePlan": 693924440,
+      "ticketsSold": 472,
+      "growthMoMPct": 48.92,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2024,
+      "month": 4,
+      "revenueActual": 337354100,
+      "revenuePlan": 371089510,
+      "ticketsSold": 220,
+      "growthMoMPct": -46.52,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2024,
+      "month": 5,
+      "revenueActual": 505673700,
+      "revenuePlan": 556241070,
+      "ticketsSold": 409,
+      "growthMoMPct": 49.89,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2024,
+      "month": 6,
+      "revenueActual": 631552000,
+      "revenuePlan": 694707200,
+      "ticketsSold": 394,
+      "growthMoMPct": 24.89,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2024,
+      "month": 7,
+      "revenueActual": 150746500,
+      "revenuePlan": 165821150,
+      "ticketsSold": 82,
+      "growthMoMPct": -76.13,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2024,
+      "month": 8,
+      "revenueActual": 589041900,
+      "revenuePlan": 647946090,
+      "ticketsSold": 353,
+      "growthMoMPct": 290.75,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2024,
+      "month": 9,
+      "revenueActual": 206455000,
+      "revenuePlan": 227100500,
+      "ticketsSold": 155,
+      "growthMoMPct": -64.95,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2024,
+      "month": 10,
+      "revenueActual": 294488700,
+      "revenuePlan": 323937570,
+      "ticketsSold": 208,
+      "growthMoMPct": 42.64,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2024,
+      "month": 11,
+      "revenueActual": 585819000,
+      "revenuePlan": 644400900,
+      "ticketsSold": 376,
+      "growthMoMPct": 98.93,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2024,
+      "month": 12,
+      "revenueActual": 318288000,
+      "revenuePlan": 350116800,
+      "ticketsSold": 233,
+      "growthMoMPct": -45.67,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2025,
+      "month": 1,
+      "revenueActual": 333235900,
+      "revenuePlan": 366559490,
+      "ticketsSold": 226,
+      "growthMoMPct": 4.7,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2025,
+      "month": 2,
+      "revenueActual": 538354500,
+      "revenuePlan": 592189950,
+      "ticketsSold": 325,
+      "growthMoMPct": 61.55,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2025,
+      "month": 3,
+      "revenueActual": 594309900,
+      "revenuePlan": 653740890,
+      "ticketsSold": 453,
+      "growthMoMPct": 10.39,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2025,
+      "month": 4,
+      "revenueActual": 1187066600,
+      "revenuePlan": 1305773260,
+      "ticketsSold": 760,
+      "growthMoMPct": 99.74,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2025,
+      "month": 5,
+      "revenueActual": 493023900,
+      "revenuePlan": 542326290,
+      "ticketsSold": 351,
+      "growthMoMPct": -58.47,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2025,
+      "month": 6,
+      "revenueActual": 745324000,
+      "revenuePlan": 819856400,
+      "ticketsSold": 563,
+      "growthMoMPct": 51.17,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2025,
+      "month": 7,
+      "revenueActual": 900188000,
+      "revenuePlan": 990206800,
+      "ticketsSold": 503,
+      "growthMoMPct": 20.78,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2025,
+      "month": 8,
+      "revenueActual": 1113714000,
+      "revenuePlan": 1225085400,
+      "ticketsSold": 685,
+      "growthMoMPct": 23.72,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2025,
+      "month": 9,
+      "revenueActual": 730958400,
+      "revenuePlan": 804054240,
+      "ticketsSold": 576,
+      "growthMoMPct": -34.37,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2025,
+      "month": 10,
+      "revenueActual": 2405859600,
+      "revenuePlan": 2646445560,
+      "ticketsSold": 1448,
+      "growthMoMPct": 229.14,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2025,
+      "month": 11,
+      "revenueActual": 3487738100,
+      "revenuePlan": 3836511910,
+      "ticketsSold": 2194,
+      "growthMoMPct": 44.97,
+      "planAttainmentPct": 90.91
+    }
+  ],
+  "yearly": [
+    {
+      "year": 2024,
+      "revenueActual": 5061353200,
+      "revenuePlan": 5567488520,
+      "ticketsSold": 3501,
+      "planAttainmentPct": 90.91
+    },
+    {
+      "year": 2025,
+      "revenueActual": 12529772900,
+      "revenuePlan": 13782750190,
+      "ticketsSold": 8084,
+      "planAttainmentPct": 90.91
+    }
+  ]
+}

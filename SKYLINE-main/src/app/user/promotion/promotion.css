@@ -1,0 +1,549 @@
+/* =============================== */
+/* TOÀN TRANG KHUYẾN MÃI & ƯU ĐÃI */
+/* =============================== */
+
+/* Toàn trang */
+.deals-page {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background-color: #fff;
+  color: #375578;
+  padding: 0;
+  margin: 0 auto;
+  max-width: 1200px;
+}
+
+/* Header background */
+.deals-header {
+  background: linear-gradient(135deg, #375578 0%, #007ad9 100%);
+  position: relative;
+  padding: 40px 0 80px;
+  color: #fff;
+  overflow: hidden;
+  border-bottom-left-radius: 40px;
+  border-bottom-right-radius: 40px;
+}
+
+/* Confetti effect (optional decorative squares) */
+.deals-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(#ffd300 2px, transparent 2px),
+    radial-gradient(#ff6b6b 2px, transparent 2px),
+    radial-gradient(#6c5ce7 2px, transparent 2px);
+  background-size: 80px 80px;
+  background-position: 20px 20px, 60px 40px, 100px 10px;
+  opacity: 0.25;
+}
+
+/* Header layout */
+.header-content {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  padding: 0 24px;
+}
+
+/* Text section */
+.header-text h2 {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.header-text p {
+  font-size: 15px;
+  margin: 8px 0 0;
+  opacity: 0.95;
+}
+
+/* Search bar */
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.search-bar input {
+  border: none;
+  padding: 10px 16px;
+  font-size: 14px;
+  width: 300px;
+  outline: none;
+  color: #333;
+}
+
+.search-icon {
+  font-size: 18px; 
+  color: #007bff; 
+  cursor: pointer; 
+  margin-left: 10px;
+}
+
+/* Tabs container */
+.deals-tabs {
+  max-width: 1100px;
+  margin: -50px auto 0;
+  background: #fff;
+  border-radius: 16px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 16px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 3;
+}
+
+/* Individual tab */
+.deals-tabs button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s, transform 0.1s;
+}
+
+.deals-tabs button:hover {
+  color: #606DEC;
+  transform: translateY(-1px);
+}
+
+.deals-tabs button.active {
+  color: #606DEC;
+  font-weight: 600;
+}
+
+.deals-tabs i {
+  font-size: 18px;
+}
+
+/* Section titles */
+.deals-container {
+  padding: 20px;
+  background: #fff;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.section-header h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.see-more {
+  color: #606DEC;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.deal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+/* Căn chỉnh nút Xem khuyến mãi ở giữa */
+.deal-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: 15px;
+  text-align: center;
+}
+
+/* Nút chính */
+.deal-btn {
+  background-color: #2e4a75;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 30px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  margin: 10px auto 0;
+  display: block;
+  width: 85%;
+  text-align: center;
+  transition: all 0.25s ease;
+}
+
+.deal-btn:hover {
+  background-color: #1f3555;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Đảm bảo thẻ card căn đều */
+.deal-card {
+  background-color: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: center;
+  transition: all 0.25s ease;
+  padding-bottom: 15px;
+}
+
+.deal-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+}
+
+
+.deal-date-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 4px;
+}
+
+.deal-date {
+  font-size: 0.95rem;
+  color: #111;
+  margin-bottom: 12px;
+}
+
+/* ============================= */
+/* NÚT XEM KHUYẾN MÃI & SAO CHÉP */
+/* ============================= */
+
+.deal-btn,
+.copy-btn {
+  background-color: #375578;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.deal-btn:hover,
+.copy-btn:hover {
+  background-color: #2b4461;
+  transform: translateY(-1px);
+}
+
+.deal-btn:active,
+.copy-btn:active {
+  transform: scale(0.97);
+}
+
+.copy-btn {
+  width: 100%;
+  margin-top: 12px;
+}
+
+/* Hộp mã khuyến mãi */
+.promo-code-box {
+  margin-top: 18px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.code-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.code-label {
+  font-weight: 600;
+  color: #375578;
+}
+
+.code-value {
+  font-family: 'Courier New', monospace;
+  background: #fff;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px dashed #375578;
+  font-weight: 700;
+  color: #375578;
+}
+
+/* View more / collapse */
+.view-more {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.view-more-btn {
+  padding: 10px 30px;
+  background: #6366f1;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.view-more-btn:hover {
+  background: #4f46e5;
+}
+
+.collapse-btn {
+  padding: 10px 30px;
+  background: #e5e7eb;
+  color: #333;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.collapse-btn:hover {
+  background: #d1d5db;
+}
+
+/* =============================== */
+/* POPUP - Chi tiết khuyến mãi */
+/* =============================== */
+
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+}
+
+/* Popup box */
+.popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  z-index: 1001;
+  width: 400px;
+  max-width: 90%;
+  animation: zoomFadeIn 0.3s ease forwards;
+  overflow: hidden;
+}
+
+/* Popup content */
+.popup-content {
+  padding: 20px;
+  text-align: left;
+  position: relative;
+}
+
+/* Ảnh popup */
+.popup-content img {
+  width: 100%;
+  border-radius: 16px 16px 0 0;
+  margin-bottom: 15px;
+  object-fit: cover;
+  max-height: 220px;
+}
+
+/* Nút đóng popup */
+.close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 22px;
+  font-weight: bold;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1002;
+  transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+  background: #ff4d4f;
+  transform: scale(1.1);
+}
+
+/* Animation popup mở phóng nhẹ */
+@keyframes zoomFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -45%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Toast thông báo copy */
+.copy-toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #375578;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 30px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  font-weight: 600;
+  z-index: 1200;
+  animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .deal-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .deal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tablet Landscape (Max-width: 1024px) */
+@media (max-width: 1024px) {
+  /* Typography và Padding */
+  .header-text h2 { font-size: 24px; }
+  .header-text p { font-size: 14px; }
+  .deals-tabs button { font-size: 13px; }
+  
+  .deals-container {
+      padding-top: 30px;
+  }
+  .section-header h2 { font-size: 1.2rem; }
+  
+  .deal-grid {
+      grid-template-columns: repeat(3, 1fr); /* GIỮ 3 CỘT */
+      gap: 12px; /* Giảm gap */
+  }
+  
+  .deal-card {
+      font-size: 13px; /* Thu nhỏ chữ */
+  }
+  .deal-btn {
+      font-size: 13px;
+      padding: 8px 15px;
+  }
+}
+
+/* Tablet Portrait (Max-width: 768px) */
+@media (max-width: 768px) {
+  /* Typography và Padding */
+  .header-text h2 { font-size: 22px; }
+  .header-text p { font-size: 13px; }
+  .deals-tabs button { font-size: 12px; }
+
+  .deals-container {
+      padding: 20px 10px 10px; /* Giảm padding tổng thể */
+  }
+  .section-header h2 { font-size: 1.1rem; }
+
+  /* Vẫn cố gắng giữ 3 cột nhưng với padding và gap nhỏ nhất */
+  .deal-grid {
+      grid-template-columns: repeat(3, 1fr); /* GIỮ 3 CỘT */
+      gap: 8px; /* Giảm gap tối thiểu */
+  }
+  
+  .deal-card {
+      font-size: 12px; /* Thu nhỏ chữ hơn nữa */
+  }
+  .deal-btn {
+      font-size: 12px;
+      padding: 6px 12px;
+  }
+}
+
+/* Mobile (Max-width: 600px) - Bắt buộc chuyển sang 2 cột hoặc 1 cột */
+@media (max-width: 600px) {
+  /* Typography */
+  .header-text h2 { font-size: 20px; }
+  .search-bar input { width: 180px; }
+  
+  .deals-tabs button { font-size: 11px; }
+
+  /* Lưới (Bắt buộc chuyển sang 2 cột) */
+  .deal-grid {
+      grid-template-columns: repeat(2, 1fr); 
+      gap: 10px;
+  }
+  
+  .deal-card {
+      font-size: 11px;
+  }
+}
+
+/* Mobile Portrait (Max-width: 450px) - Chuyển sang 1 cột */
+@media (max-width: 450px) {
+  .deals-header { padding: 20px 0 50px; }
+  .deals-tabs-wrapper { margin-top: -30px; }
+  
+  .deal-grid {
+      grid-template-columns: 1fr; /* 1 CỘT DUY NHẤT */
+  }
+  .deal-card {
+      font-size: 13px; /* Tăng size chữ lại để dễ đọc trên màn hình nhỏ */
+  }
+}

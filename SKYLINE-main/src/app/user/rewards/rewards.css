@@ -1,0 +1,199 @@
+.rewards-container {
+    display: flex;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f8f8f8;
+    min-height: 100vh;
+  }
+  
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: 260px;
+    background-color: #606DEC;
+    padding: 20px;
+    transition: width 0.3s ease;
+  }
+  
+  .avatar {
+    text-align: center;
+    margin-bottom: 30px;
+    transition: margin 0.3s ease;
+  }
+  
+  .avatar-img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px;
+  }
+  
+  .avatar h3 {
+    font-size: 18px;
+    color: #ffffff;
+    margin: 0;
+  }
+  
+  .menu ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .menu li {
+    padding: 10px 15px;
+    font-size: 14px;
+    border-bottom: 1px solid #99BBFF;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #ffffff;
+    cursor: pointer;
+  }
+  
+  .menu li.active {
+    background-color: #99BBFF;
+    font-weight: 600;
+  }
+  
+  .menu li:hover {
+    background-color: #99BBFF;
+  }
+  
+  .rewards-content {
+    flex: 1;
+    padding: 30px 50px;
+    background-color: #fff;
+    color: #375578;
+  }
+  
+  .rewards-info {
+    background: #f9f9f9;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    color: #375578;
+  }
+  
+  .progress-bar {
+    width: 100%;
+    height: 10px;
+    background: #D5FFFA;
+    border-radius: 5px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  
+  .progress {
+    height: 100%;
+    background: #22C3A6;
+    transition: width 0.3s ease;
+  }
+  
+  .rank-section {
+    margin-bottom: 20px;
+  }
+  
+  .rank-section h4 {
+    margin-bottom: 8px;
+    color: #333;
+  }
+  
+  .rank-section ul {
+    margin-left: 20px;
+    list-style: circle;
+  }
+  
+  /* ---------------------------------------------------- */
+/* ===== RESPONSIVE ADJUSTMENTS ===== */
+/* ---------------------------------------------------- */
+
+/* Tablet Landscape (Max-width: 1024px) */
+@media (max-width: 1024px) {
+  /* SIDEBAR: Thu nhỏ */
+  .sidebar {
+      width: 200px;
+      padding: 15px;
+  }
+  
+  .avatar h3 {
+      font-size: 16px;
+  }
+  .menu li {
+      font-size: 13px;
+  }
+
+  /* CONTENT: Giảm padding */
+  .rewards-content {
+      padding: 25px 35px;
+  }
+  .rank-section h4 {
+      font-size: 16px;
+  }
+  
+  .rank-section li {
+    font-size: 14px;
+  }
+}
+
+/* Tablet Portrait & Mobile (Max-width: 768px) */
+@media (max-width: 768px) {
+  /* SIDEBAR: Thu nhỏ hơn nữa */
+  .sidebar {
+      width: 160px;
+      padding: 10px;
+  }
+  
+  .avatar h3 {
+      font-size: 14px;
+  }
+  .menu li {
+      font-size: 12px;
+  }
+
+  .rank-section li {
+    font-size: 13px;
+  }
+
+  /* CONTENT: Giảm padding và thu nhỏ chữ */
+  .rewards-content {
+      padding: 20px;
+  }
+  .rewards-info {
+      padding: 12px;
+      font-size: 14px;
+  }
+  .rank-section h4 {
+      font-size: 15px;
+  }
+}
+
+/* Mobile nhỏ (Max-width: 480px) */
+@media (max-width: 480px) {
+  /* SIDEBAR: Kích thước tối thiểu */
+  .sidebar {
+      width: 130px; 
+  }
+  
+  .avatar-img {
+      width: 50px;
+      height: 50px;
+  }
+  .avatar h3 {
+      font-size: 12px;
+  }
+  .menu li {
+      font-size: 11px;
+  }
+
+  .rewards-content {
+      padding: 10px;
+  }
+  .rank-section h4 {
+      font-size: 14px;
+  }
+
+  .rank-section li {
+    font-size: 12px;
+  }
+}

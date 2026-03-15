@@ -1,0 +1,50 @@
+<div class="container">
+    <div class="left-section">
+        <a routerLink="/home" class="logo-link">
+            <img src="assets/images/logodoc.png" alt="Logo" class="auth-logo">
+        </a>
+    </div>
+    <div class="right-section">
+        <div class="form-container">
+            <h1>ĐĂNG NHẬP</h1>
+            
+            <form (ngSubmit)="onSubmit()">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" [(ngModel)]="email" name="email" placeholder="Nhập email của bạn" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" [(ngModel)]="password" name="password" placeholder="Nhập mật khẩu" required>
+                </div>
+                
+                <button type="submit" class="btn-login">ĐĂNG NHẬP</button>
+                
+                <div class="password-actions">
+                    <a href="#" class="forgot-password">Quên mật khẩu?</a>
+                    <a routerLink="/admin-login" class="admin-login">Đăng nhập với tư cách Admin</a>
+                </div>
+                
+                <div class="divider">- OR -</div>
+                
+                <div class="social-login">
+                    <button type="button" class="btn-google">
+                        <img src="https://www.google.com/favicon.ico" alt="Google">
+                        Đăng nhập với Google
+                    </button>
+                    <button type="button" class="btn-facebook">
+                        <img src="https://www.facebook.com/favicon.ico" alt="Facebook">
+                        Đăng nhập với Facebook
+                    </button>
+                </div>
+                
+                <p class="register-link">
+                    Bạn chưa có tài khoản? <a routerLink="/customer-sign-up">Đăng ký</a>
+                </p>
+            </form>
+            
+            <div *ngIf="message" class="message" [ngClass]="messageType">{{message}}</div>
+        </div>
+    </div>
+</div>

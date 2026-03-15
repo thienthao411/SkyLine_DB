@@ -1,0 +1,17 @@
+<aside class="sidebar" [ngClass]="{'open': isOpen}">
+  <div class="sidebar-header">
+    <img src="/assets/images/logongang.png" alt="Skyline Logo" class="logo">
+  </div>
+  
+  <nav class="sidebar-nav">
+    <a 
+      *ngFor="let item of menuItems; let i = index"
+      [routerLink]="item.route"
+      routerLinkActive="active"
+      class="nav-item"
+      (click)="setActive(i)">
+      <img [src]="item.icon" [alt]="item.label + ' Icon'">
+      <span>{{ item.label }}</span>
+    </a>
+  </nav>
+</aside>

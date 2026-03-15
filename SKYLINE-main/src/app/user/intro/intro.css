@@ -1,0 +1,379 @@
+/* Hero Section */
+.intro-hero {
+  position: relative;
+  min-height: 500px;
+  background-image: url('/assets/img/intro/nen.png');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  overflow: hidden;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 900px;
+  margin: 0 auto;
+  color: white;
+}
+
+.hero-title {
+  font-size: 64px;
+  font-weight: 800;
+  margin-bottom: 20px;
+  letter-spacing: 4px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+.hero-subtitle {
+  font-size: 32px;
+  font-weight: 600;
+  margin-bottom: 30px;
+  letter-spacing: 2px;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+.hero-description {
+  font-size: 18px;
+  line-height: 1.8;
+  max-width: 750px;
+  margin: 0 auto;
+  opacity: 0.95;
+}
+
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Preparation Section */
+.preparation-section {
+  padding: 80px 20px;
+  background: #ffffff;
+}
+
+.section-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #375578;
+  text-align: center;
+  margin-bottom: 60px;
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.section-title.center {
+  text-align: center;
+}
+
+.title-underline {
+  display: block;
+  margin: 10px auto 0;
+}
+
+.features-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+  margin-top: 40px;
+}
+
+.feature-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+  background: transparent;
+  padding: 20px;
+}
+
+.feature-card.reverse {
+  grid-template-columns: 1fr 1fr;
+}
+
+.feature-card.reverse .feature-content {
+  order: 2;
+}
+
+.feature-card.reverse .feature-image-wrapper {
+  order: 1;
+}
+
+.feature-image-wrapper {
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feature-image-wrapper.circle {
+  width: 350px;
+  height: 350px;
+  border-radius: 50%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  margin: 0 auto;
+  background: transparent;
+}
+
+.feature-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.feature-image-wrapper.circle .feature-image {
+  border-radius: 50%;
+}
+
+.feature-content {
+  padding: 0;
+}
+
+.feature-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #375578;
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+.feature-description {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #5f6368;
+  text-align: justify;
+}
+
+/* Team Section */
+.team-section {
+  padding: 80px 20px;
+  background: white;
+}
+
+.team-carousel {
+  position: relative;
+  margin-top: 60px;
+  padding: 0 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #d9d9d9;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.carousel-btn:hover:not(:disabled) {
+  background: #b0b0b0;
+}
+
+.carousel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.carousel-btn.prev {
+  left: 10px;
+}
+
+.carousel-btn.next {
+  right: 10px;
+}
+
+.team-grid {
+  display: flex;
+  gap: 15px;
+  align-items: flex-end;
+  justify-content: center;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.team-member {
+  flex-shrink: 0;
+  transition: all 0.5s ease;
+  transform: scale(0.85);
+}
+
+.team-member.featured {
+  transform: scale(1);
+  z-index: 10;
+}
+
+.member-image-wrapper {
+  width: 210px;
+  height: 270px;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.member-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.member-name {
+  background: #606DEC;
+  color: white;
+  padding: 10px 16px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 0;
+  box-shadow: none;
+  position: relative;
+  clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+}
+
+/* Why Section */
+.why-section {
+  padding: 80px 20px;
+  background: #ffffff;
+}
+
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+  margin-top: 60px;
+}
+
+.why-card {
+  background: white;
+  padding: 40px 30px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.why-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+
+.why-icon {
+  margin-bottom: 25px;
+  display: flex;
+  justify-content: center;
+}
+
+.why-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #375578;
+  margin-bottom: 15px;
+}
+
+.why-description {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #666;
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+  .hero-title {
+    font-size: 48px;
+  }
+
+  .hero-subtitle {
+    font-size: 24px;
+  }
+
+  .feature-card,
+  .feature-card.reverse {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .feature-card.reverse .feature-content,
+  .feature-card.reverse .feature-image-wrapper {
+    order: 0;
+  }
+
+  .why-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .team-carousel {
+    padding: 0 50px;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-title {
+    font-size: 36px;
+  }
+
+  .hero-subtitle {
+    font-size: 20px;
+  }
+
+  .section-title {
+    font-size: 28px;
+  }
+
+  .feature-title {
+    font-size: 22px;
+  }
+
+  .carousel-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .team-member {
+    min-width: 200px;
+  }
+
+  .team-member.featured {
+    min-width: 220px;
+  }
+
+  .member-image-wrapper {
+    height: 250px;
+  }
+
+  .team-member.featured .member-image-wrapper {
+    height: 280px;
+  }
+}

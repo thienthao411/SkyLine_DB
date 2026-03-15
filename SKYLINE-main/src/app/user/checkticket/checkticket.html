@@ -1,0 +1,49 @@
+<div class="checkticket-container">
+  <h2>Tra cứu vé</h2>
+
+  <div class="search-box">
+    <input type="text" placeholder="Mã đặt chỗ / Số ghế" [(ngModel)]="searchText" (keyup.enter)="searchTicket()" />
+    <button (click)="searchTicket()">Tìm kiếm</button>
+  </div>
+
+  <div class="ticket-info" *ngIf="filteredTickets.length > 0; else noData">
+    <table class="ticket-table">
+      <thead>
+        <tr>
+          <th>Mã đặt chỗ</th>
+          <th>Họ và tên</th>
+          <th>Số ghế</th>
+          <th>Tình trạng thanh toán</th>
+          <th>Chặng</th>
+          <th>Chi tiết</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let ticket of filteredTickets">
+          <td>{{ ticket.code }}</td>
+          <td>{{ ticket.name }}</td>
+          <td>{{ ticket.seat }}</td>
+          <td>
+            <span [ngClass]="{
+                paid: ticket.status === 'Đã thanh toán',
+                unpaid: ticket.status === 'Chờ thanh toán'
+              }">
+              {{ ticket.status }}
+            </span>
+          </td>
+          <td>{{ ticket.route }}</td>
+          <td>
+            <i class="bi bi-file-earmark-text" (click)="goToDetail(ticket)" style="cursor:pointer;"></i>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ng-template #noData>
+    <div class="not-found">
+      <p>Không tìm thấy vé nào.</p>
+    </div>
+  </ng-template>
+  
+</div>

@@ -1,0 +1,256 @@
+/* Footer */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.footer {
+    background: #fafafa;
+    padding: 60px 0 30px;
+    border-top: 1px solid #eee;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1.5fr 1.3fr 1fr;
+    gap: 40px;
+    margin-bottom: 40px;
+}
+
+.footer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.footer-logo-img {
+    width: 150px;
+    height: auto;
+    object-fit: contain;
+}
+
+.footer-column h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #000;
+}
+
+.footer-column ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-column ul li {
+    margin-bottom: 12px;
+}
+
+.footer-column ul li a {
+    color: #666;
+    text-decoration: none;
+    font-size: 13px;
+    transition: color 0.3s;
+    line-height: 1.6;
+}
+
+.footer-column ul li a:hover {
+    color: #6366f1;
+}
+
+.app-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.app-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: opacity 0.3s;
+    overflow: hidden;
+}
+
+.app-btn:hover {
+    opacity: 0.8;
+}
+
+.app-btn img {
+    display: block;
+    object-fit: cover;
+    object-position: center;
+}
+
+.app-btn.app-store,
+.app-btn.google-play {
+    height: 45px;
+    width: 140px;
+    border-radius: 4px;
+}
+
+.app-btn.app-store img,
+.app-btn.google-play img {
+    width: 140px;
+    height: 45px;
+}
+
+.footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 30px;
+    border-top: 1px solid #ddd;
+}
+
+.social-links {
+    display: flex;
+    gap: 15px;
+}
+
+.social-links a {
+    color: #666;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: white;
+    transition: all 0.3s;
+}
+
+.social-links a:hover {
+    color: #6366f1;
+    background: #f0f0f0;
+}
+
+.social-links a svg {
+    width: 18px;
+    height: 18px;
+}
+
+.footer-bottom p {
+    color: #999;
+    font-size: 13px;
+    margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .footer-content {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 30px;
+    }
+
+    .footer-brand {
+        grid-column: span 3;
+    }
+
+    .footer-column h4 {
+        font-size: 13px;
+    }
+
+    .footer-column ul li a {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .footer {
+        padding: 40px 0 20px;
+    }
+
+    .footer-content {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
+        font-size: 12px;
+        text-align: center;
+    }
+
+    .footer-brand {
+        grid-column: span 2;
+        align-items: center;
+        text-align: center;
+    }
+
+    .footer-logo-img {
+        width: 125px;
+    }
+
+    .footer-column h4 {
+        font-size: 12px;
+        margin-bottom: 15px;
+    }
+
+    .footer-column ul li {
+        margin-bottom: 10px;
+    }
+
+    .footer-column ul li a {
+        font-size: 11px;
+    }
+
+    .app-buttons {
+        margin-top: 10px;
+        gap: 5px;
+    }
+
+    .app-btn.app-store,
+    .app-btn.google-play {
+        height: 40px;
+        width: 125px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .app-btn.app-store img,
+    .app-btn.google-play img {
+        width: 125px;
+        height: 40px;
+    }
+
+    .footer-bottom {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+        padding-top: 20px;
+    }
+
+    .footer-bottom p {
+        font-size: 11px;
+    }
+
+    .social-links a {
+        width: 32px;
+        height: 32px;
+    }
+
+    .social-links a svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer-content {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .footer-brand {
+        grid-column: span 2;
+    }
+
+    .footer-column h4 {
+        font-size: 11px;
+    }
+
+    .footer-column ul li a {
+        font-size: 10px;
+    }
+}

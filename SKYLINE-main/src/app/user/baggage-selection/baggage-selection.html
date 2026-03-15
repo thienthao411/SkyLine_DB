@@ -1,0 +1,186 @@
+<div class="main-container">
+
+    <header class="sidebar-header">
+
+        <ng-container *ngIf="isLoading()">
+            <div class="header-box">
+                <div class="hightlight">Đang tải...</div>
+            </div>
+        </ng-container>
+
+        <ng-container *ngIf="selectedFlight() as flight">
+            <div class="header-box">
+                <div class="hightlight">{{ flight.from }}</div>
+            </div>
+
+            <div class="header-box">
+                <div class="hightlight">&rarr;</div>
+            </div>
+
+            <div class="header-box">
+                <div class="hightlight">{{ flight.to }}</div>
+            </div>
+
+            <div class="header-box">
+                <div>{{ dateVN(flight.departTime) }} | {{ timeHM(flight.departTime) }}</div>
+                <div>Departing</div>
+            </div>
+
+            <div class="header-box">
+                <div>{{ dateVN(flight.arriveTime) }} | {{ timeHM(flight.arriveTime) }}</div>
+                <div>Arriving</div>
+            </div>
+
+            <div class="header-box" *ngIf="selectedSeat">
+                <div class="hightlight">{{ selectedSeat }}</div>
+                <div>Ghế đã chọn</div>
+            </div>
+        </ng-container>
+
+        <ng-container *ngIf="!isLoading() && !selectedFlight()">
+            <div class="header-box">
+                <div class="hightlight" style="color: red;">Lỗi</div>
+                <div>Không tìm thấy chuyến bay.</div>
+            </div>
+        </ng-container>
+    </header>
+
+    <div class="baggage-content">
+
+        <div class="form-section">
+            <form [formGroup]="passengerForm" (ngSubmit)="onSubmit()">
+
+                <div class="form-card">
+                    <h3>Thông tin hành khách</h3>
+                    <p class="form-description">
+                        Thông tin phải chính xác như trên giấy tờ tùy thân (như trên CMND, Hộ Chiếu, giấy phép lái xe…).
+                        Quý khách bị từ chối vận chuyển nếu thông tin không chính xác. Vui lòng nhập thông tin bằng
+                        Tiếng Việt không dấu.
+                    </p>
+                    <div class="form-group">
+                        <label>Hành khách</label>
+                        <div class="radio-group">
+                            <label>
+                                <input type="radio" formControlName="salutation" value="Quý Ông"> Quý Ông
+                            </label>
+                            <label>
+                                <input type="radio" formControlName="salutation" value="Quý Bà"> Quý Bà
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fullName">Họ và tên</label>
+                        <input type="text" id="fullName" formControlName="fullName" placeholder="Họ và tên"
+                            [class.invalid-field]="f['fullName'].invalid && (f['fullName'].dirty || f['fullName'].touched)">
+
+                        <div *ngIf="f['fullName'].invalid && (f['fullName'].dirty || f['fullName'].touched)"
+                            class="error-message">
+                            <span *ngIf="f['fullName'].errors?.['required']">Vui lòng nhập họ và tên.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dob">Ngày sinh</label>
+                        <input type="date" id="dob" formControlName="dob"
+                            [class.invalid-field]="f['dob'].invalid && (f['dob'].dirty || f['dob'].touched)">
+
+                        <div *ngIf="f['dob'].invalid && (f['dob'].dirty || f['dob'].touched)" class="error-message">
+                            <span *ngIf="f['dob'].errors?.['required']">Vui lòng chọn ngày sinh.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="idNumber">Số CCCD</label>
+                        <input type="text" id="idNumber" formControlName="idNumber" placeholder="Số CCCD"
+                            [class.invalid-field]="f['idNumber'].invalid && (f['idNumber'].dirty || f['idNumber'].touched)">
+
+                        <div *ngIf="f['idNumber'].invalid && (f['idNumber'].dirty || f['idNumber'].touched)"
+                            class="error-message">
+                            <span *ngIf="f['idNumber'].errors?.['required']">Vui lòng nhập số CCCD.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-card">
+                    <h3>Thông tin liên hệ</h3>
+                    <p class="form-description">
+                        Thông tin này giúp hãng hàng không liên lạc với quý khách để thông báo cập nhật lịch bay thay
+                        đổi và gửi vé điện tử cho quý khách.
+                    </p>
+
+                    <div class="form-group">
+                        <label for="phoneNumber">Số điện thoại</label>
+                        <input type="tel" id="phoneNumber" formControlName="phoneNumber" placeholder="Số điện thoại"
+                            [class.invalid-field]="f['phoneNumber'].invalid && (f['phoneNumber'].dirty || f['phoneNumber'].touched)">
+
+                        <div *ngIf="f['phoneNumber'].invalid && (f['phoneNumber'].dirty || f['phoneNumber'].touched)"
+                            class="error-message">
+                            <span *ngIf="f['phoneNumber'].errors?.['required']">Vui lòng nhập số điện thoại.</span>
+                            <span *ngIf="f['phoneNumber'].errors?.['pattern']">Số điện thoại phải là 10 chữ số.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" formControlName="email" placeholder="Email"
+                            [class.invalid-field]="f['email'].invalid && (f['email'].dirty || f['email'].touched)">
+
+                        <div *ngIf="f['email'].invalid && (f['email'].dirty || f['email'].touched)"
+                            class="error-message">
+                            <span *ngIf="f['email'].errors?.['required']">Vui lòng nhập email.</span>
+                            <span *ngIf="f['email'].errors?.['email']">Email không đúng định dạng (ví dụ:
+                                example@mail.com).</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">Địa chỉ</label>
+                        <input type="text" id="address" formControlName="address" placeholder="Địa chỉ"
+                            [class.invalid-field]="f['address'].invalid && (f['address'].dirty || f['address'].touched)">
+
+                        <div *ngIf="f['address'].invalid && (f['address'].dirty || f['address'].touched)"
+                            class="error-message">
+                            <span *ngIf="f['address'].errors?.['required']">Vui lòng nhập địa chỉ.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-card">
+                    <h3>Thông tin hành lý</h3>
+                    <p class="form-description">
+                        Theo quy định, mỗi hành khách được mang theo một hành lý xách tay miễn phí và một vật dụng cá nhân. <br>
+                        <span class="form-description-highlight">Vui lòng chọn một gói hành lý ký gửi nếu bạn có nhu cầu.</span>
+                    </p>
+
+                    <div class="baggage-options-grid">
+
+                        <div class="baggage-option" (click)="selectBaggage(null)"
+                            [class.selected]="selectedBaggage() === null">
+                            <span class="baggage-name">Không mua thêm</span>
+                            <span class="baggage-price">0đ</span>
+                        </div>
+
+                        <div *ngFor="let option of baggageOptions" class="baggage-option"
+                            (click)="selectBaggage(option)" [class.selected]="selectedBaggage() === option">
+
+                            <span class="baggage-name">{{ option.name }}</span>
+                            <span class="baggage-price">{{ option.priceDisplay }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="back-btn" (click)="quayLai()">Quay lại</button>
+                    <button type="submit" class="submit-btn" [disabled]="!passengerForm.valid">Tiếp tục</button>
+                </div>
+
+            </form>
+        </div>
+        <div class="image-section">
+            <img src="/assets/media/mainLogo.png" alt="Logo">
+            <img src="/assets/media/Baggage.png" alt="Kích thước hành lý tiêu chuẩn">
+        </div>
+
+    </div>
+</div>

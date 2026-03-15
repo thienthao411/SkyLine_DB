@@ -1,0 +1,26 @@
+<div *ngIf="userData" class="rewards-container">
+  <div class="rewards-content">
+    <h2>Điểm thưởng</h2>
+
+    <div class="rewards-info">
+      <p><strong>Hạng hiện tại:</strong> {{ userData.currentRank }}</p>
+      <p><strong>Điểm tích lũy:</strong> {{ userData.points | number }}</p>
+      <p><strong>Progress:</strong> {{ userData.points }} / {{ userData.nextThreshold }} để lên {{ userData.nextRank }}</p>
+
+      <div class="progress-bar">
+        <div class="progress" [style.width.%]="(userData.points / userData.nextThreshold) * 100"></div>
+      </div>
+    </div>
+
+    <div class="benefits">
+      <h3>Quyền lợi</h3>
+
+      <div *ngFor="let rank of displayedRanks" class="rank-section">
+        <h4>{{ rank.name }}</h4>
+        <ul>
+          <li *ngFor="let benefit of rank.benefits">{{ benefit }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

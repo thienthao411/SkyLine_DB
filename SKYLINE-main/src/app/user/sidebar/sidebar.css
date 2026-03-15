@@ -1,0 +1,171 @@
+/* ===== SIDEBAR - Cập nhật width mặc định và Flex Container ===== */
+:host, .sidebar { 
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 250px; /* Chiều rộng mặc định trên Desktop */
+  background: linear-gradient(180deg,#5b61e6,#4c58d6); 
+  color: #fff;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.08);
+  overflow: auto;
+}
+
+.avatar {
+  margin-top: 80px;
+  text-align: center;
+  margin-bottom: 30px;
+  flex-shrink: 0; 
+  transition: margin-top 0.3s ease, margin-bottom 0.3s ease;
+}
+
+.avatar-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 10px;
+  transition: width 0.3s ease, height 0.3s ease;
+}
+
+.avatar h3 {
+  font-size: 18px;
+  color: #ffffff;
+  margin: 0;
+}
+
+.menu {
+  flex-grow: 1; 
+}
+
+
+.menu ul {
+  list-style: none;
+  padding: 0;
+}
+
+.menu li {
+  padding: 10px 15px;
+  font-size: 14px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2); 
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.menu li.active {
+  background-color: #99BBFF;
+  font-weight: 600;
+}
+
+.menu li:hover {
+  background-color: #99BBFF;
+}
+
+.menu li i {
+  font-size: 16px;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* ---------------------------------------------------- */
+/* ===== RESPONSIVE SCALING LOGIC (Khôi phục & Tối ưu) ===== */
+/* ---------------------------------------------------- */
+
+/* Tablet ngang (Max-width: 1024px) */
+@media (max-width: 1024px) {
+  :host, .sidebar {
+      width: 220px; 
+  }
+  
+  .avatar {
+      margin-top: 40px;
+      margin-bottom: 20px;
+  }
+
+  .avatar-img {
+      width: 80px;
+      height: 80px;
+  }
+
+  .avatar h3 {
+      font-size: 16px;
+  }
+
+  .menu li {
+      padding: 12px 15px;
+      font-size: 13px;
+  }
+
+  .menu li i {
+      font-size: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  :host, .sidebar {
+      width: 180px; 
+  }
+
+  .avatar {
+      margin-top: 60px;
+      margin-bottom: 15px;
+  }
+
+  .avatar-img {
+      width: 60px;
+      height: 60px;
+      border: 2px solid white;
+  }
+
+  .avatar h3 {
+      font-size: 14px;
+  }
+
+  .menu li {
+      padding: 10px 12px;
+      font-size: 12px;
+      gap: 8px;
+  }
+
+  .menu li i {
+      font-size: 13px;
+      min-width: 18px;
+  }
+}
+
+/* Điện thoại nhỏ (Max-width: 480px) */
+@media (max-width: 480px) {
+  :host, .sidebar {
+      width: 150px;
+  }
+
+  .avatar {
+      margin-top: 60px;
+      margin-bottom: 10px;
+  }
+
+  .avatar-img {
+      width: 50px;
+      height: 50px;
+  }
+
+  .avatar h3 {
+      font-size: 12px;
+  }
+
+  .menu li {
+      padding: 8px 10px;
+      font-size: 11px;
+      gap: 6px;
+  }
+
+  .menu li i {
+      font-size: 12px;
+      min-width: 16px;
+  }
+} 

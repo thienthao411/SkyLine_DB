@@ -1,0 +1,183 @@
+.contact-container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 30px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    font-family: 'Segoe UI', sans-serif;
+    width: 100%;
+  }
+  
+  h2 {
+    
+    color: #375578;
+    margin-bottom: 10px;
+  }
+  
+  .contact-description {
+    color: #555;
+    margin-bottom: 30px;
+    font-size: 15px;
+  }
+  
+  .contact-info {
+    margin-bottom: 30px;
+  }
+  
+  .info-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    color: #375578;
+  }
+  
+  .info-item i {
+    color: #375578;
+    margin-right: 10px;
+    font-size: 18px;
+  }
+  
+  .info-item a {
+    color: #0078ff;
+    text-decoration: none;
+  }
+  
+  .info-item a:hover {
+    text-decoration: underline;
+  }
+  
+  .contact-form {
+    background: #f9fbff;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+  }
+  
+  .form-group {
+    margin-bottom: 16px;
+  }
+  
+  label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  input,
+  textarea,
+  select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: 0.3s;
+  }
+  
+  input:focus,
+  textarea:focus,
+  select:focus {
+    border-color: #6366F1;
+    outline: none;
+  }
+  
+  .submit-btn {
+    display: block;
+    width: 100%;
+    background: #6366F1;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  
+  .submit-btn:hover {
+    background: #005fcc;
+  }
+  
+  .success-message {
+    margin-top: 15px;
+    padding: 10px;
+    background: #e6f7e9;
+    color: #1a7a1f;
+    border: 1px solid #9ee4a4;
+    border-radius: 8px;
+    text-align: center;
+  }
+  
+  .map-section {
+    margin-top: 30px;
+  }
+  
+  .map-section h3 {
+    color: #375578;
+    margin-bottom: 10px;
+  }
+  
+ /* --- RESPONSIVE ADJUSTMENTS (ĐÃ THÊM TYPOGRAPHY) --- */
+@media (max-width: 768px) {
+  .contact-container {
+      /* Xóa margin auto để nó mở rộng hết mép trái/phải */
+      margin: 20px 0; /* Giảm margin trên/dưới và xóa auto */
+      /* Giảm padding để có thêm không gian cho nội dung */
+      padding: 20px; 
+  }
+  
+  h2 {
+      font-size: 22px; /* Thu nhỏ tiêu đề chính */
+  }
+  
+  .contact-description {
+      font-size: 14px;
+  }
+  
+  .info-item span,
+  .info-item a {
+      font-size: 14px; /* Thu nhỏ thông tin liên hệ */
+  }
+  
+  .contact-form h3 {
+      font-size: 18px; /* Thu nhỏ tiêu đề form */
+  }
+  
+  label {
+      font-size: 13px; /* Thu nhỏ nhãn */
+  }
+  
+  input, textarea, select {
+      font-size: 13px; /* Thu nhỏ chữ input */
+      padding: 8px 10px;
+  }
+  
+  .submit-btn {
+      font-size: 15px;
+      padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .contact-container {
+      padding: 15px; /* Giảm padding hơn nữa trên mobile */
+  }
+  
+  h2 {
+      font-size: 20px;
+  }
+  
+  .info-item span,
+  .info-item a {
+      font-size: 13px;
+  }
+  
+  label, input, textarea, select {
+      font-size: 12px;
+  }
+  
+  .submit-btn {
+      font-size: 14px;
+  }
+}

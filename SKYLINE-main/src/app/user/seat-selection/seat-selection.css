@@ -1,0 +1,271 @@
+.main-content {
+    display: flex;
+    flex-grow: 1;
+    height: 100vh;
+}
+
+.logo {
+    width: 300px;
+}
+
+.seat-map-column {
+    flex: 50%;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    position: relative;
+}
+
+.seat-map-scroller {
+    position: relative;
+    overflow-y: auto;
+}
+
+.seat-container {
+    position: relative;
+    background-image: url('/assets/media/Plane.png');
+    width: 100%;
+    height: 2600px;
+    background-size: 205% 105%;
+    background-repeat: no-repeat;
+}
+
+.seat-economy {
+    position: absolute;
+    width: 2.43vw;   /* Thay cho 35px */
+    height: 35px;
+    font-size: 1.04vw;
+    background-color: #6a5acd;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.seat-business {
+    position: absolute;
+    width: 2.78vw;
+    height: 40px;
+    font-size: 1.04vw;
+    background-color: #22C3A6;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+/* Ghế đã có người chọn */
+.seat-economy.occupied {
+    position: absolute;
+    width: 2.43vw;   /* Thay cho 35px */
+    height: 35px;
+    font-size: 1.04vw;
+    background-color: #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #ffffff;
+    cursor: default;
+}
+
+.seat-business.occupied {
+    position: absolute;
+    width: 2.78vw;   /* Thay cho 40px */
+    height: 40px;
+    font-size: 1.04vw;
+    background-color: #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #ffffff;
+    cursor: default;
+}
+
+/* Ghế bạn đang chọn */
+.selected {
+    background-color: red;
+    color: white;
+}
+
+.seat-map-header {
+    padding: 20px 20px;
+}
+
+.info-column {
+    flex: 50%;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    border-left: 1px solid #375578;
+}
+
+.sidebar-header {
+    position: sticky;
+    top: 0;
+    background-color: #375578;
+    color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    padding: 1.5vh 2vw;
+    font-size: 1.2vw;
+    z-index: 10;
+}
+
+.header-box {
+    flex: 1;
+    text-align: center;
+}
+
+.header-box:nth-child(2) {
+    flex: 0.5;
+}
+
+.header-box:nth-child(4),
+.header-box:nth-child(5) {
+    flex: 1.25;
+}
+
+.hightlight {
+    font-size: 2.4vw;
+    font-weight: bold;
+}
+
+.sidebar-main {
+    display: flex;
+}
+
+.seat-img {
+    width: 85%;
+}
+
+.sidebar-sub-column {
+    flex: 50%;
+    padding: 30px;
+}
+
+.ticket-type ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.ticket-type li {
+    margin-bottom: 12px;
+    position: relative;
+    padding-left: 25px;
+}
+
+.ticket-type li.item-blue::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 5px;
+    width: 10px;
+    height: 10px;
+    background-color: #606DEC;
+    border-radius: 50%;
+}
+
+.ticket-type li.item-green::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: #22C3A6;
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.sidebar-footer {
+    position: sticky;
+    bottom: 0;
+    background-color: #ffffff;
+    border-top: 1px solid #375578;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    padding: 1vw;
+    font-size: 1.2vw;
+    z-index: 10;
+}
+
+.footer-info-box {
+    text-align: left;
+}
+
+.footer-info-box span {
+    display: block;
+}
+
+.footer-info-box strong {
+    font-size: 1.2vw;
+}
+
+.footer-button-group {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.footer-button-group button {
+    width: 10vw;
+    height: 3vw;
+    font-size: 1.2vw;
+    border: none;
+    border-radius: 1vw;
+    font-size: 1.2vw;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-primary {
+    background-color: #606DEC;
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: #737ee6;
+}
+
+.btn-primary:disabled,
+.btn-primary.disabled {
+    background-color: #b0c4de;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background-color: #f1f1f1;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background-color: #e0e0e0;
+}
+
+
+.selected-badge {
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: bold;
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+.selected-badge.blue {
+    background-color: #606DEC;
+}
+
+.selected-badge.green {
+    background-color: #22C3A6;
+}

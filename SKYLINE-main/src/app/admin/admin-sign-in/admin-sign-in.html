@@ -1,0 +1,33 @@
+<div class="container">
+    <div class="left-section">
+        <a routerLink="/home" class="logo-link">
+            <img src="/assets/images/logodoc.png" alt="Logo" class="auth-logo">
+        </a>
+    </div>
+    <div class="right-section">
+        <div class="form-container">
+            <h1>ĐĂNG NHẬP ADMIN</h1>
+            
+            <div *ngIf="message" class="message" [ngClass]="messageType">{{message}}</div>
+            
+            <form (ngSubmit)="onSubmit()">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" [(ngModel)]="email" name="email" placeholder="Nhập email admin" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" [(ngModel)]="password" name="password" placeholder="Nhập mật khẩu admin" required>
+                </div>
+                
+                <button type="submit" class="btn-login">ĐĂNG NHẬP</button>
+                
+                <div class="password-actions">
+                    <a href="#" class="forgot-password">Quên mật khẩu?</a>
+                    <a routerLink="/customer-sign-in" class="customer-login">Đăng nhập với tư cách Khách hàng</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

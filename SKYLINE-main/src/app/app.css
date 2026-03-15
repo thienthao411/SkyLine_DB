@@ -1,0 +1,23 @@
+.layout {
+    display: flex;
+    height: 100vh;
+  }
+  
+  app-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100vh;
+    background-color: #606DEC;
+    z-index: 100;
+  }
+  
+  .content {
+    margin-left: 260px; /* Để tránh bị sidebar đè lên */
+    padding: 20px;
+    flex: 1;
+    overflow-y: auto;
+    background-color: #f5f7fa;
+  }
+  

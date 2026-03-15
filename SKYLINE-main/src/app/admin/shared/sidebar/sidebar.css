@@ -1,0 +1,154 @@
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background-color: white;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-header {
+  padding: 30px 20px;
+  text-align: center;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.logo {
+  width: 200px;
+  height: auto;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 20px 0;
+  overflow-y: auto;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 15px 25px;
+  color: #666;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  gap: 15px;
+}
+
+.nav-item img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  transition: filter 0.3s ease;
+}
+
+.nav-item span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.nav-item:hover {
+  background-color: #f8f9fa;
+  color: #00B074;
+}
+
+.nav-item.active {
+  background-color: #f0f9f6;
+  color: #00B074;
+  border-right: 3px solid #00B074;
+}
+
+.nav-item.active img {
+  filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(126deg) brightness(98%) contrast(101%);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 220px;
+  }
+
+  .logo {
+    width: 160px;
+  }
+
+  .sidebar-header {
+    padding: 20px 15px;
+  }
+
+  .nav-item {
+    padding: 12px 20px;
+    gap: 12px;
+  }
+
+  .nav-item img {
+    width: 18px;
+    height: 18px;
+  }
+
+  .nav-item span {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 200px;
+  }
+
+  .logo {
+    width: 140px;
+  }
+
+  .sidebar-header {
+    padding: 15px 10px;
+  }
+
+  .nav-item {
+    padding: 10px 15px;
+    gap: 10px;
+  }
+
+  .nav-item img {
+    width: 16px;
+    height: 16px;
+  }
+
+  .nav-item span {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 180px;
+  }
+
+  .logo {
+    width: 120px;
+  }
+
+  .sidebar-header {
+    padding: 12px 8px;
+  }
+
+  .nav-item {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .nav-item img {
+    width: 14px;
+    height: 14px;
+  }
+
+  .nav-item span {
+    font-size: 11px;
+  }
+}

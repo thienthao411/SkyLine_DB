@@ -1,0 +1,46 @@
+<aside class="sidebar">
+  <div class="avatar">
+    <img
+      class="avatar-img"
+      [src]="user.avatar || 'assets/img/AVT0.jpg'"
+      alt="Avatar"
+    />
+    <h3>{{ user.fullName }}</h3>
+  </div>
+
+  <nav class="menu">
+    <ul>
+      <li
+        routerLink="/information"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
+        <i class="fa fa-user"></i> Thông tin cá nhân
+      </li>
+
+      <li routerLink="/checkticket" routerLinkActive="active">
+        <i class="fa fa-ticket-alt"></i> Tra cứu vé
+      </li>
+
+      <li routerLink="/history" routerLinkActive="active">
+        <i class="fa fa-history"></i> Lịch sử giao dịch
+      </li>
+
+      <li routerLink="/wallet" routerLinkActive="active">
+        <i class="fa fa-wallet"></i> Ví & Thanh toán
+      </li>
+
+      <li routerLink="/rewards" routerLinkActive="active">
+        <i class="fa fa-star"></i> Điểm thưởng
+      </li>
+
+      <li routerLink="/notifications" routerLinkActive="active">
+        <i class="fa fa-bell"></i> Cài đặt thông báo
+      </li>
+
+      <li routerLink="/contact" routerLinkActive="active">
+        <i class="fa fa-headset"></i> Liên hệ hỗ trợ
+      </li>
+    </ul>
+  </nav>
+</aside>

@@ -1,0 +1,307 @@
+<div class="admin-container">
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <main class="content">
+    <app-admin-header></app-admin-header>
+
+    <div class="header">
+      <h1>Vé và giao dịch</h1>
+      <p class="subtitle">Chào Tường Vy, mừng bạn đến với trang quản lý vé và giao dịch!</p>
+    </div>
+
+    <div class="main-content-panel">
+      <div class="tab-header-row">
+        <div class="tabs">
+          <button [class.active]="activeTab === 'ticket'" (click)="switchTab('ticket')">Quản lý vé</button>
+          <button [class.active]="activeTab === 'transaction'" (click)="switchTab('transaction')">Quản lý giao
+            dịch</button>
+        </div>
+
+        <div class="list-toolbar" *ngIf="activeTab==='ticket' || activeTab==='transaction'">
+          <div class="search-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" placeholder="Tìm theo mã vé,..." [(ngModel)]="searchTerm"
+              (ngModelChange)="onSearchChange($event)" />
+          </div>
+
+          <div class="filter-wrap">
+            <select [(ngModel)]="statusFilter" (change)="applyStatusFilter()">
+              <option value="all">Tất cả</option>
+              <option value="hoàn thành">Hoàn thành</option>
+              <option value="đã thanh toán">Đã thanh toán</option>
+              <option value="chờ thanh toán">Chờ thanh toán</option>
+              <option value="hủy">Hủy</option>
+            </select>
+          </div>
+
+          <button class="date-range-trigger" (click)="openDatePopover($event)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#375578">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-width="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6" stroke-width="2"></line>
+              <line x1="8" y1="2" x2="8" y2="6" stroke-width="2"></line>
+              <line x1="3" y1="10" x2="21" y2="10" stroke-width="2"></line>
+            </svg>
+            <div class="trigger-text">
+              <span>Lọc theo thời gian</span>
+              <small>{{ displayDateRange }}</small>
+            </div>
+            <svg class="trigger-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280">
+              <polyline points="6 9 12 15 18 9" stroke-width="2.5"></polyline>
+            </svg>
+          </button>
+
+          <div class="date-popover" *ngIf="isDatePopoverOpen">
+            <h5 class="popover-header">Chọn khoảng thời gian</h5>
+            <div class="quick-buttons">
+              <button (click)="setQuickRange(7)">7 ngày qua</button>
+              <button (click)="setQuickRange(30)">30 ngày qua</button>
+              <button (click)="setQuickRange(90)">90 ngày qua</button>
+            </div>
+            <div class="date-fields">
+              <div class="field-group">
+                <label for="popover-start-date">Từ ngày:</label>
+                <input type="date" id="popover-start-date" [(ngModel)]="tempStartDate">
+              </div>
+              <div class="field-group">
+                <label for="popover-end-date">Đến ngày:</label>
+                <input type="date" id="popover-end-date" [(ngModel)]="tempEndDate">
+              </div>
+            </div>
+            <div class="popover-actions">
+              <button class="btn form-btn-cancel" (click)="closeDatePopover()">Hủy</button>
+              <button class="btn form-btn-save" (click)="applyDateFilter()">Áp dụng</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="activeTab === 'ticket'" class="list-container">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Mã vé</th>
+                <th>Mã chuyến bay</th>
+                <th>Số ghế</th>
+                <th>Khuyến mãi</th>
+                <th>Ngày đặt</th>
+                <th>Giá (VNĐ)</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let t of pagedTickets">
+                <td>{{ t.ticket_code }}</td>
+                <td>{{ t.flight_id }}</td>
+                <td>{{ t.seat }}</td>
+                <td>{{ t.promotion_id || 'Không' }}</td>
+                <td>{{ t.booking_date }}</td>
+                <td>{{ t.price | number }}</td>
+                <td>
+                  <span [class.status]="true" [class.success]="t.status.toLowerCase() === 'hoàn thành'"
+                    [class.pending]="t.status.toLowerCase() !== 'hoàn thành'">{{ t.status }}</span>
+                </td>
+                <td class="actions">
+                  <button title="Xem" class="action-btn view" (click)="onView(t)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-width="1.5"></path>
+                      <circle cx="12" cy="12" r="3" stroke-width="1.5"></circle>
+                    </svg>
+                  </button>
+                  <button title="Sửa" class="action-btn edit" (click)="onEdit(t)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-width="1.5"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.5"></path>
+                    </svg>
+                  </button>
+                  <button title="Xóa" class="action-btn delete" (click)="onDelete(t)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <polyline points="3 6 5 6 21 6" stroke-width="1.5"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                        stroke-width="1.5"></path>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div *ngIf="activeTab === 'transaction'" class="list-container">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Mã giao dịch</th>
+                <th>Mã vé</th>
+                <th>Ngày đặt</th>
+                <th>Phương thức thanh toán</th>
+                <th>Trạng thái</th>
+                <th>Khiếu nại</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let tx of pagedTransactions">
+                <td>{{ tx.transaction_id }}</td>
+                <td>{{ tx.ticket_code }}</td>
+                <td>{{ tx.booking_date }}</td>
+                <td>{{ tx.payment_method || 'Chưa có' }}</td>
+                <td>
+                  <span [class.status]="true" [class.success]="tx.status.toLowerCase() === 'hoàn thành'"
+                    [class.pending]="tx.status.toLowerCase() !== 'hoàn thành'">
+                    {{ tx.status }}
+                  </span>
+                </td>
+                <td>
+                  <span [class.complaint]="true" [class.ok]="tx.complaint === 'Không'"
+                    [class.warn]="tx.complaint !== 'Không'">
+                    {{ tx.complaint }}
+                  </span>
+                </td>
+                <td class="actions">
+                  <button title="Xem" class="action-btn view" (click)="onView(tx)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-width="1.5"></path>
+                      <circle cx="12" cy="12" r="3" stroke-width="1.5"></circle>
+                    </svg>
+                  </button>
+                  <button title="Sửa" class="action-btn edit" (click)="onEdit(tx)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-width="1.5"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.5"></path>
+                    </svg>
+                  </button>
+                  <button title="Xóa" class="action-btn delete" (click)="onDelete(tx)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <polyline points="3 6 5 6 21 6" stroke-width="1.5"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                        stroke-width="1.5"></path>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div *ngIf="activeTab === 'ticket' && totalPagesTickets > 1" class="tm-pagination">
+        <button class="btn-page" (click)="goToPageTickets(currentPageTickets-1)"
+          [disabled]="currentPageTickets===1">«</button>
+        <span class="page-info">Trang {{currentPageTickets}} / {{totalPagesTickets}}</span>
+        <button class="btn-page" (click)="goToPageTickets(currentPageTickets+1)"
+          [disabled]="currentPageTickets===totalPagesTickets">»</button>
+      </div>
+
+      <div *ngIf="activeTab === 'transaction' && totalPagesTransactions > 1" class="tm-pagination">
+        <button class="btn-page" (click)="goToPageTransactions(currentPageTransactions-1)"
+          [disabled]="currentPageTransactions===1">«</button>
+        <span class="page-info">Trang {{currentPageTransactions}} / {{totalPagesTransactions}}</span>
+        <button class="btn-page" (click)="goToPageTransactions(currentPageTransactions+1)"
+          [disabled]="currentPageTransactions===totalPagesTransactions">»</button>
+      </div>
+
+    </div>
+  </main>
+  <div *ngIf="showDeleteConfirm" class="modal-overlay">
+    <div class="modal-content">
+      <h4>Xác nhận xóa</h4>
+      <p>Bạn có chắc chắn muốn xóa {{ activeTab === 'ticket' ? 'vé' : 'giao dịch' }} này không? <br> Hành động này không
+        thể hoàn tác.</p>
+      <div class="modal-buttons">
+        <button class="btn btn-modal-cancel" (click)="cancelDelete()">Hủy</button>
+        <button class="btn btn-modal-delete" (click)="confirmDelete()">Xóa</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="isModalOpen">
+    <div class="modal-content modal-view">
+      <h4>
+        {{ isEditMode ? 'Chỉnh sửa' : 'Chi tiết' }}
+        {{ modalType === 'ticket' ? 'vé' : 'giao dịch' }}
+      </h4>
+
+      <div class="view-details-grid" *ngIf="modalData">
+        <div class="detail-item" *ngIf="modalType === 'ticket'">
+          <label>Mã vé</label>
+          <span *ngIf="!isEditMode">{{ modalData.ticket_code }}</span>
+          <input *ngIf="isEditMode" [(ngModel)]="modalData.ticket_code" />
+        </div>
+        <div class="detail-item" *ngIf="modalType === 'transaction'">
+          <label>Mã giao dịch</label>
+          <span *ngIf="!isEditMode">{{ modalData.transaction_id }}</span>
+          <input *ngIf="isEditMode" [(ngModel)]="modalData.transaction_id" />
+        </div>
+
+        <div class="detail-item" *ngIf="modalType === 'ticket'">
+          <label>Chuyến bay</label>
+          <span *ngIf="!isEditMode">{{ modalData.flight_id }}</span>
+          <input *ngIf="isEditMode" [(ngModel)]="modalData.flight_id" />
+        </div>
+        <div class="detail-item" *ngIf="modalType === 'ticket'">
+          <label>Ghế</label>
+          <span *ngIf="!isEditMode">{{ modalData.seat }}</span>
+          <input *ngIf="isEditMode" [(ngModel)]="modalData.seat" />
+        </div>
+        <div class="detail-item" *ngIf="modalType === 'ticket'">
+          <label>Khuyến mãi</label>
+          <span *ngIf="!isEditMode">{{ modalData.promotion_id || 'Không' }}</span>
+          <input *ngIf="isEditMode" [(ngModel)]="modalData.promotion_id" placeholder="Không" />
+        </div>
+        <div class="detail-item">
+          <label>Ngày đặt</label>
+          <span *ngIf="!isEditMode">{{ modalData.booking_date }}</span>
+          <input *ngIf="isEditMode" [(ngModel)]="modalData.booking_date" type="date" />
+        </div>
+        <div class="detail-item" *ngIf="modalType === 'ticket'">
+          <label>Giá (VNĐ)</label>
+          <span *ngIf="!isEditMode">{{ modalData.price | number }}</span>
+          <input *ngIf="isEditMode" [(ngModel)]="modalData.price" type="number" />
+        </div>
+        <div class="detail-item">
+          <label>Trạng thái</label>
+          <span *ngIf="!isEditMode">{{ modalData.status }}</span>
+          <select *ngIf="isEditMode" [(ngModel)]="modalData.status">
+            <option value="Hoàn thành">Hoàn thành</option>
+            <option value="Chờ thanh toán">Chờ thanh toán</option>
+            <option value="Đã thanh toán">Đã thanh toán</option>
+            <option value="Hủy">Hủy</option>
+          </select>
+        </div>
+
+        <div class="detail-item" *ngIf="modalType === 'transaction'">
+          <label>Phương thức thanh toán</label>
+          <span *ngIf="!isEditMode">{{ modalData.payment_method }}</span>
+          <select *ngIf="isEditMode" [(ngModel)]="modalData.payment_method">
+            <option value="VISA">VISA</option>
+            <option value="Google Pay">Google Pay</option>
+            <option value="Apple Pay">Apple Pay</option>
+            <option value="Paypal">Paypal</option>
+          </select>
+        </div>
+        <div class="detail-item" *ngIf="modalType === 'transaction'">
+          <label>Khiếu nại</label>
+          <span *ngIf="!isEditMode">{{ modalData.complaint }}</span>
+          <select *ngIf="isEditMode" [(ngModel)]="modalData.complaint">
+            <option value="Không">Không</option>
+            <option value="Có">Có</option>
+          </select>
+        </div>
+      </div>
+
+      <div *ngIf="isEditMode" class="modal-actions">
+        <button class="btn btn-save" (click)="saveModalChanges()">Lưu</button>
+        <button class="btn btn-cancel" (click)="closeModal()">Hủy</button>
+      </div>
+
+      <button *ngIf="!isEditMode" class="btn btn-modal-close" (click)="closeModal()">Đóng</button>
+
+  </div>
+</div>

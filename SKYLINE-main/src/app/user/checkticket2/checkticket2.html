@@ -1,0 +1,120 @@
+<div class="checkticket-container detail-container">
+
+    <div *ngIf="ticketDetail" class="ticket-detail-card-content">
+
+        <!-- Thông tin vé -->
+        <div class="ticket-summary-area">
+            <h3>Thông tin vé</h3>
+
+            <div class="ticket-summary-grid grid-header-row">
+                <span>Mã đặt chỗ</span>
+                <span>Họ và tên</span>
+                <span>Liên hệ</span>
+                <span>Tình trạng thanh toán</span>
+                <span>Ngày đặt</span>
+            </div>
+
+            <hr class="summary-line">
+
+            <div class="ticket-summary-grid summary-data-row">
+                <span class="code-value">{{ ticketDetail.code }}</span>
+                <span>{{ ticketDetail.name }}</span>
+                <span>{{ ticketDetail.phone }}</span>
+                <span class="status-value-summary" [ngClass]="{
+              paid: ticketDetail.status === 'Đã thanh toán',
+              unpaid: ticketDetail.status === 'Chờ thanh toán'
+            }">
+                    {{ ticketDetail.status }}
+                </span>
+                <span>{{ ticketDetail.bookingDate }}</span>
+            </div>
+        </div>
+
+        <!-- Chi tiết chuyến bay -->
+        <div class="flight-detail-block">
+            <div class="flight-main-info">
+
+                <!-- QR Code -->
+                <div class="qr-placeholder">
+                    <img [src]="'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' + ticketDetail.code"
+                        alt="QR Code">
+                </div>
+
+                <!-- Điểm đi -->
+                <div class="time-col">
+                    <div class="time">{{ ticketDetail.departure.split('-')[0].trim() }}</div>
+                    <div class="city">{{ ticketDetail.route.split('-')[0].trim() }}</div>
+                    <div class="date">{{ ticketDetail.departure.split('-')[1].trim() }}</div>
+                </div>
+
+                <!-- Duration -->
+                <div class="duration-col">
+                    <span class="duration-label">{{ calculateDuration(ticketDetail.departure, ticketDetail.arrival)
+                        }}</span>
+                </div>
+
+                <!-- Điểm đến -->
+                <div class="time-col arrival-time-route">
+                    <div class="time">{{ ticketDetail.arrival.split('-')[0].trim() }}</div>
+                    <div class="city">{{ ticketDetail.route.split('-')[1].trim() }}</div>
+                    <div class="date">{{ ticketDetail.arrival.split('-')[1].trim() }}</div>
+                </div>
+
+                <div class="seat-col">
+                    <div class="seat-label">Số ghế</div>
+                    <div class="seat-value">{{ ticketDetail.seat }}</div>
+                </div>
+
+            </div>
+
+            <!-- Nút hành động -->
+            <div class="flight-actions">
+                <button class="link-action" (click)="showPromo()">Khuyến mãi</button>
+                <button class="link-action" (click)="showBenefits()">Lợi ích đi kèm</button>
+
+                <button class="btn-swap" (click)="handleSwap()">Đổi vé</button>
+                <button class="btn-cancel" (click)="handleCancel()">Hủy vé</button>
+            </div>
+
+        </div>
+
+        <button class="home-btn" (click)="goBack()">Quay lại</button>
+
+    </div>
+
+    <div *ngIf="!ticketDetail" class="not-found">
+        <p>Không tìm thấy thông tin vé.</p>
+    </div>
+
+    <!-- Modal xác nhận hủy/đổi -->
+    <div class="modal-backdrop" *ngIf="showModal">
+        <div class="modal-box">
+            <p>{{ modalMessage }}</p>
+            <div class="modal-actions">
+                <button class="btn-confirm" (click)="confirmModal()">Xác nhận</button>
+                <button class="btn-cancel" (click)="cancelModal()">Hủy</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup phản hồi sau xác nhận -->
+    <div class="feedback-popup" *ngIf="showFeedback">
+        <p>{{ feedbackMessage }}</p>
+    </div>
+
+    <!-- Popup Khuyến mãi / Lợi ích -->
+    <div class="info-popup-backdrop" *ngIf="showInfoPopup">
+        <div class="info-popup-box">
+            <h4>{{ infoPopupTitle }}</h4>
+            <ul class="info-list">
+                <li *ngFor="let line of infoMessageLines">
+                    <i class="bi bi-check-circle-fill text-primary me-2"></i>{{ line }}
+                </li>
+            </ul>
+            <div class="info-popup-actions">
+                <button class="btn-ok" (click)="closeInfoPopup()">Đồng ý</button>
+            </div>
+        </div>
+    </div>
+
+</div>

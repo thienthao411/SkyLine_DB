@@ -1,0 +1,162 @@
+<app-header></app-header>
+
+<!-- Hero Section -->
+<section class="intro-hero">
+    <div class="hero-overlay"></div>
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="hero-title">SKYLINE</h1>
+            <h2 class="hero-subtitle">KẾT NỐI MỌI CHUYẾN BAY</h2>
+            <p class="hero-description">
+                Skyline là nền tảng đặt vé máy bay trực tuyến giúp hành khách dễ dàng tìm kiếm, 
+                so sánh và đặt vé máy bay với giá tốt nhất. Chúng tôi mang đến trải nghiệm đặt vé nhanh chóng, 
+                minh bạch và thuận tiện cho mọi chuyến bay trong nước và quốc tế.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Chuẩn bị Section -->
+<section class="preparation-section">
+    <div class="container">
+        <h2 class="section-title">
+            Chuẩn bị cho hành trình bay thuận lợi
+            <svg class="title-underline" width="355" height="20" viewBox="0 0 355 20" fill="none">
+                <path d="M2 15C90 5 180 2 353 8" stroke="#4A90E2" stroke-width="4" stroke-linecap="round"/>
+                <path d="M2 18C90 8 180 5 353 11" stroke="#4A90E2" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+            </svg>
+        </h2>
+
+        <div class="features-grid">
+            <!-- Feature 1 -->
+            <div class="feature-card">
+                <div class="feature-content">
+                    <h3 class="feature-title">Đặt vé dễ dàng<br>Nhanh chóng & Tiện lợi</h3>
+                    <p class="feature-description">
+                        Tại Skyline, người dùng có thể tra cứu hàng trăm chuyến bay chỉ với vài thao tác. 
+                        Chúng tôi tối ưu giao diện, giảm số bước đặt vé và đảm bảo mọi thông tin đều rõ ràng, trực quan.
+                    </p>
+                </div>
+                <div class="feature-image-wrapper circle">
+                    <img src="assets/img/intro/Ellipse1.png" alt="Đặt vé dễ dàng" class="feature-image">
+                </div>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="feature-card reverse">
+                <div class="feature-image-wrapper circle">
+                    <img src="assets/img/intro/Ellipse2.png" alt="Giá vé minh bạch" class="feature-image">
+                </div>
+                <div class="feature-content">
+                    <h3 class="feature-title">Giá vé minh bạch<br>Không phí ẩn</h3>
+                    <p class="feature-description">
+                        Skyline cam kết hiển thị đúng giá, đúng thuế, đúng phí. 
+                        Mọi chi phí đều được liệt kê rõ ràng giúp khách hàng an tâm khi thanh toán và lựa chọn chuyến bay phù hợp nhất.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="feature-card">
+                <div class="feature-content">
+                    <h3 class="feature-title">Hỗ trợ 24/7<br>Luôn đồng hành cùng bạn</h3>
+                    <p class="feature-description">
+                        Đội ngũ hỗ trợ của Skyline sẵn sàng tư vấn mọi lúc, giải đáp vấn đề và hành lý, thay đổi chuyến bay và các dịch vụ liên quan.
+                    </p>
+                </div>
+                <div class="feature-image-wrapper circle">
+                    <img src="assets/img/intro/Ellipse3.png" alt="Hỗ trợ 24/7" class="feature-image">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Đội ngũ Skyline Section -->
+<section class="team-section">
+    <div class="container">
+        <h2 class="section-title center">
+            Đội ngũ Skyline
+            <svg class="title-underline" width="355" height="20" viewBox="0 0 355 20" fill="none">
+                <path d="M2 15C90 5 180 2 353 8" stroke="#4A90E2" stroke-width="4" stroke-linecap="round"/>
+                <path d="M2 18C90 8 180 5 353 11" stroke="#4A90E2" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+            </svg>
+        </h2>
+
+        <div class="team-carousel">
+            <button class="carousel-btn prev" (click)="prevSlide()" [disabled]="featuredIndex === 0">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </button>
+
+            <div class="team-grid">
+                <div class="team-member" *ngFor="let member of teamMembers; let i = index" 
+                     [class.featured]="isFeatured(i)">
+                    <div class="member-image-wrapper">
+                        <img [src]="member.image" [alt]="member.name" class="member-image">
+                    </div>
+                    <div class="member-name">{{ member.name }}</div>
+                </div>
+            </div>
+
+            <button class="carousel-btn next" (click)="nextSlide()" [disabled]="featuredIndex === teamMembers.length - 1">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18l6-6-6-6"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Skyline Section -->
+<section class="why-section">
+    <div class="container">
+        <h2 class="section-title center">Vì sao nên chọn Skyline?</h2>
+
+        <div class="why-grid">
+            <div class="why-card">
+                <div class="why-icon">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#4A90E2" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                </div>
+                <h3 class="why-title">Nội dung & giá vé đáng tin cậy</h3>
+                <p class="why-description">
+                    Giá vé minh bạch, cập nhật theo thời gian thực từ các hãng bay trong nước và quốc tế.
+                </p>
+            </div>
+
+            <div class="why-card">
+                <div class="why-icon">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#4A90E2" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                </div>
+                <h3 class="why-title">Công cụ quản lý hành trình thông minh</h3>
+                <p class="why-description">
+                    Theo dõi đặt chỗ, hành lý, thay đổi chuyến bay và thông báo tự động – all in one.
+                </p>
+            </div>
+
+            <div class="why-card">
+                <div class="why-icon">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#4A90E2" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                </div>
+                <h3 class="why-title">Đội ngũ hỗ trợ tận tâm</h3>
+                <p class="why-description">
+                    Skyline cam kết đồng hành, trung gian và sẵn sàng hỗ trợ mọi chuyến bay, giúp bạn an tâm tối đa.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<app-footer></app-footer>
