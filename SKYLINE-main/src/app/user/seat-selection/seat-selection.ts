@@ -1,34 +1,27 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService, UserWithoutPassword } from '../services/auth.service';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { BookingService } from '../services/booking.service';
+import { forkJoin } from 'rxjs';
+import { BookingApiService, Flight } from '../services/booking-api.service';
 
-type Cabin = 'Economy' | 'Premium Economy' | 'Business';
-export interface Flight {
+type SeatKind = 'economy' | 'business';
+
+interface SeatLayoutItem {
   id: string;
-  airline: string;
-  flightNo: string;
-  from: string;
-  to: string;
-  date: string;
-  departTime: string;
-  arriveTime: string;
-  durationMin: number;
-  price: number;
-  currency: 'VND' | 'USD';
-  seatsLeft: number;
-  cabin: Cabin;
-  details?: any;
+  label: string;
+  seatType: SeatKind;
+  cssClass: 'seat-economy' | 'seat-business';
+  top: number;
+  left: string;
 }
 
 @Component({
   selector: 'app-seat-selection',
   standalone: true,
   imports: [
-    CommonModule,
-    HttpClientModule
+    CommonModule
   ],
   templateUrl: './seat-selection.html',
   styleUrls: ['./seat-selection.css']
@@ -40,29 +33,18 @@ export class SeatSelection implements OnInit {
 
   currentUser: UserWithoutPassword | null = null;
   selectedFlightId: string | null = null;
+  occupiedSeats = signal<string[]>([]);
+  seats: SeatLayoutItem[] = this.buildSeatLayout();
 
   selectedFlight = signal<Flight | null>(null);
   isLoading = signal(true);
-
-  chooseSeat(selectedSeat: string, seatType: string) {
-    if (!this.selectedFlight()) {
-      console.error('Chưa có chuyến bay để chọn ghế!');
-      return;
-    }
-  
-    this.bookingService.setData('flight', this.selectedFlight());
-    this.bookingService.setData('seat', selectedSeat);
-    this.bookingService.setData('seatType', seatType);
-  
-    this.router.navigate(['/confirmation']);
-  }
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
     private authService: AuthService,
-    private http: HttpClient,
     private bookingService: BookingService,
+    private bookingApiService: BookingApiService,
   ) { }
 
   ngOnInit(): void {
@@ -71,18 +53,18 @@ export class SeatSelection implements OnInit {
     this.selectedFlightId = this.route.snapshot.paramMap.get('flightId');
 
     if (this.selectedFlightId) {
-      console.log('Đang chọn ghế cho chuyến bay:', this.selectedFlightId);
-
-      this.http.get('assets/data/flight-search-sampledata.json').subscribe({
-        next: (raw: any) => {
-          const all = this.normalizeFlights(raw);
-          const f = all.find(x => String(x.id) === String(this.selectedFlightId)) ?? null;
-          this.selectedFlight.set(f);
+      forkJoin({
+        flight: this.bookingApiService.getFlightById(this.selectedFlightId),
+        occupiedSeats: this.bookingApiService.getOccupiedSeats(this.selectedFlightId)
+      }).subscribe({
+        next: ({ flight, occupiedSeats }) => {
+          this.selectedFlight.set(flight);
+          this.occupiedSeats.set(occupiedSeats);
+          this.bookingService.setData('flight', flight);
           this.isLoading.set(false);
-          if (!f) console.error('Không tìm thấy chuyến bay!');
         },
         error: (err) => {
-          console.error('Lỗi tải dữ liệu chuyến bay:', err);
+          console.error('Lỗi tải dữ liệu ghế/chuyến bay:', err);
           this.isLoading.set(false);
         }
       });
@@ -93,6 +75,10 @@ export class SeatSelection implements OnInit {
   }
 
   selectSeat(seatId: string, seatType: string) {
+    if (this.isSeatOccupied(seatId)) {
+      return;
+    }
+
     console.log('Ghế đã chọn:', seatId, 'Loại:', seatType);
 
     if (this.selectedSeat === seatId) {
@@ -111,6 +97,8 @@ export class SeatSelection implements OnInit {
     }
 
     this.bookingService.setData('seat', this.selectedSeat);
+    this.bookingService.setData('selectedSeat', this.selectedSeat);
+    this.bookingService.setData('selectedSeatType', this.selectedSeatType);
 
     this.router.navigate(['/baggage-selection'], {
       queryParams: {
@@ -125,41 +113,48 @@ export class SeatSelection implements OnInit {
     this.router.navigate(['/chon-chuyen-bay', this.selectedFlightId]);
   }
 
-  private normalizeFlights(data: any): Flight[] {
-    const cur = data?.meta?.currency ?? 'VND';
-    const list = Array.isArray(data) ? data : (data?.flights ?? []);
-    const pick = (o: any, keys: string[], def: any = '') => {
-      for (const k of keys) {
-        try {
-          const v = k.includes('.') ? k.split('.').reduce((x: any, kk) => x?.[kk], o) : o?.[k];
-          if (v !== undefined && v !== null && v !== '') return v;
-        } catch { }
-      }
-      return def;
-    };
-    return (list as any[]).map(x => {
-      const departISO = String(pick(x, ['departTime', 'depart_time', 'dep_time', 'depart', 'departISO', 'depart.time']));
-      const arriveISO = String(pick(x, ['arriveTime', 'arrive_time', 'arr_time', 'arrive', 'arriveISO', 'arrive.time']));
-      const date = String(pick(x, ['date', 'flight_date'], departISO ? departISO.slice(0, 10) : ''));
-      const from = String(pick(x, ['from', 'origin', 'from_code', 'route.from'])).toUpperCase();
-      const to = String(pick(x, ['to', 'destination', 'to_code', 'route.to'])).toUpperCase();
-      const price = Number(pick(x, ['price', 'fare', 'amount', 'total', 'base_price'], 0));
-      const duration = Number(pick(x, ['durationMin', 'duration_min', 'duration', 'mins'], 0));
-      return {
-        id: String(pick(x, ['id'], `${pick(x, ['flightNo', 'number', 'flight_no'], 'XX000')}-${date}`)),
-        airline: String(pick(x, ['airline', 'carrier', 'airline_name'], 'Unknown')),
-        flightNo: String(pick(x, ['flightNo', 'number', 'flight_no'], 'XX000')),
-        from, to, date,
-        departTime: departISO,
-        arriveTime: arriveISO,
-        durationMin: duration,
-        price,
-        currency: (String(pick(x, ['currency'], cur)) as 'VND' | 'USD'),
-        seatsLeft: Number(pick(x, ['seatsLeft', 'seats_left', 'seats_remaining'], 0)),
-        cabin: (pick(x, ['cabin', 'class'], 'Economy') as Cabin),
-        details: x.details ?? x
-      };
+  isSeatOccupied(seatId: string): boolean {
+    return this.occupiedSeats().includes(seatId);
+  }
+
+  trackBySeat(_index: number, seat: SeatLayoutItem): string {
+    return seat.id;
+  }
+
+  private buildSeatLayout(): SeatLayoutItem[] {
+    const businessRows = [495, 558, 621, 684, 747];
+    const economyRows = [826, 876, 926, 976, 1026, 1114, 1164, 1214, 1264, 1314, 1402, 1452, 1502, 1552, 1602, 1690, 1740, 1790, 1840, 1890, 1978, 2028, 2078, 2128];
+    const seats: SeatLayoutItem[] = [];
+
+    businessRows.forEach((top, rowIndex) => {
+      const rowNumber = rowIndex + 1;
+      ['A', 'B', 'C'].forEach((column, columnIndex) => {
+        seats.push({
+          id: `${column}${String(rowNumber).padStart(2, '0')}`,
+          label: `${column}${String(rowNumber).padStart(2, '0')}`,
+          seatType: 'business',
+          cssClass: 'seat-business',
+          top,
+          left: ['38.5%', '48.5%', '58.5%'][columnIndex],
+        });
+      });
     });
+
+    economyRows.forEach((top, rowIndex) => {
+      const rowNumber = rowIndex + 6;
+      ['A', 'B', 'C', 'D'].forEach((column, columnIndex) => {
+        seats.push({
+          id: `${column}${String(rowNumber).padStart(2, '0')}`,
+          label: `${column}${String(rowNumber).padStart(2, '0')}`,
+          seatType: 'economy',
+          cssClass: 'seat-economy',
+          top,
+          left: ['38.5%', '44.5%', '53.5%', '59.5%'][columnIndex],
+        });
+      });
+    });
+
+    return seats;
   }
 
   timeHM(iso?: string) {
@@ -177,11 +172,5 @@ export class SeatSelection implements OnInit {
       return `${dd} Thg ${mm}`;
     } catch { return ''; }
   }
-
-chooseFlight(flight: any, selectedSeat: string) {
-  this.bookingService.setData('flight', flight);
-  this.bookingService.setData('seat', selectedSeat);
-  this.router.navigate(['/confirmation']);
-}
 
 }

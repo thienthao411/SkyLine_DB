@@ -182,14 +182,14 @@
 
         <div class="payment-alert" *ngIf="showPaymentAlert()">
           <div class="payment-alert-box">
-            <p>Vui lòng nhập đầy đủ thông tin địa chỉ thanh toán.</p>
+            <p>{{ paymentAlertMessage() }}</p>
             <button (click)="closeAlert()">Đóng</button>
           </div>
         </div>
 
         <div class="confirm-btn-wrapper">
-          <button class="btn-primary" (click)="confirmPayment(paymentForm)">
-            Xác nhận và thanh toán
+          <button class="btn-primary" [disabled]="isSubmitting()" (click)="confirmPayment(paymentForm)">
+            {{ isSubmitting() ? 'Đang xử lý...' : 'Xác nhận và thanh toán' }}
           </button>
         </div>
       </div>

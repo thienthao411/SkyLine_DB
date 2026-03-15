@@ -3,26 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
 import { BookingService } from '../services/booking.service';
+import { BookingApiService, BookingRecord, Flight } from '../services/booking-api.service';
 
 const TAX_RATE = 0.1;
-
-type Cabin = 'Economy' | 'Premium Economy' | 'Business';
-export interface Flight {
-  id: string;
-  airline: string;
-  flightNo: string;
-  from: string;
-  to: string;
-  date: string;
-  departTime: string;
-  arriveTime: string;
-  durationMin: number;
-  price: number;
-  currency: 'VND' | 'USD';
-  seatsLeft: number;
-  cabin: Cabin;
-  details?: any;
-}
 
 @Component({
   selector: 'app-confirmation',
@@ -33,6 +16,7 @@ export interface Flight {
 })
 export class Confirmation {
   private bookingService = inject(BookingService);
+  private bookingApiService = inject(BookingApiService);
   private router = inject(Router);
 
   isLoading = signal(true);
@@ -54,6 +38,8 @@ export class Confirmation {
   showPaymentAlert = signal(false);
   couponApplied = signal(false);
   showCouponAlert = signal<{ show: boolean; message: string }>({ show: false, message: '' });
+  paymentAlertMessage = signal('Vui lòng nhập đầy đủ thông tin địa chỉ thanh toán.');
+  isSubmitting = signal(false);
 
   @ViewChild('cardNameInput') cardNameInput!: ElementRef<HTMLInputElement>;
 
@@ -94,22 +80,54 @@ export class Confirmation {
   getTaxes() { return this.taxesAndFees(); }
 
   confirmPayment(form: NgForm) {
-    if (!form.valid) { this.showPaymentAlert.set(true); return; }
+    if (!form.valid) {
+      this.paymentAlertMessage.set('Vui lòng nhập đầy đủ thông tin thanh toán.');
+      this.showPaymentAlert.set(true);
+      return;
+    }
 
-    this.bookingService.setData('payment', {
+    const passengerInfo = this.bookingService.getData('passengerInfo');
+    if (!this.flight() || !this.seat() || !passengerInfo) {
+      this.paymentAlertMessage.set('Thiếu dữ liệu đặt vé. Vui lòng quay lại bước trước.');
+      this.showPaymentAlert.set(true);
+      return;
+    }
+
+    const payment = {
       method: this.paymentMethod(),
       details: form.value
+    };
+
+    const bookingDate = new Date().toISOString();
+    this.isSubmitting.set(true);
+
+    this.bookingApiService.createBooking({
+      flightId: this.flight()!.id,
+      flight: this.flight()!,
+      passengerInfo,
+      seat: this.seat(),
+      seatType: this.seatType(),
+      baggageOption: this.bookingService.getData('baggageOption'),
+      payment,
+      totalAmount: this.totalPrice(),
+      bookingDate
+    }).subscribe({
+      next: (booking: BookingRecord) => {
+        this.bookingService.setData('payment', payment);
+        this.bookingService.setData('totalAmount', booking.totalAmount);
+        this.bookingService.setData('bookingDate', booking.bookingDate);
+        this.bookingService.setData('ticketCode', booking.ticketCode);
+        this.bookingService.setData('bookingSnapshot', booking);
+        this.isSubmitting.set(false);
+        this.router.navigate(['/checkout']);
+      },
+      error: (error: any) => {
+        const message = error?.error?.message ?? 'Không thể tạo booking trên backend. Vui lòng thử lại.';
+        this.paymentAlertMessage.set(message);
+        this.showPaymentAlert.set(true);
+        this.isSubmitting.set(false);
+      }
     });
-
-    this.bookingService.setData('totalAmount', this.totalPrice());
-    this.bookingService.setData('bookingDate', new Date().toISOString());
-
-    const flightNo = this.flight()?.flightNo ?? 'BK';
-    const randomCode = Date.now().toString().slice(-6);
-    const tempTicketCode = `${flightNo}-${randomCode}`;
-    this.bookingService.setData('ticketCode', tempTicketCode);
-
-    this.router.navigate(['/checkout']);
   }
 
   closeAlert() { this.showPaymentAlert.set(false); }

@@ -7,6 +7,7 @@ import { FooterComponent } from '../shared/footer/footer';
 import localeVi from '@angular/common/locales/vi';
 
 import { BookingService } from '../services/booking.service';
+import { BookingApiService, BookingRecord } from '../services/booking-api.service';
 
 registerLocaleData(localeVi, 'vi');
 
@@ -34,7 +35,10 @@ export class Checkout implements OnInit {
   flightDetails: any = null;
   seatDetails: string = '';
 
-  constructor(private bookingService: BookingService) {
+  constructor(
+    private bookingService: BookingService,
+    private bookingApiService: BookingApiService
+  ) {
 
   }
 
@@ -45,37 +49,45 @@ export class Checkout implements OnInit {
   fetchTicketData(): void {
     this.isLoading = true;
 
-    const passenger = this.bookingService.getData('passengerInfo');
-    const amount = this.bookingService.getData('totalAmount');
     const code = this.bookingService.getData('ticketCode');
-    const dateStr = this.bookingService.getData('bookingDate');
-
-    const flight = this.bookingService.getData('selectedFlight');
-    const seat = this.bookingService.getData('selectedSeat');
-
-    if (passenger && amount && code && dateStr && flight && seat) {
-
-      const bookingDateObj = new Date(dateStr);
-      this.paymentDeadline = new Date(bookingDateObj.getTime() + 15 * 60 * 1000);
-
-      this.ticketInfo = {
-        name: passenger.fullName,
-        phone: passenger.phoneNumber,
-        bookingDate: bookingDateObj,
-        email: passenger.email
-      };
-
-      this.totalAmount = amount;
-      this.qrData = code;
-
-      this.flightDetails = flight;
-      this.seatDetails = seat;
-
+    if (!code) {
+      console.error('Không tìm thấy mã đặt vé để tải checkout từ backend.');
       this.isLoading = false;
-    } else {
-      console.error('Không tìm thấy thông tin đặt vé đầy đủ từ service.');
-      this.isLoading = false;
+      return;
     }
+
+    this.bookingApiService.getBooking(code).subscribe({
+      next: (booking: BookingRecord) => {
+        this.populateTicketData(booking);
+        this.bookingService.setData('bookingSnapshot', booking);
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Không thể tải booking từ backend:', error);
+        const fallbackBooking = this.bookingService.getData('bookingSnapshot');
+        if (fallbackBooking) {
+          this.populateTicketData(fallbackBooking);
+        }
+        this.isLoading = false;
+      }
+    });
+  }
+
+  private populateTicketData(booking: BookingRecord): void {
+    const bookingDateObj = new Date(booking.bookingDate);
+    this.paymentDeadline = new Date(bookingDateObj.getTime() + 15 * 60 * 1000);
+
+    this.ticketInfo = {
+      name: booking.passengerInfo?.['fullName'],
+      phone: booking.passengerInfo?.['phoneNumber'],
+      bookingDate: bookingDateObj,
+      email: booking.passengerInfo?.['email']
+    };
+
+    this.totalAmount = booking.totalAmount;
+    this.qrData = booking.ticketCode;
+    this.flightDetails = booking.flight;
+    this.seatDetails = booking.seat;
   }
 
   timeHM(iso?: string) {
