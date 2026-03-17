@@ -1,12 +1,11 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Location } from '@angular/common';
 import { HeaderComponent } from '../shared/header/header';
 import { FooterComponent } from '../shared/footer/footer';
 export { FlightSelectionComponent as FlightSelection } from './flight-selection';
 import { BookingService } from '../services/booking.service';
+import { BookingApiService } from '../services/booking-api.service';
 
 type Cabin = 'Economy' | 'Premium Economy' | 'Business';
 
@@ -27,43 +26,6 @@ export interface Flight {
   details?: any;
 }
 
-function normalizeFlights(data: any): Flight[] {
-  const cur = data?.meta?.currency ?? 'VND';
-  const list = Array.isArray(data) ? data : (data?.flights ?? []);
-  const pick = (o: any, keys: string[], def: any = '') => {
-    for (const k of keys) {
-      try {
-        const v = k.includes('.') ? k.split('.').reduce((x: any, kk) => x?.[kk], o) : o?.[k];
-        if (v !== undefined && v !== null && v !== '') return v;
-      } catch { }
-    }
-    return def;
-  };
-  return (list as any[]).map(x => {
-    const departISO = String(pick(x, ['departTime', 'depart_time', 'dep_time', 'depart', 'departISO', 'depart.time']));
-    const arriveISO = String(pick(x, ['arriveTime', 'arrive_time', 'arr_time', 'arrive', 'arriveISO', 'arrive.time']));
-    const date = String(pick(x, ['date', 'flight_date'], departISO ? departISO.slice(0, 10) : ''));
-    const from = String(pick(x, ['from', 'origin', 'from_code', 'route.from'])).toUpperCase();
-    const to = String(pick(x, ['to', 'destination', 'to_code', 'route.to'])).toUpperCase();
-    const price = Number(pick(x, ['price', 'fare', 'amount', 'total', 'base_price'], 0));
-    const duration = Number(pick(x, ['durationMin', 'duration_min', 'duration', 'mins'], 0));
-    return {
-      id: String(pick(x, ['id'], `${pick(x, ['flightNo', 'number', 'flight_no'], 'XX000')}-${date}`)),
-      airline: String(pick(x, ['airline', 'carrier', 'airline_name'], 'Unknown')),
-      flightNo: String(pick(x, ['flightNo', 'number', 'flight_no'], 'XX000')),
-      from, to, date,
-      departTime: departISO,
-      arriveTime: arriveISO,
-      durationMin: duration,
-      price,
-      currency: (String(pick(x, ['currency'], cur)) as 'VND' | 'USD'),
-      seatsLeft: Number(pick(x, ['seatsLeft', 'seats_left', 'seats_remaining'], 0)),
-      cabin: (pick(x, ['cabin', 'class'], 'Economy') as Cabin),
-      details: x.details ?? x
-    };
-  });
-}
-
 @Component({
   selector: 'app-flight-selection',
   standalone: true,
@@ -72,11 +34,10 @@ function normalizeFlights(data: any): Flight[] {
   styleUrls: ['./flight-selection.css']
 })
 export class FlightSelectionComponent {
-  private http = inject(HttpClient);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private location = inject(Location);
   private bookingService = inject(BookingService);
+  private bookingApiService = inject(BookingApiService);
 
   isLoading = signal(true);
   loadError = signal<string | null>(null);
@@ -87,14 +48,12 @@ export class FlightSelectionComponent {
   constructor() {
     console.log('Flight chọn:', this.flight());
     const id = this.route.snapshot.paramMap.get('id')!;
-    this.http.get('assets/data/flight-search-sampledata.json').subscribe({
-      next: raw => {
-        const all = normalizeFlights(raw);
-        const f = all.find(x => String(x.id) === String(id)) ?? null;
-        this.flight.set(f);
-        this.bookingService.setData('flight', this.flight());
+    this.bookingApiService.getFlightById(id).subscribe({
+      next: (flight) => {
+        this.flight.set(flight as Flight);
+        this.bookingService.setData('flight', flight);
         this.isLoading.set(false);
-        if (!f) this.loadError.set('Không tìm thấy chuyến bay.');
+        if (!flight) this.loadError.set('Không tìm thấy chuyến bay.');
       },
       error: () => { this.isLoading.set(false); this.loadError.set('Lỗi tải dữ liệu.'); }
     });

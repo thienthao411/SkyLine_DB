@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { forkJoin, map, Observable } from 'rxjs';
 import { HeaderComponent } from '../shared/header/header';
 import { FooterComponent } from '../shared/footer/footer';
 
@@ -81,6 +82,8 @@ function normalizeFlights(data: RawJson): Flight[] {
 export class FlightSearchComponent {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private readonly apiBaseUrl = 'http://localhost:5000/api';
+  private legacyFlights = signal<Flight[]>([]);
 
   constructor(private http: HttpClient) {
     const st = (history.state as any)?.search;
@@ -161,20 +164,19 @@ export class FlightSearchComponent {
   }
 
   fetchData(autoSearchAfterLoad = false) {
-    this.isLoading.set(true);
-    this.loadError.set(null);
     this.http.get('assets/data/flight-search-sampledata.json').subscribe({
       next: raw => {
-        this.allFlights.set(normalizeFlights(raw));
-        this.isLoading.set(false);
+        this.legacyFlights.set(normalizeFlights(raw));
         if (autoSearchAfterLoad && this.from() && this.to() && this.departDate()) {
           this.search(false);
         }
       },
       error: err => {
-        console.error(err);
-        this.loadError.set('Lỗi tải dữ liệu.');
-        this.isLoading.set(false);
+        console.warn('Khong tai duoc legacy flight data:', err);
+        this.legacyFlights.set([]);
+        if (autoSearchAfterLoad && this.from() && this.to() && this.departDate()) {
+          this.search(false);
+        }
       }
     });
   }
@@ -209,35 +211,10 @@ export class FlightSearchComponent {
       alert('Ngày khứ hồi phải ≥ Ngày khởi hành.'); return;
     }
 
-    const f = this.from().toUpperCase(), t = this.to().toUpperCase(), d = this.departDate();
-    const hasExactOut = this.allFlights().some(x => x.from === f && x.to === t && x.date === d);
-    if (!hasExactOut) {
-      const nearest = this.nearestDateForRoute(f, t, d);
-      if (nearest) { this.departDate.set(nearest); this.autoDateMsg.set(`Không có chuyến ngày ${d}. Đã tự chọn ngày gần nhất: ${nearest}.`); }
-    }
-
     if (this.tripType() === 'round') {
       if (!this.rtFrom()) this.rtFrom.set(this.to());
       if (!this.rtTo()) this.rtTo.set(this.from());
-      const rf = (this.rtFrom() || this.to()).toUpperCase();
-      const rt = (this.rtTo() || this.from()).toUpperCase();
-      const rd = this.returnDate();
-      if (rd) {
-        const hasExactBack = this.allFlights().some(x => x.from === rf && x.to === rt && x.date === rd);
-        if (!hasExactBack) {
-          const nearestBack = this.nearestDateForRoute(rf, rt, rd);
-          if (nearestBack) {
-            this.returnDate.set(nearestBack);
-            const prev = this.autoDateMsg() ? this.autoDateMsg() + ' ' : '';
-            this.autoDateMsg.set(prev + `Chặng về: không có chuyến ngày ${rd}. Đã tự chọn ngày gần nhất: ${nearestBack}.`);
-          }
-        }
-      }
     }
-
-    this.hasSearched.set(true);
-    this.listLimitOut.set(3);
-    this.listLimitBack.set(3);
 
     if (updateUrl) {
       this.router.navigate([], {
@@ -251,6 +228,278 @@ export class FlightSearchComponent {
         queryParamsHandling: 'merge'
       });
     }
+
+    this.isLoading.set(true);
+    this.loadError.set(null);
+
+    const outbound$ = this.searchFlightsApi(this.from(), this.to(), this.departDate(), this.cabinOut());
+
+    const returnDate = this.returnDate();
+    const hasRoundTripReturn = this.tripType() === 'round' && !!returnDate;
+
+    if (hasRoundTripReturn) {
+      forkJoin({
+        outbound: outbound$,
+        inbound: this.searchFlightsApi(
+          this.rtFrom() || this.to(),
+          this.rtTo() || this.from(),
+          returnDate,
+          this.cabinBack()
+        )
+      }).subscribe({
+        next: ({ outbound, inbound }) => {
+          this.allFlights.set([...outbound, ...inbound]);
+          this.hasSearched.set(true);
+          this.listLimitOut.set(3);
+          this.listLimitBack.set(3);
+          this.isLoading.set(false);
+        },
+        error: err => {
+          console.error(err);
+          this.allFlights.set([]);
+          this.hasSearched.set(true);
+          this.listLimitOut.set(3);
+          this.listLimitBack.set(3);
+          this.loadError.set('Lỗi tải dữ liệu.');
+          this.isLoading.set(false);
+        }
+      });
+      return;
+    }
+
+    outbound$.subscribe({
+      next: (flights) => {
+        this.allFlights.set(flights);
+        this.hasSearched.set(true);
+        this.listLimitOut.set(3);
+        this.listLimitBack.set(3);
+        this.isLoading.set(false);
+      },
+      error: err => {
+        console.error(err);
+        this.allFlights.set([]);
+        this.hasSearched.set(true);
+        this.listLimitOut.set(3);
+        this.listLimitBack.set(3);
+        this.loadError.set('Lỗi tải dữ liệu.');
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  private searchFlightsApi(
+    from: string,
+    to: string,
+    date: string,
+    requestedCabin: Flight['cabin'] | ''
+  ): Observable<Flight[]> {
+    return this.http.get<any[]>(`${this.apiBaseUrl}/flights/search`, {
+      params: {
+        from: String(from || '').trim().toUpperCase(),
+        to: String(to || '').trim().toUpperCase(),
+        date: String(date || '').trim()
+      }
+    }).pipe(
+      map((rows) => (Array.isArray(rows) ? rows : []).map((row) => this.mapApiFlight(row, requestedCabin)))
+    );
+  }
+
+  private mapApiFlight(raw: any, requestedCabin: Flight['cabin'] | ''): Flight {
+    const legacy = this.findLegacyFlight(raw, requestedCabin);
+    const cabin = legacy?.cabin ?? this.pickCabin(raw, requestedCabin);
+    const airlineCode = String(raw?.airlineCode || legacy?.details?.airline_code || this.getInitials(raw?.airline || '')).toUpperCase();
+    const from = String(raw?.from || '').trim().toUpperCase();
+    const to = String(raw?.to || '').trim().toUpperCase();
+    const date = String(raw?.date || '').trim();
+    const flightNo = String(raw?.flightNo || legacy?.flightNo || 'XX000');
+    const departTime = this.normalizeDateTime(date, raw?.departTime || legacy?.departTime || '');
+    const arriveTime = this.normalizeDateTime(date, raw?.arriveTime || legacy?.arriveTime || '');
+    const price = this.pickPrice(raw, cabin, legacy?.price);
+    const seatsLeft = this.pickSeatsLeft(raw, cabin, legacy?.seatsLeft);
+    const details = this.mapFlightDetails(raw, legacy, {
+      airlineCode,
+      from,
+      to,
+      date,
+      flightNo,
+      departTime,
+      arriveTime
+    });
+
+    return {
+      id: legacy?.id ?? String(raw?._id || this.buildLegacyCompatibleId(airlineCode, flightNo, from, to, date, cabin)),
+      airline: String(raw?.airline || legacy?.airline || 'Unknown'),
+      flightNo,
+      from,
+      to,
+      date,
+      departTime,
+      arriveTime,
+      durationMin: Number(raw?.durationMin ?? legacy?.durationMin ?? 0),
+      price,
+      currency: (String(raw?.currency || legacy?.currency || 'VND') as 'VND' | 'USD'),
+      seatsLeft,
+      cabin,
+      details
+    };
+  }
+
+  private mapFlightDetails(
+    raw: any,
+    legacy: Flight | null,
+    ctx: {
+      airlineCode: string;
+      from: string;
+      to: string;
+      date: string;
+      flightNo: string;
+      departTime: string;
+      arriveTime: string;
+    }
+  ) {
+    const rawDetails = raw?.details ?? {};
+    const legacyDetails = legacy?.details ?? {};
+    const rawSegments = Array.isArray(rawDetails?.itinerary?.segments) ? rawDetails.itinerary.segments : [];
+
+    const segments = rawSegments.length
+      ? rawSegments.map((segment: any) => ({
+          origin: String(segment?.origin || segment?.from || ctx.from).toUpperCase(),
+          destination: String(segment?.destination || segment?.to || ctx.to).toUpperCase(),
+          depart: this.normalizeDateTime(ctx.date, segment?.depart || segment?.departTime || ctx.departTime),
+          arrive: this.normalizeDateTime(ctx.date, segment?.arrive || segment?.arriveTime || ctx.arriveTime),
+          aircraft: segment?.aircraft || null,
+          flightNo: String(segment?.flightNo || ctx.flightNo),
+        }))
+      : (legacyDetails?.itinerary?.segments ?? [
+          {
+            origin: ctx.from,
+            destination: ctx.to,
+            depart: ctx.departTime,
+            arrive: ctx.arriveTime,
+            aircraft: null,
+            flightNo: ctx.flightNo,
+          }
+        ]);
+
+    const fareOptions = Array.isArray(rawDetails?.fare_options)
+      ? rawDetails.fare_options.map((option: any) => ({
+          type: option?.type || this.buildFareType(option?.class, ctx.flightNo),
+          baggage: option?.baggage ?? null,
+          change_fee: option?.change_fee ?? null,
+          refundable: Boolean(option?.refundable),
+          price: Number(option?.price ?? 0),
+        }))
+      : (legacyDetails?.fare_options ?? []);
+
+    return {
+      ...legacyDetails,
+      airline_code: ctx.airlineCode,
+      itinerary: { segments },
+      perks: Array.isArray(rawDetails?.perks) ? rawDetails.perks : (legacyDetails?.perks ?? []),
+      fare_options: fareOptions,
+      fromAirportName: raw?.fromAirportName || rawDetails?.fromAirportName || legacyDetails?.fromAirportName || null,
+      toAirportName: raw?.toAirportName || rawDetails?.toAirportName || legacyDetails?.toAirportName || null,
+      stops: raw?.stops ?? rawDetails?.stops ?? legacyDetails?.stops ?? 0,
+      stopsLabel: raw?.stopsLabel || rawDetails?.stopsLabel || legacyDetails?.stopsLabel || 'Bay thẳng',
+    };
+  }
+
+  private findLegacyFlight(raw: any, requestedCabin: Flight['cabin'] | ''): Flight | null {
+    const flightNo = String(raw?.flightNo || '').trim();
+    const from = String(raw?.from || '').trim().toUpperCase();
+    const to = String(raw?.to || '').trim().toUpperCase();
+    const date = String(raw?.date || '').trim();
+    const airlineCode = String(raw?.airlineCode || '').trim().toUpperCase();
+
+    const matches = this.legacyFlights().filter((flight) => {
+      const legacyCode = String(flight?.details?.airline_code || '').trim().toUpperCase();
+      const sameCode = !airlineCode || !legacyCode || legacyCode === airlineCode;
+      return sameCode
+        && flight.flightNo === flightNo
+        && flight.from === from
+        && flight.to === to
+        && flight.date === date;
+    });
+
+    if (!matches.length) return null;
+
+    const preferredCabins = [
+      requestedCabin,
+      'Economy',
+      'Premium Economy',
+      'Business'
+    ].filter(Boolean) as Flight['cabin'][];
+
+    for (const cabin of preferredCabins) {
+      const match = matches.find((flight) => flight.cabin === cabin);
+      if (match) return match;
+    }
+
+    return matches[0];
+  }
+
+  private pickCabin(raw: any, requestedCabin: Flight['cabin'] | ''): Flight['cabin'] {
+    if (requestedCabin) return requestedCabin;
+    if (raw?.priceEconomy != null) return 'Economy';
+    if (raw?.priceBusiness != null) return 'Business';
+    return 'Economy';
+  }
+
+  private pickPrice(raw: any, cabin: Flight['cabin'], fallback = 0): number {
+    if (cabin === 'Business') {
+      return Number(raw?.priceBusiness ?? raw?.priceEconomy ?? fallback ?? 0);
+    }
+
+    return Number(raw?.priceEconomy ?? raw?.priceBusiness ?? fallback ?? 0);
+  }
+
+  private pickSeatsLeft(raw: any, cabin: Flight['cabin'], fallback = 0): number {
+    if (cabin === 'Business') {
+      const max = Number(raw?.seatsBusinessMax ?? 0);
+      const booked = Number(raw?.seatsBookedBusiness ?? 0);
+      return max > 0 ? Math.max(0, max - booked) : Number(fallback ?? 0);
+    }
+
+    const max = Number(raw?.seatsEconomyMax ?? raw?.seatsMax ?? 0);
+    const booked = Number(raw?.seatsBookedEconomy ?? raw?.seatsBookedTotal ?? 0);
+    return max > 0 ? Math.max(0, max - booked) : Number(fallback ?? 0);
+  }
+
+  private buildLegacyCompatibleId(
+    airlineCode: string,
+    flightNo: string,
+    from: string,
+    to: string,
+    date: string,
+    cabin: Flight['cabin']
+  ): string {
+    const cabinCode = cabin === 'Business' ? 'BU' : cabin === 'Premium Economy' ? 'PR' : 'EC';
+    return `${airlineCode}-${flightNo}-${from}-${to}-${date}-${cabinCode}`;
+  }
+
+  private normalizeDateTime(date: string, value: string): string {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    if (raw.includes('T')) return raw;
+
+    if (/^\d{2}:\d{2}$/.test(raw)) {
+      return `${date}T${raw}:00+07:00`;
+    }
+
+    if (/^\d{2}:\d{2}:\d{2}$/.test(raw)) {
+      return `${date}T${raw}+07:00`;
+    }
+
+    return raw;
+  }
+
+  private buildFareType(fareClass: string, flightNo: string): string {
+    const cls = String(fareClass || '').trim().toLowerCase();
+    const code = String(flightNo || '').slice(0, 2).toUpperCase() || 'FL';
+
+    if (cls === 'business') return `${code} Business`;
+    if (cls === 'economy') return `${code} Economy`;
+    return `${code} Fare`;
   }
 
   private applyFiltersAndSort(arr: Flight[]) {
