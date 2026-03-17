@@ -34,6 +34,10 @@ export class UserApiService {
     return this.http.get<User[]>(this.apiUrl);
   }
 
+  getByEmail(email: string): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/email/${encodeURIComponent(email)}`);
+  }
+
   login(email: string, password: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/login`, { email, password });
   }

@@ -38,6 +38,12 @@ export interface AuthResponse {
   user?: UserWithoutPassword;
 }
 
+export interface AccountProvisionResult {
+  status: 'existing' | 'created';
+  user: UserWithoutPassword;
+  tempPassword?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -170,5 +176,61 @@ export class AuthService {
 
   validatePassword(password: string): boolean {
     return password.length >= 6;
+  }
+
+  async ensurePassengerAccount(name: string, email: string): Promise<AccountProvisionResult> {
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    if (!normalizedEmail) {
+      throw new Error('Email hành khách không hợp lệ.');
+    }
+
+    let existingUser: any = null;
+    try {
+      existingUser = await lastValueFrom(this.userApiService.getByEmail(normalizedEmail));
+    } catch (error: any) {
+      // 404 means user does not exist yet, proceed to create account.
+      if (error?.status !== 404) {
+        throw error;
+      }
+    }
+
+    if (existingUser) {
+      return {
+        status: 'existing',
+        user: this.toUserWithoutPassword(existingUser),
+      };
+    }
+
+    const tempPassword = this.generateTemporaryPassword();
+    const response = await lastValueFrom(
+      this.userApiService.register({
+        fullName: String(name || '').trim() || 'Khach hang SKYLINE',
+        email: normalizedEmail,
+        password: tempPassword,
+      })
+    );
+
+    if (!response?.success || !response?.user) {
+      throw new Error(response?.message || 'Không thể tạo tài khoản hành khách.');
+    }
+
+    return {
+      status: 'created',
+      user: this.toUserWithoutPassword(response.user),
+      tempPassword,
+    };
+  }
+
+  private toUserWithoutPassword(user: any): UserWithoutPassword {
+    return {
+      id: user?._id || user?.id || Date.now(),
+      name: user?.fullName || user?.name || 'Khach hang',
+      email: user?.email || '',
+      createdAt: user?.createdAt || new Date().toISOString(),
+    };
+  }
+
+  private generateTemporaryPassword(): string {
+    return `Sky${Math.random().toString(36).slice(2, 8)}!`;
   }
 }
