@@ -31,16 +31,16 @@
               <circle cx="11" cy="11" r="8" stroke-width="2"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65" stroke-width="2"></line>
             </svg>
-            <input type="text" placeholder="Tìm theo tên, email, SĐT..." [(ngModel)]="searchTerm" />
+            <input type="text" placeholder="Tìm theo tên, email, SĐT..." [(ngModel)]="searchTerm" (ngModelChange)="onFilterChange()" />
           </div>
           <div class="filter-wrap">
-            <select [(ngModel)]="selectedRank">
+            <select [(ngModel)]="selectedRank" (ngModelChange)="onFilterChange()">
               <option value="all">Tất cả Rank</option>
               <option *ngFor="let rank of uniqueRanks" [value]="rank">{{ rank }}</option>
             </select>
           </div>
           <div class="filter-wrap">
-            <select [(ngModel)]="selectedStatus">
+            <select [(ngModel)]="selectedStatus" (ngModelChange)="onFilterChange()">
               <option value="all">Tất cả Trạng thái</option>
               <option *ngFor="let status of uniqueStatuses" [value]="status">{{ status }}</option>
             </select>
@@ -84,15 +84,17 @@
                 </td>
                 <td>{{ user.currentRank }}</td>
                 <td>{{ user.points | number }}</td>
-                <td 
-  [ngClass]="{
-    'status-cell': true,
-    'active': user.status === 'active',
-    'inactive': user.status === 'inactive'
-  }"
->
-  {{ user.status }}
-</td>
+                <td>
+                  <span
+                    [ngClass]="{
+                      'status-pill': true,
+                      'active': user.status === 'active',
+                      'inactive': user.status === 'inactive'
+                    }"
+                  >
+                    {{ user.status }}
+                  </span>
+                </td>
                 <td>{{ user.phone }}</td>
                 <td class="actions">
                   <button title="Xem chi tiết" class="action-btn view" (click)="viewUser(user)">
@@ -175,15 +177,17 @@
           <div class="form-column">
             <div>
               <label>Ngày sinh</label>
-              <input [(ngModel)]="formUser.birthday" type="text" placeholder="Định dạng: DD/MM/YYYY" />
+              <input [(ngModel)]="formUser.birthday" type="date" />
             </div>
             <div>
               <label>Hạng thành viên (Rank)</label>
-              <input [(ngModel)]="formUser.currentRank" type="text" readonly class="read-only-field" />
+              <select [(ngModel)]="formUser.currentRank">
+                <option *ngFor="let rank of formRankOptions" [value]="rank">{{ rank }}</option>
+              </select>
             </div>
             <div>
               <label>Điểm tích lũy</label>
-              <input [(ngModel)]="formUser.points" type="number" readonly class="read-only-field" />
+              <input [(ngModel)]="formUser.points" type="number" min="0" step="1" />
             </div>
             <div>
               <label>Số căn cước/Hộ chiếu</label>
@@ -191,7 +195,7 @@
             </div>
             <div>
               <label>Ngày hết hạn giấy tờ</label>
-              <input [(ngModel)]="formUser.passportExpiry" type="text" placeholder="Định dạng: DD/MM/YYYY" />
+              <input [(ngModel)]="formUser.passportExpiry" type="date" />
             </div>
           </div>
         </div>
@@ -231,8 +235,8 @@
 
           <div class="detail-item"><label>Email</label><span>{{ userToView.email }}</span></div>
           <div class="detail-item"><label>Điện thoại</label><span>{{ userToView.phone }}</span></div>
-          <div class="detail-item"><label>Ngày sinh</label><span>{{ userToView.birthday }} ({{ userToView.gender
-              }})</span></div>
+              <div class="detail-item"><label>Ngày sinh</label><span>{{ formatDisplayDate(userToView.birthday) }}</span></div>
+              <div class="detail-item"><label>Giới tính</label><span>{{ userToView.gender || '(Chưa cập nhật)' }}</span></div>
           <div class="detail-item"><label>Quốc gia</label><span>{{ userToView.country }}</span></div>
 
           <div class="detail-item"><label>Hạng hiện tại</label><span>**{{ userToView.currentRank }}**</span></div>
@@ -245,7 +249,7 @@
           </div>
 
           <div class="detail-item"><label>Số căn cước/Hộ chiếu</label><span>{{ userToView.passport }}</span></div>
-          <div class="detail-item"><label>Ngày hết hạn</label><span>{{ userToView.passportExpiry }}</span></div>
+          <div class="detail-item"><label>Ngày hết hạn</label><span>{{ formatDisplayDate(userToView.passportExpiry) }}</span></div>
 
           <div class="detail-item full-width"><label>Trạng thái</label><span>{{ userToView.status || '(Chưa xác định)'
               }}</span>

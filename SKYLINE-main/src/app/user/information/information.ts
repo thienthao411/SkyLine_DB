@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
+import { User, UserApiService } from '../../services/user-api.service';
 
 @Component({
   selector: 'app-information',
@@ -14,6 +15,11 @@ import { AuthService } from '../services/auth.service';
 export class Information implements OnInit {
   user: any = null;
   isEditing = false;
+  showSavePopup = false;
+  savePopupType: 'success' | 'error' = 'success';
+  savePopupTitle = '';
+  savePopupMessage = '';
+  private popupTimer: ReturnType<typeof setTimeout> | null = null;
 
   // danh sách quốc gia gợi ý
   countries: string[] = [
@@ -27,7 +33,7 @@ export class Information implements OnInit {
     'Singapore'
   ];
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(private authService: AuthService, private userApi: UserApiService) {}
 
   ngOnInit(): void {
     // Kiểm tra xem user đã đăng nhập chưa
@@ -54,7 +60,7 @@ export class Information implements OnInit {
       const hasCompleteData = userData.phone && userData.birthday && userData.passport;
       
       if (hasCompleteData) {
-        this.user = userData;
+        this.user = this.applyDisplayDateFields(userData);
         console.log('✅ Loaded complete user data from localStorage:', this.user);
         console.log('📊 User data details:', {
           phone: this.user.phone,
@@ -82,17 +88,17 @@ export class Information implements OnInit {
   private loadUserDataFromAPI(email: string): void {
 
     console.log('🌐 Loading user data from API...');
-  
-    this.http.get<any>(`http://localhost:5000/api/users/email/${email}`)
+
+    this.userApi.getByEmail(email)
       .subscribe({
   
         next: (user) => {
   
           console.log('✅ Loaded user from MongoDB:', user);
   
-          this.user = user;
+          this.user = this.applyDisplayDateFields(user);
   
-          localStorage.setItem('fullUserData', JSON.stringify(user));
+          localStorage.setItem('fullUserData', JSON.stringify(this.user));
   
         },
   
@@ -111,45 +117,162 @@ export class Information implements OnInit {
   }
 
   onSave(): void {
-    this.isEditing = false;
-    
-    // Lưu vào fullUserData
-    localStorage.setItem('fullUserData', JSON.stringify(this.user));
-    
-    // Đồng bộ với users array trong localStorage (nếu có)
-    const usersJson = localStorage.getItem('users');
-    if (usersJson) {
-      const users = JSON.parse(usersJson);
-      const currentUser = this.authService.getCurrentUser();
-      
-      if (currentUser) {
-        const userIndex = users.findIndex((u: any) => u.email === currentUser.email);
-        if (userIndex !== -1) {
-          // Cập nhật thông tin user trong mảng
-          users[userIndex] = {
-            ...users[userIndex],
-            name: this.user.fullName,
-            phone: this.user.phone,
-            birthday: this.user.birthday,
-            gender: this.user.gender,
-            passport: this.user.passport,
-            passportExpiry: this.user.passportExpiry,
-            country: this.user.country,
-            address: this.user.address,
-            avatar: this.user.avatar
-          };
-          localStorage.setItem('users', JSON.stringify(users));
-          console.log('✅ Updated user in users array');
+    if (!this.user) {
+      this.showPopup('error', 'Không thể lưu', 'Không có dữ liệu người dùng để lưu.');
+      return;
+    }
+
+    const payload: User = {
+      ...this.user,
+      birthday: this.normalizeDateInput(this.user.birthday),
+      passportExpiry: this.normalizeDateInput(this.user.passportExpiry)
+    };
+
+    const updateById = (id: string) => {
+      this.userApi.update(id, payload).subscribe({
+        next: (updatedUser) => {
+          this.user = this.applyDisplayDateFields(updatedUser);
+          this.isEditing = false;
+          this.syncLocalUserStorage(this.user);
+          this.showPopup('success', 'Lưu thành công', 'Thông tin cá nhân đã được cập nhật.');
+        },
+        error: (err) => {
+          console.error('❌ Failed to update user:', err);
+          this.showPopup('error', 'Lưu thất bại', err.error?.error || 'Vui lòng kiểm tra lại dữ liệu.');
         }
+      });
+    };
+
+    if (this.user._id) {
+      updateById(this.user._id);
+      return;
+    }
+
+    this.userApi.getByEmail(this.user.email).subscribe({
+      next: (dbUser) => {
+        if (!dbUser?._id) {
+          this.showPopup('error', 'Không tìm thấy tài khoản', 'Không thể cập nhật thông tin người dùng này.');
+          return;
+        }
+        updateById(dbUser._id);
+      },
+      error: (err) => {
+        console.error('❌ Failed to find user by email:', err);
+        this.showPopup('error', 'Không thể lưu', 'Không tìm thấy tài khoản để lưu thông tin.');
+      }
+    });
+  }
+
+  closeSavePopup(): void {
+    this.showSavePopup = false;
+    if (this.popupTimer) {
+      clearTimeout(this.popupTimer);
+      this.popupTimer = null;
+    }
+  }
+
+  private showPopup(type: 'success' | 'error', title: string, message: string): void {
+    this.savePopupType = type;
+    this.savePopupTitle = title;
+    this.savePopupMessage = message;
+    this.showSavePopup = true;
+
+    if (this.popupTimer) {
+      clearTimeout(this.popupTimer);
+    }
+
+    this.popupTimer = setTimeout(() => {
+      this.showSavePopup = false;
+      this.popupTimer = null;
+    }, 2500);
+  }
+
+  private syncLocalUserStorage(updatedUser: User): void {
+    localStorage.setItem('fullUserData', JSON.stringify(updatedUser));
+
+    const currentUserJson = localStorage.getItem('currentUser');
+    if (currentUserJson) {
+      const currentUser = JSON.parse(currentUserJson);
+      currentUser.name = updatedUser.fullName;
+      currentUser.email = updatedUser.email;
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    }
+
+    const usersJson = localStorage.getItem('users');
+    if (!usersJson) return;
+
+    const users = JSON.parse(usersJson);
+    const index = users.findIndex((u: any) => u.email === updatedUser.email);
+    if (index !== -1) {
+      users[index] = {
+        ...users[index],
+        name: updatedUser.fullName,
+        phone: updatedUser.phone,
+        birthday: updatedUser.birthday,
+        gender: updatedUser.gender,
+        passport: updatedUser.passport,
+        passportExpiry: updatedUser.passportExpiry,
+        country: updatedUser.country,
+        address: updatedUser.address,
+        avatar: updatedUser.avatar
+      };
+      localStorage.setItem('users', JSON.stringify(users));
+    }
+  }
+
+  private normalizeDateInput(value: any): string {
+    if (!value) return '';
+    const raw = String(value).trim();
+
+    // ISO datetime => yyyy-mm-dd
+    if (/^\d{4}-\d{2}-\d{2}T/.test(raw)) {
+      return raw.slice(0, 10);
+    }
+
+    // Already ISO-like
+    if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw;
+
+    // Convert dd/mm/yyyy => yyyy-mm-dd
+    const parts = raw.split('/');
+    if (parts.length === 3) {
+      const [dd, mm, yyyy] = parts;
+      if (dd && mm && yyyy && yyyy.length === 4) {
+        return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
       }
     }
-    
-    alert('✅ Thông tin đã được lưu thành công!');
+
+    // Parse any Date-like string fallback
+    const parsed = new Date(raw);
+    if (!Number.isNaN(parsed.getTime())) {
+      const yyyy = parsed.getFullYear();
+      const mm = String(parsed.getMonth() + 1).padStart(2, '0');
+      const dd = String(parsed.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    return raw;
+  }
+
+  private formatDateOnlyForDisplay(value: any): string {
+    if (!value) return '';
+    const iso = this.normalizeDateInput(value);
+    if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return String(value);
+
+    const [yyyy, mm, dd] = iso.split('-');
+    return `${dd}/${mm}/${yyyy}`;
+  }
+
+  private applyDisplayDateFields(user: any): any {
+    return {
+      ...user,
+      birthday: this.formatDateOnlyForDisplay(user?.birthday),
+      passportExpiry: this.formatDateOnlyForDisplay(user?.passportExpiry)
+    };
   }
 
   // Debug method - có thể gọi từ console hoặc thêm nút tạm
   reloadUserData(): void {
-    console.log('🔄 Reloading user data from JSON file...');
+    console.log('🔄 Reloading user data from API...');
     const currentUser = this.authService.getCurrentUser();
     
     if (!currentUser) {
@@ -160,14 +283,10 @@ export class Information implements OnInit {
     
     console.log('🔍 Looking for user:', currentUser.email);
     
-    this.http.get<any[]>('assets/data/user_data.json').subscribe({
-      next: (users) => {
-        console.log('📦 Loaded', users.length, 'users from JSON');
-        
-        const foundUser = users.find(u => u.email.toLowerCase() === currentUser.email.toLowerCase());
-        
+    this.userApi.getByEmail(currentUser.email).subscribe({
+      next: (foundUser) => {
         if (foundUser) {
-          this.user = { ...foundUser };
+          this.user = this.applyDisplayDateFields(foundUser);
           localStorage.setItem('fullUserData', JSON.stringify(this.user));
           
           console.log('✅ Reloaded user data:', {
@@ -187,13 +306,13 @@ export class Information implements OnInit {
                 `Ngày sinh: ${this.user.birthday || 'Chưa có'}\n` +
                 `Passport: ${this.user.passport || 'Chưa có'}`);
         } else {
-          console.error('❌ User not found in JSON file');
+          console.error('❌ User not found in API');
           alert(`❌ Không tìm thấy thông tin cho email: ${currentUser.email}\n\nCó thể bạn đã đăng ký tài khoản mới.`);
         }
       },
       error: (err) => {
-        console.error('❌ Error loading JSON:', err);
-        alert('❌ Lỗi khi tải file JSON. Vui lòng kiểm tra console!');
+        console.error('❌ Error loading user from API:', err);
+        alert('❌ Lỗi khi tải dữ liệu từ API. Vui lòng kiểm tra console!');
       }
     });
   }

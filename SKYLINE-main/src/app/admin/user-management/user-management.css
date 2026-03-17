@@ -196,6 +196,7 @@
 .table-wrapper table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
     color: #375578;
 }
 
@@ -206,6 +207,34 @@
     text-align: center;
     vertical-align: middle; 
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.table-wrapper th:nth-child(1),
+.table-wrapper td:nth-child(1) {
+    width: 84px;
+}
+
+.table-wrapper th:nth-child(2),
+.table-wrapper td:nth-child(2) {
+    width: 250px;
+}
+
+.table-wrapper th:nth-child(3),
+.table-wrapper td:nth-child(3),
+.table-wrapper th:nth-child(4),
+.table-wrapper td:nth-child(4),
+.table-wrapper th:nth-child(5),
+.table-wrapper td:nth-child(5),
+.table-wrapper th:nth-child(6),
+.table-wrapper td:nth-child(6) {
+    width: 120px;
+}
+
+.table-wrapper th:nth-child(7),
+.table-wrapper td:nth-child(7) {
+    width: 150px;
 }
 
 .table-wrapper th {
@@ -251,39 +280,28 @@
 }
 
 /* 🟢 --- STATUS (ĐÃ FIX LỖI LỆCH TRÊN) --- 🟢 */
-.table-wrapper td:nth-child(5) { 
-    display: flex;
-    justify-content: center;
-    align-items: center; 
-    padding: 12px 15px; 
-    height: 100%;
-    margin-top: 15px;
-    white-space: nowrap;
-}
+
 
 .table-wrapper tr:not(:last-child) td {
     border-bottom: 1px solid #e2e8f0;
 }
-.status-cell {
-    /* Đã sửa: Không cần position: relative hay top nữa */
-    display: inline-block; 
-    padding: 6px 8px; 
-    font-size: 12px;
+.status-pill {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: 14px;
     font-weight: 600;
-    border-radius: 6px;
-    min-width: 60px;
-    line-height: 1.2; 
+    border-radius: 8px;
+    min-width: 74px;
+    line-height: 1.2;
     text-align: center;
-    position: static;
-    top: unset;
 }
 
-.status-cell.hoạt-động {
+.status-pill.hoạt-động {
     background-color: #D1FAE5;
     color: #065F46;
 }
 
-.status-cell.khóa {
+.status-pill.khóa {
     background-color: #FEE2E2;
     color: #B91C1C;
 }
@@ -708,23 +726,15 @@
 }
 
 /* giống style "Hoạt động" */
-.status-cell.active {
+.status-pill.active {
   background-color: #d4edda;
   color: #155724;
-  padding: 6px 12px;
-  border-radius: 8px;
-  text-align: center;
-  font-weight: 500;
 }
 
 /* giống style "Khóa" */
-.status-cell.inactive {
+.status-pill.inactive {
   background-color: #f8d7da;
   color: #721c24;
-  padding: 6px 12px;
-  border-radius: 8px;
-  text-align: center;
-  font-weight: 500;
 }
 
 .pagination {

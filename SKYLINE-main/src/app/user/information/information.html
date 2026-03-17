@@ -60,5 +60,15 @@
             <button type="submit" class="btn-save" *ngIf="isEditing">Lưu thay đổi</button>
           </div>
         </form>
+
+        <div class="save-popup-overlay" *ngIf="showSavePopup" (click)="closeSavePopup()">
+          <div class="save-popup" [ngClass]="savePopupType" (click)="$event.stopPropagation()">
+            <div class="save-popup-header">
+              <strong>{{ savePopupTitle }}</strong>
+              <button type="button" class="save-popup-close" (click)="closeSavePopup()">×</button>
+            </div>
+            <p>{{ savePopupMessage }}</p>
+          </div>
+        </div>
       </main>
     </div>

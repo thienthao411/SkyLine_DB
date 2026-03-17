@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const promotionSchema = new mongoose.Schema({
   title: String,
   icon: String,
+  category: String,
   items: [{
     image: String,
     label: String,
@@ -16,6 +17,10 @@ const promotionSchema = new mongoose.Schema({
     promoCode: String,
     maxDiscountAmount: Number,
     discountValueRaw: Number,
+    status: {
+      type: String,
+      default: 'active'
+    },
     flightRoutes: String,
     ticketClass: String,
     minTickets: Number,
