@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { Observable } from 'rxjs'; 
+import { HttpClientModule } from '@angular/common/http';
 
 // Cần đảm bảo các imports này được xử lý trong module cha (nếu không phải standalone)
 import { AdminSidebarComponent } from '../shared/sidebar/sidebar';
 import { AdminHeader } from '../shared/header/admin-header/admin-header';
+import { PromotionApiModel, PromotionApiService } from '../../services/promotion-api.service';
 
 // --- INTERFACES ---
 interface Promotion {
@@ -48,7 +48,10 @@ interface JsonItem {
   date: string;
   details: string; 
   target: string;
-  applyTime: string;
+    applyTime: {
+        from: string;
+        to: string;
+    } | string;
   promoCode: string;
   maxDiscountAmount?: number | null;
   discountValueRaw?: number | null; 
@@ -67,17 +70,22 @@ interface JsonItem {
 }
 
 interface PromoCategory {
-  id: string;
+    _id?: string;
+    id?: string;
   title: string;
   icon: string;
   items: JsonItem[];
+    category?: string;
   visibleCount: number;
   expanded: boolean;
 }
 
 interface PromoListItem {
   id: number;
+    dbPromotionId: string;
   name: string;
+    rawLabel: string;
+    promoCode: string;
   startDate: string;
   endDate: string;
   type: string;
@@ -115,10 +123,11 @@ export class PromotionManagement implements OnInit {
   
   promoToView: PromoListItem | null = null; 
   rawJsonData: PromoCategory[] = []; 
+    editingPromotionId: string | null = null;
   
   currentPromotion: Promotion = {
       promoId: '', promoName: '', promoCode: '', promoType: 'percent', discountValue: null,
-      maxDiscountAmount: null, startDate: '', endDate: '', status: 'inactive', notes: '',
+      maxDiscountAmount: null, startDate: new Date().toISOString().slice(0, 10), endDate: '', status: 'inactive', notes: '',
       endTime: '', descriptionPlaceholder: '', applyHour: 'any', applyDayOfWeek: 'any',
       applyDayOfMonth: 'any', applyMonth: 'any', applyYear: 'any', applyTimeframe: 'any',
       flightRoutes: '', ticketClass: '', minTickets: null, ruleType: '', additionalCondition: '',
@@ -156,12 +165,13 @@ export class PromotionManagement implements OnInit {
   typeOptions = [
       { value: 'all', label: 'Tất cả ưu đãi' },
       { value: 'percent', label: 'Giảm phần trăm' },
+      { value: 'amount', label: 'Giảm số tiền' },
       { value: 'point', label: 'Thưởng điểm' },
       { value: 'combo', label: 'Combo/Dịch vụ' },
       { value: 'refund', label: 'Hoàn tiền' },
   ];
 
-  constructor(private http: HttpClient) { }
+    constructor(private promotionApi: PromotionApiService) { }
   
   ngOnInit(): void {
       this.loadPromoData(); 
@@ -173,55 +183,94 @@ export class PromotionManagement implements OnInit {
       return this.promoTypeDescriptions[typeCode as keyof typeof this.promoTypeDescriptions] || this.promoTypeDescriptions['default'];
   }
 
+  formatApplyTarget(target: string): string {
+      const map: Record<string, string> = {
+          all: 'Tất cả khách hàng',
+          new: 'Khách hàng mới',
+          returning: 'Khách hàng quay lại',
+          gold: 'Thành viên hạng Vàng',
+          silver: 'Thành viên hạng Bạc',
+          vip: 'Khách VIP',
+          payment: 'Khách theo phương thức thanh toán',
+          loyal: 'Khách hàng thân thiết'
+      };
+      return map[target] || target || 'N/A';
+  }
+
+  formatApplyCount(value?: string): string {
+      if (value === 'multiple' || value === 'multi' || value === 'unlimited') return 'Nhiều lần';
+      if (value === '1' || value === 'once') return 'Một lần';
+      return value || 'N/A';
+  }
+
+  formatApplyChannel(value?: string): string {
+      const map: Record<string, string> = {
+          all: 'Toàn bộ hệ thống',
+          specific: 'Hãng bay cụ thể',
+          online: 'Online',
+          web: 'Website',
+          app: 'Ứng dụng',
+          momo: 'Momo',
+          bank: 'Ngân hàng'
+      };
+      return value ? (map[value] || value) : 'N/A';
+  }
+
+  formatDiscountValue(type: string, value?: number | null): string {
+      if (value === null || value === undefined) return 'N/A';
+      if (type === 'percent') return `${value}%`;
+      return `${value.toLocaleString('vi-VN')} VND`;
+  }
+
+  getPromoImageSrc(image?: string): string {
+      if (!image) return 'assets/img/default_promo.jpg';
+      if (image.startsWith('http') || image.startsWith('assets/')) return image;
+      return `assets/img/${image}`;
+  }
+
   loadPromoData() {
-      const jsonPath = 'assets/data/promotion.json';
-      this.http.get<PromoCategory[]>(jsonPath).subscribe({
+      this.promotionApi.getAll().subscribe({
           next: (data) => {
-              this.rawJsonData = data; 
-              
+              this.rawJsonData = data.map((category: PromotionApiModel) => ({
+                  ...category,
+                  visibleCount: category.items?.length || 0,
+                  expanded: false
+              }));
+
               let promoIdCounter = 1;
               const flattenedPromos: PromoListItem[] = [];
-              
-              data.forEach(category => {
-                  category.items.forEach((item, index) => {
-                      const parts = item.details.replace(/\*\*/g, '').split(',');
-                      const name = parts[0]?.trim() || item.date;
-                      
-                      // 🟢 LOGIC XÁC ĐỊNH TYPE CODE
-                      let typeCode = 'amount';
-                      if (item.details.includes('%')) typeCode = 'percent';
-                      else if (item.details.includes('điểm')) typeCode = 'point';
-                      else if (item.details.includes('Combo')) typeCode = 'combo';
-                      else if (item.details.includes('Hoàn tiền')) typeCode = 'refund';
-                      else if (item.details.includes('Miễn phí')) typeCode = 'freeship';
 
-                      let status: 'active' | 'upcoming' | 'expired' | 'draft' = 'active';
-                      if (item.applyTime.includes('Vô thời hạn') || item.date.includes('Sale Tết')) {
-                           status = 'upcoming';
-                      }
-                      if (item.applyTime.split('–')[1]?.trim() && new Date(item.applyTime.split('–')[1]?.trim()) < new Date()) {
-                           status = 'expired';
-                      }
-                      
+              this.rawJsonData.forEach(category => {
+                  const categoryId = category._id || category.id || '';
+
+                  (category.items || []).forEach((item, index) => {
+                      const from = this.getApplyFrom(item.applyTime);
+                      const to = this.getApplyTo(item.applyTime);
+                      const rawLabel = (category.title || item.label || '').replace(/\*\*/g, '').trim();
+                      const type = this.detectPromoType(item);
+                      const displayName = this.buildPromoDisplayName(rawLabel, item, type);
+
                       flattenedPromos.push({
                           id: promoIdCounter++,
-                          name: name, 
-                          startDate: item.applyTime.split('–')[0]?.trim() || '', 
-                          endDate: item.applyTime.split('–')[1]?.trim() || 'Vô thời hạn', 
-                          type: typeCode, // 🟢 SỬ DỤNG MÃ CODE
-                          applyTarget: item.target,
-                          status: status,
-                          jsonCategoryId: category.id, 
-                          jsonItemIndex: index 
+                          dbPromotionId: categoryId,
+                          name: displayName,
+                          rawLabel,
+                          promoCode: (item.promoCode || '').trim(),
+                          startDate: from,
+                          endDate: to || 'Vô thời hạn',
+                          type,
+                          applyTarget: item.customerTargetType || item.target || 'all',
+                          status: this.getPromoStatus(item, to),
+                          jsonCategoryId: categoryId,
+                          jsonItemIndex: index
                       });
                   });
               });
-              
-              this.promos = flattenedPromos;
 
+              this.promos = flattenedPromos;
           },
           error: (err) => {
-              console.error("Lỗi khi tải dữ liệu khuyến mãi từ JSON:", err);
+              console.error('Lỗi khi tải dữ liệu khuyến mãi từ API:', err);
           }
       });
   }
@@ -230,23 +279,7 @@ export class PromotionManagement implements OnInit {
     if (!this.promoToView || !this.rawJsonData) return null;
 
     // 🟢 1. XỬ LÝ CHƯƠNG TRÌNH ĐƯỢC TẠO MỚI GIẢ
-    if (this.promoToView.jsonCategoryId === 'user_added_temp') {
-        // Trả về dữ liệu chi tiết (Giả định chi tiết khớp với PromoListItem)
-        return {
-            image: 'assets/img/default_promo.jpg', // Dùng ảnh placeholder
-            label: this.promoToView.name,
-            date: this.promoToView.startDate,
-            details: `Chi tiết cho chương trình mới: ${this.promoToView.name}.`,
-            target: this.promoToView.applyTarget,
-            applyTime: `${this.promoToView.startDate} – ${this.promoToView.endDate}`,
-            promoCode: 'NEW_CODE',
-            maxDiscountAmount: 0,
-            // Thêm các trường khác để Modal không bị lỗi (chúng ta chỉ dùng item cơ bản)
-        } as JsonItem; 
-    }
-    
-    // 2. XỬ LÝ DỮ LIỆU JSON GỐC
-    const category = this.rawJsonData.find(c => c.id === this.promoToView!.jsonCategoryId);
+    const category = this.rawJsonData.find(c => (c._id || c.id) === this.promoToView!.jsonCategoryId);
     if (category && category.items.length > this.promoToView.jsonItemIndex) {
          return category.items[this.promoToView.jsonItemIndex];
     }
@@ -272,13 +305,14 @@ export class PromotionManagement implements OnInit {
       
       if (promoItem) {
           const rawData = this.getPromoRawData(); 
+          this.editingPromotionId = promoItem.dbPromotionId;
           
           // Lấy giá trị số đã làm sạch từ rawData (FIX LỖI)
           let discountValue = rawData?.discountValueRaw || 0;
 
           this.currentPromotion = {
               ...this.currentPromotion,
-              promoName: promoItem.name.replace(/\*\*/g, '').trim(), 
+              promoName: ((promoItem.rawLabel || rawData?.label || promoItem.name) || '').replace(/\*\*/g, '').trim(), 
               promoCode: rawData?.promoCode || `CODE-${promoItem.id}`, 
               
               // 🟢 FIX: Ánh xạ promoType là MÃ CODE và discountValue là GIÁ TRỊ SỐ
@@ -288,7 +322,7 @@ export class PromotionManagement implements OnInit {
               maxDiscountAmount: rawData?.maxDiscountAmount || null,
               startDate: promoItem.startDate,
               endDate: promoItem.endDate !== 'Vô thời hạn' ? promoItem.endDate : '',
-              status: promoItem.status === 'active' || promoItem.status === 'upcoming' ? 'active' : 'inactive',
+              status: promoItem.status === 'active' ? 'active' : 'inactive',
               descriptionPlaceholder: rawData?.details || '', 
               
               // MAP CÁC TRƯỜNG CHI TIẾT
@@ -320,7 +354,7 @@ export class PromotionManagement implements OnInit {
   createEmptyPromotion(): Promotion {
     return {
         promoId: '', promoName: '', promoCode: '', promoType: 'percent', discountValue: null,
-        maxDiscountAmount: null, startDate: '', endDate: '', status: 'inactive', notes: '',
+                maxDiscountAmount: null, startDate: new Date().toISOString().slice(0, 10), endDate: '', status: 'inactive', notes: '',
         endTime: '', descriptionPlaceholder: '', applyHour: 'any', applyDayOfWeek: 'any',
         applyDayOfMonth: 'any', applyMonth: 'any', applyYear: 'any', applyTimeframe: 'any',
         flightRoutes: '', ticketClass: '', minTickets: null, ruleType: '', additionalCondition: '',
@@ -335,6 +369,7 @@ export class PromotionManagement implements OnInit {
       if (tab === 'create') {
           // 🟢 FIX: Reset form khi chuyển sang tab tạo mới
           this.currentPromotion = this.createEmptyPromotion(); 
+                    this.editingPromotionId = null;
           this.activeStep = 'info'; 
           this.isLimitedTime = false;
           this.updateFormValidity();
@@ -398,9 +433,14 @@ export class PromotionManagement implements OnInit {
             result = result.filter(p => p.status === this.selectedStatusFilter);
         }
 
+        if (this.selectedTypeFilter !== 'all') {
+            result = result.filter(p => p.type === this.selectedTypeFilter);
+        }
+
         if (term) {
             result = result.filter(p =>
                 p.name.toLowerCase().includes(term) ||
+                p.promoCode.toLowerCase().includes(term) ||
                 p.applyTarget.toLowerCase().includes(term) ||
                 p.type.toLowerCase().includes(term)
             );
@@ -410,8 +450,17 @@ export class PromotionManagement implements OnInit {
     }
 
     deletePromo(id: number) {
+        const target = this.promos.find(p => p.id === id);
+        if (!target?.dbPromotionId) return;
+
         if (confirm(`Bạn có chắc chắn muốn xóa khuyến mãi ID ${id} không?`)) {
-            this.promos = this.promos.filter(p => p.id !== id);
+            this.promotionApi.delete(target.dbPromotionId).subscribe({
+                next: () => {
+                    this.promos = this.promos.filter(p => p.id !== id);
+                    this.rawJsonData = this.rawJsonData.filter(c => (c._id || c.id) !== target.dbPromotionId);
+                },
+                error: (err) => console.error('Lỗi xóa khuyến mãi:', err)
+            });
         }
     }
 
@@ -428,36 +477,32 @@ export class PromotionManagement implements OnInit {
     confirmAction() {
       if (this.showModalType === 'cancel') {
           this.currentPromotion = this.createEmptyPromotion();
+          this.editingPromotionId = null;
           this.activeMainTab = 'manage';
           this.activeStep = 'info';
           this.isLimitedTime = false;
       } else if (this.showModalType === 'draft' || this.showModalType === 'activate') {
-          
-          // 🟢 1. TẠO DỮ LIỆU MỚI (Mapping Promotion -> PromoListItem)
-          const newPromoId = Math.max(...this.promos.map(p => p.id), 0) + 1;
-          
-          const newPromoItem: PromoListItem = {
-              id: newPromoId,
-              name: this.currentPromotion.promoName,
-              startDate: this.currentPromotion.startDate,
-              endDate: this.isLimitedTime ? this.currentPromotion.endDate : 'Vô thời hạn',
-              type: this.currentPromotion.promoType,
-              applyTarget: this.currentPromotion.customerTargetType,
-              status: this.showModalType === 'activate' ? 'active' : 'draft', 
-              
-              // 🟢 SỬA: Đặt khóa tạm thời để hàm getPromoRawData nhận diện
-              jsonCategoryId: 'user_added_temp', 
-              jsonItemIndex: 0, 
-          };
-  
-          // 🟢 2. THÊM DỮ LIỆU MỚI VÀO BẢNG
-          this.promos = [newPromoItem, ...this.promos]; 
-          
-          console.log('Đã thêm chương trình mới:', newPromoItem);
-          alert(`Đã ${this.showModalType === 'activate' ? 'Lưu & Kích hoạt' : 'Lưu bản nháp'} chương trình thành công!`);
-          this.activeMainTab = 'manage';
-          this.currentPromotion = this.createEmptyPromotion();
-          this.isLimitedTime = false;
+          const status = this.showModalType === 'activate' ? 'active' : 'draft';
+          const payload = this.buildPromotionPayload(status);
+
+          const request$ = this.editingPromotionId
+              ? this.promotionApi.update(this.editingPromotionId, payload)
+              : this.promotionApi.create(payload);
+
+          request$.subscribe({
+              next: () => {
+                  alert(`Đã ${this.showModalType === 'activate' ? 'Lưu & Kích hoạt' : 'Lưu bản nháp'} chương trình thành công!`);
+                  this.activeMainTab = 'manage';
+                  this.currentPromotion = this.createEmptyPromotion();
+                  this.editingPromotionId = null;
+                  this.isLimitedTime = false;
+                  this.loadPromoData();
+              },
+              error: (err) => {
+                  console.error('Lỗi lưu khuyến mãi:', err);
+                  alert('Không thể lưu khuyến mãi. Vui lòng kiểm tra backend/MongoDB.');
+              }
+          });
       }
       this.closeModal();
     }
@@ -468,5 +513,121 @@ export class PromotionManagement implements OnInit {
             return;
         }
         this.switchStep('apply');
+    }
+
+    private getApplyFrom(applyTime: JsonItem['applyTime']): string {
+        if (typeof applyTime === 'string') {
+            return applyTime.split('–')[0]?.trim() || '';
+        }
+        return applyTime?.from || '';
+    }
+
+    private getApplyTo(applyTime: JsonItem['applyTime']): string {
+        if (typeof applyTime === 'string') {
+            return applyTime.split('–')[1]?.trim() || '';
+        }
+        return applyTime?.to || '';
+    }
+
+    private detectPromoType(item: JsonItem): string {
+        const ruleType = (item.ruleType || '').toLowerCase();
+        if (ruleType === 'percentage') return 'percent';
+        if (ruleType === 'fixed') return 'amount';
+
+        const sourceText = `${item.label || ''} ${item.details || ''} ${item.ruleType || ''}`.toLowerCase();
+        if (sourceText.includes('%')) return 'percent';
+        if (sourceText.includes('điểm')) return 'point';
+        if (sourceText.includes('combo')) return 'combo';
+        if (sourceText.includes('hoàn tiền')) return 'refund';
+        if (sourceText.includes('miễn phí')) return 'freeship';
+        return 'amount';
+    }
+
+    private getPromoStatus(item: JsonItem, endDate: string): 'active' | 'upcoming' | 'expired' | 'draft' {
+        if ((item as any).status === 'draft') {
+            return 'draft';
+        }
+
+        const now = new Date();
+        const fromDate = this.parseDate(this.getApplyFrom(item.applyTime));
+        const toDate = this.parseDate(endDate);
+
+        if (fromDate && fromDate > now) {
+            return 'upcoming';
+        }
+        if (toDate && toDate < now) {
+            return 'expired';
+        }
+        return 'active';
+    }
+
+    private parseDate(input: string): Date | null {
+        if (!input) return null;
+        const d = new Date(input);
+        return Number.isNaN(d.getTime()) ? null : d;
+    }
+
+    private buildPromoDisplayName(baseName: string, item: JsonItem, type: string): string {
+        const cleaned = (baseName || '').replace(/\*\*/g, '').trim();
+        const genericPattern = /^giảm\s*[\d.,]+\s*(k|vnd|đ|%)$/i;
+
+        if (cleaned && !genericPattern.test(cleaned)) {
+            return cleaned;
+        }
+
+        const target = this.formatApplyTarget(item.customerTargetType || item.target || 'all');
+        const discount = this.formatDiscountValue(type, item.discountValueRaw ?? null);
+        const detail = (item.details || '').trim();
+
+        if (detail) {
+            return detail.length > 70 ? `${detail.slice(0, 67)}...` : detail;
+        }
+
+        if (discount !== 'N/A') {
+            return `Ưu đãi ${target} - ${discount}`;
+        }
+
+        return `Ưu đãi ${target}`;
+    }
+
+    private buildPromotionPayload(status: 'active' | 'draft'): PromotionApiModel {
+        const fallbackDate = new Date().toISOString().slice(0, 10);
+        const fromDate = this.currentPromotion.startDate || fallbackDate;
+        const toDate = this.isLimitedTime ? (this.currentPromotion.endDate || '') : '';
+
+        return {
+            title: this.currentPromotion.promoName,
+            icon: 'promo-default.png',
+            category: this.currentPromotion.promoType,
+            items: [
+                {
+                    image: 'promo-default.png',
+                    label: this.currentPromotion.promoName,
+                    date: fromDate,
+                    details: this.currentPromotion.descriptionPlaceholder || this.currentPromotion.notes || '',
+                    target: this.currentPromotion.customerTargetType,
+                    applyTime: {
+                        from: fromDate,
+                        to: toDate
+                    },
+                    promoCode: this.currentPromotion.promoCode,
+                    maxDiscountAmount: this.currentPromotion.maxDiscountAmount,
+                    discountValueRaw: this.currentPromotion.discountValue,
+                    status,
+                    flightRoutes: this.currentPromotion.flightRoutes,
+                    ticketClass: this.currentPromotion.ticketClass,
+                    minTickets: this.currentPromotion.minTickets,
+                    ruleType: this.currentPromotion.ruleType,
+                    additionalCondition: this.currentPromotion.additionalCondition,
+                    departureAirport: this.currentPromotion.departureAirport,
+                    arrivalAirport: this.currentPromotion.arrivalAirport,
+                    minOrderValue: this.currentPromotion.minOrderValue,
+                    territory: this.currentPromotion.territory,
+                    applyCountType: this.currentPromotion.applyCountType,
+                    applyChannel: this.currentPromotion.applyChannel,
+                    customerTargetType: this.currentPromotion.customerTargetType
+                }
+            ]
+        };
     }
 }

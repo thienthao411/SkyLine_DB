@@ -36,7 +36,10 @@ export class UserManagement implements OnInit {
   // ================= LOAD =================
   loadUsers() {
     this.userApi.getAll().subscribe({
-      next: (data) => this.users = data,
+      next: (data) => {
+        this.users = data;
+        this.currentPage = 1;
+      },
       error: (err) => {
         console.error(err);
         alert('Không load được dữ liệu!');
@@ -48,7 +51,7 @@ export class UserManagement implements OnInit {
   emptyFormUser: User = {
     fullName: '',
     avatar: 'assets/img/AVT0.jpg',
-    currentRank: 'Đồng',
+    currentRank: 'Bạc',
     points: 0,
     nextRank: 'Bạc',
     nextThreshold: 500,
@@ -96,7 +99,27 @@ export class UserManagement implements OnInit {
   }
 
   get uniqueRanks(): string[] {
-    return Array.from(new Set(this.users.map(u => u.currentRank)));
+    return Array.from(
+      new Set(this.users.map(u => u.currentRank).filter(rank => !!rank && rank !== 'Đồng'))
+    );
+  }
+
+  get formRankOptions(): string[] {
+    const ranks = new Set(
+      this.users
+        .map(u => u.currentRank)
+        .filter((rank): rank is string => !!rank && rank !== 'Đồng')
+    );
+
+    if (this.formUser.currentRank && this.formUser.currentRank !== 'Đồng') {
+      ranks.add(this.formUser.currentRank);
+    }
+
+    if (ranks.size === 0) {
+      ranks.add(this.emptyFormUser.currentRank);
+    }
+
+    return Array.from(ranks);
   }
 
   get uniqueStatuses(): string[] {
@@ -114,12 +137,19 @@ currentPage: number = 1;
 pageSize: number = 10;
 
 get paginatedUsers(): User[] {
+  if (this.currentPage > this.totalPages) {
+    this.currentPage = this.totalPages;
+  }
   const start = (this.currentPage - 1) * this.pageSize;
   return this.filteredUsers.slice(start, start + this.pageSize);
 }
 
 get totalPages(): number {
-  return Math.ceil(this.filteredUsers.length / this.pageSize);
+  return Math.max(1, Math.ceil(this.filteredUsers.length / this.pageSize));
+}
+
+onFilterChange() {
+  this.currentPage = 1;
 }
 
 nextPage() {
@@ -157,6 +187,8 @@ prevPage() {
   // ================= EDIT =================
   editUser(user: User) {
     this.formUser = JSON.parse(JSON.stringify(user));
+    this.formUser.birthday = this.toDateInput(this.formUser.birthday);
+    this.formUser.passportExpiry = this.toDateInput(this.formUser.passportExpiry);
     this.activeTab = 'form';
   }
 
@@ -167,7 +199,13 @@ prevPage() {
       return;
     }
 
-    this.userApi.create(this.formUser).subscribe({
+    const payload: User = {
+      ...this.formUser,
+      birthday: this.toDateInput(this.formUser.birthday),
+      passportExpiry: this.toDateInput(this.formUser.passportExpiry)
+    };
+
+    this.userApi.create(payload).subscribe({
       next: (created) => {
         this.users.push(created);
         alert(`Thêm ${created.fullName} thành công!`);
@@ -189,7 +227,13 @@ prevPage() {
       return;
     }
 
-    this.userApi.update(existing._id, this.formUser).subscribe({
+    const payload: User = {
+      ...this.formUser,
+      birthday: this.toDateInput(this.formUser.birthday),
+      passportExpiry: this.toDateInput(this.formUser.passportExpiry)
+    };
+
+    this.userApi.update(existing._id, payload).subscribe({
       next: (updated) => {
         const idx = this.users.findIndex(u => u._id === updated._id);
         if (idx !== -1) this.users[idx] = updated;
@@ -235,5 +279,41 @@ prevPage() {
   cancelForm() {
     this.formUser = { ...this.emptyFormUser };
     this.activeTab = 'list';
+  }
+
+  formatDisplayDate(value: any): string {
+    const iso = this.toDateInput(value);
+    if (!iso) return '';
+
+    const parts = iso.split('-');
+    if (parts.length === 3) {
+      const [yyyy, mm, dd] = parts;
+      return `${dd}/${mm}/${yyyy}`;
+    }
+
+    return String(value || '');
+  }
+
+  private toDateInput(value: any): string {
+    if (!value) return '';
+    const raw = String(value).trim();
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+    if (/^\d{4}-\d{2}-\d{2}T/.test(raw)) return raw.slice(0, 10);
+
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(raw)) {
+      const [dd, mm, yyyy] = raw.split('/');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    const parsed = new Date(raw);
+    if (!Number.isNaN(parsed.getTime())) {
+      const yyyy = parsed.getFullYear();
+      const mm = String(parsed.getMonth() + 1).padStart(2, '0');
+      const dd = String(parsed.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    return '';
   }
 }

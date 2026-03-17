@@ -286,7 +286,11 @@
                               <td colspan="7" class="no-data">Không tìm thấy mã khuyến mãi nào.</td>
                           </tr>
                           <tr *ngFor="let promo of filteredPromos" class="promo-item-row">
-                              <td class="name-col">{{ promo.name.replace('**', '').replace('**', '').trim() }}</td>
+                              <td class="name-col">
+                                  <div class="promo-name">{{ promo.name.replace('**', '').replace('**', '').trim() }}</div>
+                                  <div class="promo-code" *ngIf="promo.promoCode">Mã: {{ promo.promoCode }}</div>
+                                  <div class="promo-code" *ngIf="!promo.promoCode">Mã: N/A</div>
+                              </td>
                               <td>{{ promo.startDate }}</td>
                               <td>{{ promo.endDate }}</td>
                               
@@ -373,8 +377,18 @@
                           </div>
 
                           <div class="detail-item">
+                              <label>Giá trị ưu đãi</label>
+                              <span>{{ formatDiscountValue(promoToView.type, rawData.discountValueRaw) }}</span>
+                          </div>
+
+                          <div class="detail-item">
                               <label>Thời Gian Áp Dụng</label>
                               <span>{{ promoToView.startDate }} - {{ promoToView.endDate }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                              <label>Thời điểm cập nhật</label>
+                              <span>{{ rawData.date || 'Chưa cập nhật' }}</span>
                           </div>
                           
                           <div class="detail-item">
@@ -389,7 +403,12 @@
                           
                           <div class="detail-item full-width">
                               <label>Đối Tượng Áp Dụng</label>
-                              <span>{{ promoToView.applyTarget }}</span>
+                              <span>{{ formatApplyTarget(promoToView.applyTarget) }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                              <label>Nhóm khách hàng mục tiêu</label>
+                              <span>{{ formatApplyTarget(rawData.target || rawData.customerTargetType || 'all') }}</span>
                           </div>
 
                           <div class="detail-item">
@@ -430,21 +449,21 @@
                               <span>{{ rawData.details }}</span>
                           </div>
                           <div class="detail-item full-width">
-                              <label>Ghi chú/Label</label>
-                              <span>{{ rawData.label }}</span>
+                              <label>Ghi chú</label>
+                              <span>{{ rawData.label || promoToView.rawLabel || 'N/A' }}</span>
                           </div>
                           
                           <div class="detail-item">
                               <label>Số lần áp dụng</label>
-                              <span>{{ rawData.applyCountType === 'multiple' ? 'Nhiều lần' : 'Một lần' }}</span>
+                              <span>{{ formatApplyCount(rawData.applyCountType) }}</span>
                           </div>
                           <div class="detail-item">
                               <label>Kênh áp dụng</label>
-                              <span>{{ rawData.applyChannel === 'all' ? 'Toàn bộ hệ thống' : rawData.applyChannel === 'specific' ? 'Hãng bay cụ thể' : rawData.applyChannel || 'N/A' }}</span>
+                              <span>{{ formatApplyChannel(rawData.applyChannel) }}</span>
                           </div>
                           <div class="detail-item">
                               <label>Đối tượng khách hàng</label>
-                              <span>{{ rawData.customerTargetType === 'all' ? 'Tất cả' : rawData.customerTargetType === 'new' ? 'Khách hàng mới' : rawData.customerTargetType }}</span>
+                              <span>{{ formatApplyTarget(rawData.customerTargetType || rawData.target || 'all') }}</span>
                           </div>
 
                           

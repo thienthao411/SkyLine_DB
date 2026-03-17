@@ -14,6 +14,7 @@
                     type="text" 
                     placeholder="Nhập khuyến mãi mà bạn muốn"
                     [(ngModel)]="searchTerm"
+                    (ngModelChange)="applyFilter()"
                     (keyup.enter)="applyFilter()"
                 />
             </div>
@@ -78,10 +79,13 @@
         <button class="close-btn" (click)="closePopup()">×</button>
         <img [src]="selectedDeal.image" alt="Promotion detail" onerror="this.onerror=null; this.src='https://placehold.co/400x250/cccccc/333333?text=Detail';" />
         <div class="popup-details">
-            <h3>🎉 {{ selectedDeal.date }}</h3>
+            <h3>🎉 {{ selectedDeal.label }}</h3>
             <p><strong>Chi tiết ưu đãi:</strong> {{ selectedDeal.details }}</p>
+            <p><strong>Mức ưu đãi:</strong> {{ selectedDeal.discountText }}</p>
             <p><strong>Đối tượng áp dụng:</strong> {{ selectedDeal.target }}</p>
+            <p><strong>Kênh áp dụng:</strong> {{ selectedDeal.channelText }}</p>
             <p><strong>Thời gian áp dụng:</strong> <span class="apply-time-tag">{{ selectedDeal.applyTime }}</span></p>
+            <p><strong>Điều kiện áp dụng:</strong> {{ selectedDeal.conditionText }}</p>
         </div>
            <div class="promo-code-box">
                <div class="code-display">
