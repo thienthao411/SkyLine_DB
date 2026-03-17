@@ -74,77 +74,36 @@ export class Information implements OnInit {
     }
     
     // Nếu chưa có hoặc dữ liệu không đầy đủ → Load từ file JSON
-    console.log('� Loading user data from JSON file...');
-    this.loadUserDataFromJSON(currentUser.email);
+    console.log('� Loading user data from API...');
+    this.loadUserDataFromAPI(currentUser.email);
   }
   
   // Helper method để load dữ liệu từ JSON
-  private loadUserDataFromJSON(email: string): void {
-    this.http.get<any[]>('assets/data/user_data.json').subscribe({
-      next: (users) => {
-        console.log('📦 Loaded', users.length, 'users from JSON');
-        
-        // Tìm user theo email
-        const foundUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-        
-        if (foundUser) {
-          console.log('✅ Found user in JSON file:', foundUser.fullName);
-          this.user = { ...foundUser };
-          
-          // Lưu vào localStorage để lần sau không cần load lại
-          localStorage.setItem('fullUserData', JSON.stringify(this.user));
-          
-          console.log('💾 Saved complete data to localStorage:', {
-            phone: this.user.phone,
-            birthday: this.user.birthday,
-            passport: this.user.passport,
-            passportExpiry: this.user.passportExpiry
-          });
-        } else {
-          console.warn('⚠️ User not found in JSON, creating default profile');
-          // Tạo profile mặc định nếu không tìm thấy (tài khoản mới đăng ký)
-          this.user = {
-            fullName: this.authService.getCurrentUser()?.name || '',
-            email: email,
-            phone: '',
-            birthday: '',
-            gender: '',
-            passport: '',
-            passportExpiry: '',
-            country: 'Việt Nam',
-            address: '',
-            avatar: 'assets/img/AVT1.jpg',
-            currentRank: 'Đồng',
-            points: 0,
-            nextRank: 'Bạc',
-            nextThreshold: 500,
-            status: 'Hoạt động'
-          };
-          localStorage.setItem('fullUserData', JSON.stringify(this.user));
+  private loadUserDataFromAPI(email: string): void {
+
+    console.log('🌐 Loading user data from API...');
+  
+    this.http.get<any>(`http://localhost:5000/api/users/email/${email}`)
+      .subscribe({
+  
+        next: (user) => {
+  
+          console.log('✅ Loaded user from MongoDB:', user);
+  
+          this.user = user;
+  
+          localStorage.setItem('fullUserData', JSON.stringify(user));
+  
+        },
+  
+        error: (err) => {
+  
+          console.error('❌ Failed to load user from API:', err);
+  
         }
-      },
-      error: (err) => {
-        console.error('❌ Failed to load user_data.json:', err);
-        // Tạo profile mặc định nếu lỗi
-        this.user = {
-          fullName: this.authService.getCurrentUser()?.name || '',
-          email: email,
-          phone: '',
-          birthday: '',
-          gender: '',
-          passport: '',
-          passportExpiry: '',
-          country: 'Việt Nam',
-          address: '',
-          avatar: 'assets/img/AVT0.jpg',
-          currentRank: 'Đồng',
-          points: 0,
-          nextRank: 'Bạc',
-          nextThreshold: 500,
-          status: 'Hoạt động'
-        };
-      }
-    });
+  
+      });
+  
   }
 
   onEdit(): void {

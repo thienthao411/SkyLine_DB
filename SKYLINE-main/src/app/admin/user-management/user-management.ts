@@ -2,27 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { AdminSidebarComponent } from '../shared/sidebar/sidebar';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClientModule } from '@angular/common/http';
 import { AdminHeader } from '../shared/header/admin-header/admin-header';
-
-interface User {
-  fullName: string;
-  avatar: string;
-  currentRank: string;
-  points: number;
-  nextRank: string;
-  nextThreshold: number;
-  email: string;
-  password?: string;
-  phone: string;
-  birthday: string;
-  gender: string;
-  passport: string;
-  passportExpiry: string;
-  country: string;
-  address: string;
-  status?: string;
-}
+import { UserApiService } from '../../services/user-api.service';
+import { User } from '../../services/user-api.service';
 
 @Component({
   selector: 'app-user-management',
@@ -44,16 +27,16 @@ export class UserManagement implements OnInit {
   showViewModal = false;
   userToView: User | null = null;
 
-  constructor(private http: HttpClient) {}
+  constructor(private userApi: UserApiService) {}
 
   ngOnInit(): void {
     this.loadUsers();
   }
 
   loadUsers() {
-    this.http.get<User[]>('assets/data/user_data.json').subscribe({
+    this.userApi.getAll().subscribe({
       next: (data) => (this.users = data),
-      error: (err) => console.error('Lỗi đọc dữ liệu:', err),
+      error: (err) => console.error('Lỗi đọc dữ liệu từ API:', err),
     });
   }
 
@@ -144,10 +127,17 @@ export class UserManagement implements OnInit {
   }
 
   confirmDelete() {
-    if (this.userToDeleteEmail) {
-      this.users = this.users.filter((u) => u.email !== this.userToDeleteEmail);
-    }
-    this.cancelDelete();
+    if (!this.userToDeleteEmail) return;
+    const user = this.users.find((u) => u.email === this.userToDeleteEmail);
+    if (!user || !user._id) return;
+
+    this.userApi.delete(user._id).subscribe({
+      next: () => {
+        this.users = this.users.filter((u) => u._id !== user._id);
+        this.cancelDelete();
+      },
+      error: (err) => console.error('Lỗi xóa user:', err),
+    });
   }
 
   cancelDelete() {
@@ -164,21 +154,33 @@ export class UserManagement implements OnInit {
       alert('Email đã tồn tại. Vui lòng sử dụng chức năng Chỉnh sửa.');
       return;
     }
-    this.users.push({ ...this.formUser, avatar: this.formUser.avatar || 'assets/img/AVT0.jpg' });
-    this.users.sort((a, b) => a.fullName.localeCompare(b.fullName));
-    alert(`Đã thêm người dùng ${this.formUser.fullName} thành công!`);
-    this.cancelForm();
+
+    this.userApi.create(this.formUser).subscribe({
+      next: (created) => {
+        this.users.push(created);
+        alert(`Đã thêm người dùng ${created.fullName} thành công!`);
+        this.cancelForm();
+      },
+      error: (err) => console.error('Lỗi thêm user:', err),
+    });
   }
 
   updateUser() {
-    const index = this.users.findIndex((u) => u.email === this.formUser.email);
-    if (index !== -1) {
-      this.users[index] = { ...this.formUser };
-      alert('Cập nhật thông tin thành công!');
-      this.cancelForm();
-    } else {
+    const existing = this.users.find((u) => u.email === this.formUser.email);
+    if (!existing || !existing._id) {
       alert('Không tìm thấy người dùng để cập nhật!');
+      return;
     }
+
+    this.userApi.update(existing._id, this.formUser).subscribe({
+      next: (updated) => {
+        const idx = this.users.findIndex((u) => u._id === updated._id);
+        if (idx !== -1) this.users[idx] = updated;
+        alert('Cập nhật thông tin thành công!');
+        this.cancelForm();
+      },
+      error: (err) => console.error('Lỗi cập nhật user:', err),
+    });
   }
 
   cancelForm() {
