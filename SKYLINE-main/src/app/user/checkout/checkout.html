@@ -1,68 +1,172 @@
 <app-header></app-header>
 <div class="content">
     <div class="checkout-container">
-
-        <header class="payment-header">
+        <header class="checkout-header">
             <div>
-                <img src="/assets/media/icon.png" alt="" class="payment-logo">
-            </div>
-            <div class="payment-info">
                 <h2>THỰC HIỆN THANH TOÁN</h2>
-                <p>Mã thanh toán của bạn sẽ được giữ trong vòng 15 phút.</p>
-                <p>Mã thanh toán này sẽ bị hủy nếu không có thanh toán nào xảy ra.</p>
-                <div class="deadline">
-                    Mã thanh toán này sẽ hết hạn vào lúc {{ paymentDeadline | date:'HH:mm | dd/MM/yyyy':'vi' }}
-                </div>
+                <p>Chuyển khoản đúng nội dung để hệ thống xác nhận nhanh.</p>
+            </div>
+            <div class="header-meta">
+                <div class="meta-pill deadline">Hạn thanh toán: {{ paymentDeadline | date:'HH:mm | dd/MM/yyyy':'vi' }}</div>
+                <div class="meta-pill status" [class]="'meta-pill status ' + bookingStatus">{{ statusText }}</div>
             </div>
         </header>
 
-        <section class="ticket-details">
-            <h3>Thông tin vé</h3>
-
+        <section class="checkout-body">
             <div *ngIf="isLoading; else ticketData" class="loading-state">
                 Đang tải thông tin vé, vui lòng chờ...
             </div>
 
             <ng-template #ticketData>
-                <div class="ticket-content">
-                    <div class="qr-code">
-                        <qrcode [qrdata]="qrData" [width]="200" [errorCorrectionLevel]="'M'">
-                        </qrcode>
+                <div class="loading-state error-state" *ngIf="loadError">
+                    <p>{{ loadError }}</p>
+                    <button class="btn-secondary" (click)="fetchTicketData()">Tải lại</button>
+                </div>
+
+                <div *ngIf="!loadError" class="checkout-layout">
+                    <div class="payment-column">
+                        <article class="card transfer-card">
+                            <div class="card-title-row">
+                                <h3>Bước 1: Chuyển khoản</h3>
+                                <span class="chip">VietQR</span>
+                            </div>
+
+                            <div class="transfer-grid">
+                                <div class="qr-card">
+                                    <img [src]="qrImageUrl" alt="Mã QR thanh toán" class="vietqr-image" />
+                                    <p>Quét QR bằng ứng dụng ngân hàng.</p>
+                                </div>
+
+                                <div class="transfer-detail">
+                                    <div class="amount-row">
+                                        <span>Số tiền thanh toán</span>
+                                        <strong>{{ totalAmount | number:'1.0-0' }} đ</strong>
+                                        <button class="mini-btn" (click)="copyAmount()">Sao chép</button>
+                                    </div>
+
+                                    <div class="detail-row">
+                                        <span>Ngân hàng</span>
+                                        <strong>{{ bankInfo.bankName }}</strong>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span>Số tài khoản</span>
+                                        <strong>{{ bankInfo.accountNumber }}</strong>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span>Nội dung</span>
+                                        <strong>{{ transferContent() }}</strong>
+                                        <button class="mini-btn" (click)="copyTransferContent()">Sao chép</button>
+                                    </div>
+
+                                    <div class="price-breakdown">
+                                        <div class="breakdown-row">
+                                            <span>Giá vé cơ bản</span>
+                                            <strong>{{ baseFare | number:'1.0-0' }} đ</strong>
+                                        </div>
+                                        <div class="breakdown-row" *ngIf="baggageInfo">
+                                            <span>Hành lý mua thêm</span>
+                                            <strong>{{ baggageFee | number:'1.0-0' }} đ</strong>
+                                        </div>
+                                        <div class="breakdown-row" *ngIf="feeAmount > 0">
+                                            <span>Thuế và phí</span>
+                                            <strong>{{ feeAmount | number:'1.0-0' }} đ</strong>
+                                        </div>
+                                        <div class="breakdown-row total">
+                                            <span>Tổng thanh toán</span>
+                                            <strong>{{ totalAmount | number:'1.0-0' }} đ</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p class="copied-note" *ngIf="copiedField === 'amount'">Đã sao chép số tiền.</p>
+                            <p class="copied-note" *ngIf="copiedField === 'content'">Đã sao chép nội dung chuyển khoản.</p>
+                        </article>
+
+                        <article class="card confirm-card" *ngIf="bookingStatus === 'pending'">
+                            <div class="card-title-row">
+                                <h3>Bước 2: Xác nhận giao dịch</h3>
+                            </div>
+
+                            <p class="confirm-note">Sau khi bạn chuyển khoản thành công, hãy điền thông tin bên dưới để gửi yêu cầu đối soát.</p>
+
+                            <div class="form-grid">
+                                <div class="form-block">
+                                    <label for="payerName">Tên người chuyển khoản</label>
+                                    <input id="payerName" type="text" [(ngModel)]="payerName" placeholder="Nguyễn Văn A" />
+                                </div>
+
+                                <div class="form-block">
+                                    <label for="transactionRef">Mã tham chiếu giao dịch</label>
+                                    <input id="transactionRef" type="text" [(ngModel)]="transactionRef" placeholder="FT123456789" />
+                                </div>
+                            </div>
+
+                            <label class="confirm-check">
+                                <input type="checkbox" [(ngModel)]="hasConfirmedTransfer" />
+                                <span>Tôi xác nhận đã hoàn tất chuyển khoản.</span>
+                            </label>
+
+                            <div class="action-row">
+                                <button class="btn-success" (click)="confirmPaid()" [disabled]="!canConfirmPayment">
+                                    {{ isUpdatingStatus ? 'Đang xử lý...' : 'Gửi yêu cầu xác nhận' }}
+                                </button>
+                                <button class="btn-secondary" (click)="refreshBooking()" [disabled]="isUpdatingStatus">Làm mới</button>
+                            </div>
+                        </article>
+
+                        <article class="card status-card" *ngIf="bookingStatus !== 'pending'">
+                            <div class="card-title-row">
+                                <h3>Trạng thái thanh toán</h3>
+                            </div>
+
+                            <div class="info-banner processing" *ngIf="bookingStatus === 'processing'">
+                                <strong>Đơn đang chờ đối soát.</strong>
+                                <span>Vui lòng chờ xác nhận hoặc làm mới trạng thái.</span>
+                            </div>
+
+                            <div class="info-banner success" *ngIf="bookingStatus === 'paid' || bookingStatus === 'issued'">
+                                <strong>Đã xác nhận thanh toán.</strong>
+                            </div>
+
+                            <div class="action-row">
+                                <button class="btn-secondary" (click)="refreshBooking()" [disabled]="isUpdatingStatus">Làm mới trạng thái</button>
+                                <button class="btn-secondary" (click)="goToResult()" [disabled]="isUpdatingStatus">Xem kết quả</button>
+                            </div>
+                        </article>
+
+                        <p class="status-message" *ngIf="statusMessage">{{ statusMessage }}</p>
                     </div>
 
-                    <div class="ticket-info-list">
-                        <div class="info-row">
-                            <span>Tên hành khách</span>
-                            <strong>{{ ticketInfo.name }}</strong>
-                        </div>
+                    <aside class="summary-column">
+                        <article class="card summary-card">
+                            <div class="card-title-row">
+                                <h3>Tóm tắt đơn</h3>
+                            </div>
 
-                        <div class="info-row flight-summary" *ngIf="flightDetails">
-                            <span>Chuyến bay</span>
-                            <strong>{{ flightDetails.flightNo }} ({{ flightDetails.from }} → {{ flightDetails.to }}) -
-                                Ghế {{ seatDetails }}</strong>
-                        </div>
-                        <div class="info-row flight-summary" *ngIf="flightDetails">
-                            <span>Khởi hành</span>
-                            <strong>{{ timeHM(flightDetails.departTime) }} - {{ dateVN(flightDetails.date) }}</strong>
-                        </div>
-                        <div class="info-row">
-                            <span>Số điện thoại</span>
-                            <strong>{{ ticketInfo.phone }}</strong>
-                        </div>
-                        <div class="info-row">
-                            <span>Ngày đặt</span>
-                            <strong>{{ ticketInfo.bookingDate | date:'HH:mm, dd/MM/yyyy' }}</strong>
-                        </div>
-                        <div class="info-row">
-                            <span>Email</span>
-                            <strong>{{ ticketInfo.email }}</strong>
-                        </div>
-
-                        <div class="total-amount">
-                            <span>TỔNG</span>
-                            <strong>{{ totalAmount | currency:'VND':'symbol':'1.0-0':'vi' }}</strong>
-                        </div>
-                    </div>
+                            <div class="summary-line">
+                                <span>Mã đơn</span>
+                                <strong>{{ ticketCode }}</strong>
+                            </div>
+                            <div class="summary-line" *ngIf="flightDetails">
+                                <span>Chuyến bay</span>
+                                <strong>{{ flightDetails.flightNo }} ({{ flightDetails.from }} → {{ flightDetails.to }})</strong>
+                            </div>
+                            <div class="summary-line">
+                                <span>Ghế</span>
+                                <strong>{{ seatDetails }} - {{ seatTypeLabel }}</strong>
+                            </div>
+                            <div class="summary-line">
+                                <span>Loại hành lý</span>
+                                <strong *ngIf="baggageInfo; else noBaggage">
+                                    {{ baggageInfo.code ? (baggageInfo.code + ' - ') : '' }}{{ baggageLabel }}
+                                </strong>
+                                <ng-template #noBaggage>
+                                    <strong>Không mua thêm</strong>
+                                </ng-template>
+                            </div>
+                        </article>
+                    </aside>
                 </div>
             </ng-template>
         </section>

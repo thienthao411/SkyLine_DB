@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClientModule } from '@angular/common/http';
+import { BookingApiService, BookingRecord } from '../services/booking-api.service';
 
 interface Ticket {
   code: string;
@@ -26,7 +27,6 @@ interface Ticket {
 })
 export class CheckTicket2 implements OnInit {
   ticketDetail: Ticket | undefined;
-  tickets: Ticket[] = [];
 
   // Modal state
   showModal = false;
@@ -46,29 +46,56 @@ export class CheckTicket2 implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private http: HttpClient
+    private bookingApiService: BookingApiService
   ) { }
 
   ngOnInit(): void {
-    this.http.get<Ticket[]>('assets/data/example_ticket.json').subscribe({
-      next: (data) => {
-        this.tickets = data;
-
-        this.route.queryParams.subscribe(params => {
-          const code = params['code'];
-          if (code) {
-            this.ticketDetail = this.tickets.find(ticket => ticket.code === code);
-          }
-
-          if (!this.ticketDetail) {
-            console.warn('Không tìm thấy vé với mã:', code);
-          }
-        });
-      },
-      error: (err) => {
-        console.error('Lỗi khi đọc file JSON:', err);
+    this.route.queryParams.subscribe(params => {
+      const code = params['code'];
+      if (!code) {
+        this.ticketDetail = undefined;
+        return;
       }
+
+      this.bookingApiService.getTicket(code).subscribe({
+        next: (record) => {
+          this.ticketDetail = this.toTicketDetail(record);
+        },
+        error: () => {
+          this.ticketDetail = undefined;
+          console.warn('Không tìm thấy vé với mã:', code);
+        }
+      });
     });
+  }
+
+  private toTicketDetail(record: BookingRecord): Ticket {
+    const statusText = record.status === 'paid' || record.status === 'issued' ? 'Đã thanh toán' : 'Chờ thanh toán';
+
+    return {
+      code: record.ticketCode,
+      name: String(record.passengerInfo?.['fullName'] || '').trim(),
+      seat: record.seat,
+      status: statusText,
+      route: `${record.flight.from} - ${record.flight.to}`,
+      phone: String(record.passengerInfo?.['phoneNumber'] || record.passengerInfo?.['phone'] || '').trim(),
+      email: String(record.passengerInfo?.['email'] || '').trim(),
+      departure: this.formatDateTime(record.flight.departTime),
+      arrival: this.formatDateTime(record.flight.arriveTime),
+      bookingDate: this.formatDateTime(record.bookingDate),
+      price: Number(record.totalAmount || 0),
+    };
+  }
+
+  private formatDateTime(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    const time = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const day = date.toLocaleDateString('vi-VN');
+    return `${time} - ${day}`;
   }
 
   goBack() {
@@ -119,11 +146,8 @@ export class CheckTicket2 implements OnInit {
   // --- Tính duration chuyến bay ---
   calculateDuration(departure: string, arrival: string): string {
     try {
-      const depParts = departure.split('-').map(p => p.trim());
-      const arrParts = arrival.split('-').map(p => p.trim());
-
-      const depDate = new Date(`${depParts[1]}T${depParts[0]}:00`);
-      const arrDate = new Date(`${arrParts[1]}T${arrParts[0]}:00`);
+      const depDate = this.parseDisplayDateTime(departure);
+      const arrDate = this.parseDisplayDateTime(arrival);
 
       const diffMs = arrDate.getTime() - depDate.getTime();
       if (diffMs < 0) return '---';
@@ -135,6 +159,18 @@ export class CheckTicket2 implements OnInit {
       console.error('Lỗi tính duration:', err);
       return '---';
     }
+  }
+
+  private parseDisplayDateTime(value: string): Date {
+    const [timeRaw, dateRaw] = value.split(' - ').map((part) => part.trim());
+    if (!timeRaw || !dateRaw) {
+      return new Date('invalid');
+    }
+
+    const [day, month, year] = dateRaw.split('/').map((part) => Number(part));
+    const [hour, minute] = timeRaw.split(':').map((part) => Number(part));
+
+    return new Date(year, (month || 1) - 1, day || 1, hour || 0, minute || 0, 0);
   }
 
   // --- Info popup ---

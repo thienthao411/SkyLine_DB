@@ -2,6 +2,25 @@
   
     <!-- Phần nội dung chính -->
     <main class="content">
+      <section class="notification-inbox">
+        <h2>Thông báo gần đây</h2>
+
+        <div class="inbox-empty" *ngIf="!inbox.length">
+          Chưa có thông báo nào được ghi nhận cho tài khoản này.
+        </div>
+
+        <div class="inbox-list" *ngIf="inbox.length">
+          <article class="inbox-card" *ngFor="let item of inbox">
+            <div class="inbox-meta">
+              <span class="inbox-type">{{ item.type === 'account' ? 'Tài khoản' : item.type === 'payment' ? 'Thanh toán' : 'Hệ thống' }}</span>
+              <span class="inbox-time">{{ item.createdAt | date:'HH:mm dd/MM/yyyy' }}</span>
+            </div>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.message }}</p>
+          </article>
+        </div>
+      </section>
+
       <h2>Cài đặt thông báo</h2>
   
       <div class="notification-settings">

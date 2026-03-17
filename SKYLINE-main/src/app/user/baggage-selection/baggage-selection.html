@@ -23,12 +23,12 @@
 
             <div class="header-box">
                 <div>{{ dateVN(flight.departTime) }} | {{ timeHM(flight.departTime) }}</div>
-                <div>Departing</div>
+                <div>Khởi hành</div>
             </div>
 
             <div class="header-box">
                 <div>{{ dateVN(flight.arriveTime) }} | {{ timeHM(flight.arriveTime) }}</div>
-                <div>Arriving</div>
+                <div>Hạ cánh</div>
             </div>
 
             <div class="header-box" *ngIf="selectedSeat">
@@ -130,7 +130,7 @@
                             class="error-message">
                             <span *ngIf="f['email'].errors?.['required']">Vui lòng nhập email.</span>
                             <span *ngIf="f['email'].errors?.['email']">Email không đúng định dạng (ví dụ:
-                                example@mail.com).</span>
+                                tenban@mail.com).</span>
                         </div>
                     </div>
 
@@ -178,8 +178,13 @@
             </form>
         </div>
         <div class="image-section">
-            <img src="/assets/media/mainLogo.png" alt="Logo">
-            <img src="/assets/media/Baggage.png" alt="Kích thước hành lý tiêu chuẩn">
+            <div class="image-card brand-card">
+                <img src="/assets/media/mainLogo.png" alt="Logo">
+                <p>Kiểm tra lại thông tin hành khách và hành lý trước khi sang bước xác nhận đơn đặt chỗ.</p>
+            </div>
+            <div class="image-card">
+                <img src="/assets/media/Baggage.png" alt="Kích thước hành lý tiêu chuẩn">
+            </div>
         </div>
 
     </div>

@@ -7,6 +7,25 @@
             <img src="/assets/media/Logo.png" alt="Logo" class="logo">
         </header>
 
+        <div class="seat-legend">
+            <div class="legend-item">
+                <span class="legend-swatch economy"></span>
+                <span>Ghế phổ thông trống</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-swatch business"></span>
+                <span>Ghế thương gia trống</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-swatch selected-seat"></span>
+                <span>Ghế đang chọn</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-swatch occupied"></span>
+                <span>Ghế đã có người đặt</span>
+            </div>
+        </div>
+
         <div class="seat-map-scroller">
             <div class="seat-container">
                 <div
@@ -52,12 +71,12 @@
 
                 <div class="header-box">
                     <div>{{ dateVN(f.departTime) }} | {{ timeHM(f.departTime) }}</div>
-                    <div>Departing</div>
+                    <div>Khởi hành</div>
                 </div>
 
                 <div class="header-box">
                     <div>{{ dateVN(f.arriveTime) }} | {{ timeHM(f.arriveTime) }}</div>
-                    <div>Arriving</div>
+                    <div>Hạ cánh</div>
                 </div>
             </ng-container>
 
@@ -76,10 +95,10 @@
 
             <div class="sidebar-sub-column">
                 <div class="ticket-type">
-                    <img src="/assets/media/Economy Seats.png" alt="Economy Seats" class="seat-img">
+                    <img src="/assets/media/Economy Seats.png" alt="Ghế phổ thông" class="seat-img">
                     <h2>
                         Phổ thông
-                        <span *ngIf="selectedSeatType === 'economy'" class="selected-badge blue">Selected</span>
+                        <span *ngIf="selectedSeatType === 'economy'" class="selected-badge blue">Đã chọn</span>
                     </h2>
                     <div>Vé hạng phổ thông cung cấp dịch vụ cơ bản với chi phí tiết kiệm, bao gồm:</div>
                     <ul>
@@ -92,10 +111,10 @@
 
             <div class="sidebar-sub-column">
                 <div class="ticket-type">
-                    <img src="/assets/media/Business Seats.png" alt="Economy Seats" class="seat-img">
+                    <img src="/assets/media/Business Seats.png" alt="Ghế thương gia" class="seat-img">
                     <h2>
                         Thương gia
-                        <span *ngIf="selectedSeatType === 'business'" class="selected-badge green">Selected</span>
+                        <span *ngIf="selectedSeatType === 'business'" class="selected-badge green">Đã chọn</span>
                     </h2>
                     <div>Hạng thương gia là hạng vé lý tưởng dành cho những hành khách muốn có trải nghiệm bay thoải
                         mái, riêng tư với nhiều đặc quyền.</div>
@@ -126,7 +145,7 @@
             </div>
 
             <div class="footer-info-box">
-                <span>Seat number</span>
+                <span>Số ghế</span>
                 <strong>{{ selectedSeat || '--' }}</strong>
             </div>
 

@@ -13,6 +13,7 @@ import { Confirmation } from './user/confirmation/confirmation';
 import { SeatSelection } from './user/seat-selection/seat-selection';
 import { BaggageSelection } from './user/baggage-selection/baggage-selection';
 import { Checkout } from './user/checkout/checkout';
+import { PaymentResult } from './user/payment-result/payment-result';
 import { Contact } from './user/contact/contact';
 
 export const routes: Routes = [
@@ -114,6 +115,7 @@ export const routes: Routes = [
   { path: 'baggage-selection/:id', component: BaggageSelection },
   { path: 'baggage-selection', component: BaggageSelection },
   { path: 'checkout', component: Checkout },
+  { path: 'ket-qua-thanh-toan/:ticketCode', component: PaymentResult },
 
   // Trang xác nhận
   { path: 'confirmation', component: Confirmation },

@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClientModule } from '@angular/common/http';
+import { BookingApiService, BookingRecord } from '../services/booking-api.service';
 
 interface Ticket {
   code: string;
@@ -26,7 +27,7 @@ export class CheckTicket implements OnInit {
   filteredTickets: Ticket[] = [];
   currentUser: string | null = null;
 
-  constructor(private router: Router, private http: HttpClient) { }
+  constructor(private router: Router, private bookingApiService: BookingApiService) { }
 
   ngOnInit(): void {
     const savedUser = localStorage.getItem('currentUser');
@@ -45,18 +46,33 @@ export class CheckTicket implements OnInit {
 
     if (!this.currentUser) return;
 
-    this.http.get<Ticket[]>('assets/data/example_ticket.json').subscribe({
-      next: (data) => {
-        this.tickets = data.filter(t => t.email?.trim().toLowerCase() === this.currentUser);
+    this.bookingApiService.getTickets(this.currentUser).subscribe({
+      next: (records) => {
+        this.tickets = records.map(record => this.toTicket(record));
         this.filteredTickets = [...this.tickets];
         if (this.tickets.length === 0) {
           console.warn('Không tìm thấy vé cho user:', this.currentUser);
         }
       },
       error: (err) => {
-        console.error('Lỗi khi đọc file JSON:', err);
+        console.error('Lỗi khi tải dữ liệu vé:', err);
       }
     });
+  }
+
+  private toTicket(record: BookingRecord): Ticket {
+    const fullName = String(record.passengerInfo?.['fullName'] || '').trim();
+    const email = String(record.passengerInfo?.['email'] || '').trim();
+    const statusText = record.status === 'paid' || record.status === 'issued' ? 'Đã thanh toán' : 'Chờ thanh toán';
+
+    return {
+      code: record.ticketCode,
+      name: fullName,
+      seat: record.seat,
+      status: statusText,
+      route: `${record.flight.from} - ${record.flight.to}`,
+      email,
+    };
   }
 
   goToDetail(ticket: Ticket) {

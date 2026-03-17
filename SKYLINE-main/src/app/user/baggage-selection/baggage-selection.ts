@@ -54,10 +54,26 @@ export class BaggageSelection implements OnInit {
   }
 
   ngOnInit(): void {
+    const savedFlightId = this.bookingService.getData('flight')?.flightId || this.bookingService.getData('selectedFlight')?.flightId;
+    const savedSeat = this.bookingService.getData('selectedSeat');
+    const savedSeatType = this.bookingService.getData('selectedSeatType');
+    const savedPassengerInfo = this.bookingService.getData('passengerInfo');
+    const savedBaggageCode = this.bookingService.getData('baggageOption')?.code;
+
     this.selectedFlightId = this.route.snapshot.queryParams['flightId'];
     this.selectedSeat = this.route.snapshot.queryParams['seat'];
     this.selectedSeatType = this.route.snapshot.queryParams['type'];
     this.currentUser = this.authService.getCurrentUser();
+
+    this.selectedFlightId = this.selectedFlightId || savedFlightId || null;
+    this.selectedSeat = this.selectedSeat || savedSeat || null;
+    this.selectedSeatType = this.selectedSeatType || savedSeatType || null;
+
+    if (!this.selectedFlightId || !this.selectedSeat) {
+      alert('Thiếu dữ liệu đặt chỗ. Vui lòng chọn ghế lại từ đầu.');
+      this.router.navigate(['/tim-chuyen-bay']);
+      return;
+    }
 
     let fullUserData: any = null;
     const fullUserRaw = localStorage.getItem('fullUserData');
@@ -82,26 +98,29 @@ export class BaggageSelection implements OnInit {
       });
     }
 
-    if (this.selectedFlightId) {
-      forkJoin({
-        flight: this.bookingApiService.getFlightById(this.selectedFlightId),
-        options: this.bookingApiService.getBaggageOptions()
-      }).subscribe({
-        next: ({ flight, options }) => {
-          this.selectedFlight.set(flight);
-          this.baggageOptions = options;
-          this.bookingService.setData('flight', flight);
-          this.isLoading.set(false);
-        },
-        error: (err) => {
-          console.error('Lỗi tải dữ liệu hành lý/chuyến bay:', err);
-          this.isLoading.set(false);
-        }
-      });
-    } else {
-      console.error('Không có ID chuyến bay!');
-      this.isLoading.set(false);
+    if (savedPassengerInfo) {
+      this.passengerForm.patchValue(savedPassengerInfo);
     }
+
+    forkJoin({
+      flight: this.bookingApiService.getFlightById(this.selectedFlightId),
+      options: this.bookingApiService.getBaggageOptions()
+    }).subscribe({
+      next: ({ flight, options }) => {
+        this.selectedFlight.set(flight);
+        this.baggageOptions = options;
+        if (savedBaggageCode) {
+          const matchedOption = options.find((option) => option.code === savedBaggageCode) || null;
+          this.selectedBaggage.set(matchedOption);
+        }
+        this.bookingService.setData('flight', flight);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Lỗi tải dữ liệu hành lý/chuyến bay:', err);
+        this.isLoading.set(false);
+      }
+    });
   }
 
   private formatDateForInput(dateStr: string): string {
@@ -130,11 +149,11 @@ export class BaggageSelection implements OnInit {
 
   onSubmit(): void {
     if (this.passengerForm.valid) {
-      console.log('Form Data:', this.passengerForm.value);
+      console.log('Dữ liệu biểu mẫu:', this.passengerForm.value);
 
       const selectedBaggage = this.selectedBaggage();
       const selectedBaggagePrice = selectedBaggage ? selectedBaggage.price : 0;
-      console.log('Baggage Price selected:', selectedBaggagePrice);
+      console.log('Giá hành lý đã chọn:', selectedBaggagePrice);
 
       this.bookingService.setData('passengerInfo', this.passengerForm.value);
       this.bookingService.setData('baggagePrice', selectedBaggagePrice);

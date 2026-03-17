@@ -4,81 +4,97 @@
     flex-direction: column;
     align-items: center;
     box-sizing: border-box;
+    background: linear-gradient(180deg, #f4f8fc 0%, #ffffff 100%);
 }
 
 .baggage-content {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
     width: 100%;
-    gap: 2rem;
-    padding: 1.5rem 2rem;
+    gap: 24px;
+    padding: 24px;
     box-sizing: border-box;
+    align-items: start;
 }
 
 .form-section {
-    flex: 2;
-    min-width: 300px;
+    min-width: 0;
+}
+
+.journey-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.summary-chip {
+    background: #ffffff;
+    border: 1px solid #dce6f1;
+    border-radius: 18px;
+    padding: 14px 16px;
+    box-shadow: 0 12px 28px rgba(38, 63, 92, 0.08);
+}
+
+.summary-chip span {
+    display: block;
+    font-size: 13px;
+    color: #5d738c;
+    margin-bottom: 4px;
+}
+
+.summary-chip strong {
+    color: #1f3652;
 }
 
 .image-section {
-    flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 25rem;
+    gap: 20px;
+    position: sticky;
+    top: 24px;
 }
 
-.image-section img {
+.image-card {
+    background: #ffffff;
+    border: 1px solid #dce6f1;
+    border-radius: 24px;
+    padding: 20px;
+    box-shadow: 0 18px 40px rgba(31, 54, 82, 0.08);
+}
+
+.image-card img {
     max-width: 100%;
     height: auto;
+    display: block;
+    margin: 0 auto;
 }
 
-.flight-info-header {
-    width: 100%;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e0e0e0;
-    padding: 1.5rem 1rem;
-    box-sizing: border-box;
-    display: flex;
-    justify-content: center;
-}
-
-.flight-info-content {
-    width: 100%;
-    max-width: 1200px;
-}
-
-.flight-info-content h2 {
-    margin: 0;
-}
-
-.flight-info-content h3.flight-date-label {
-    margin-bottom: 0.25rem;
-}
-
-.flight-info-content p.flight-data {
-    color: #606DEC;
-    font-weight: 500;
-    margin: 0.25rem 0 0 0;
+.brand-card p {
+    margin: 14px 0 0;
+    color: #49627d;
+    line-height: 1.6;
 }
 
 .form-card {
-    background-color: #f8f9fa;
-    border: 1px solid #e0e0e0;
-    border-radius: 10px;
-    padding: 1rem 2rem;
-    margin-bottom: 1.5rem;
+    background-color: #ffffff;
+    border: 1px solid #dce6f1;
+    border-radius: 24px;
+    padding: 24px;
+    margin-bottom: 18px;
+    box-shadow: 0 18px 40px rgba(31, 54, 82, 0.08);
 }
 
 .form-card h3 {
+    margin-top: 0;
     font-size: 1.25rem;
-    color: #606DEC;
+    color: #375578;
 }
 
 .form-description {
     margin-bottom: 1.5rem;
+    color: #4e667f;
+    line-height: 1.6;
 }
 
 .form-description-highlight {
@@ -87,14 +103,15 @@
 }
 
 .form-group {
-    margin-bottom: 1.25rem;
+    margin-bottom: 22px;
     position: relative;
 }
 
 .form-group label {
     display: block;
-    font-weight: 500;
+    font-weight: 600;
     margin-bottom: 0.5rem;
+    color: #1f3652;
 }
 
 .form-group input[type="text"],
@@ -102,79 +119,87 @@
 .form-group input[type="tel"],
 .form-group input[type="date"] {
     width: 100%;
-    padding: 0.75rem;
+    padding: 0.85rem 0.95rem;
     font-size: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    border: 1px solid #cdd9e5;
+    border-radius: 12px;
     box-sizing: border-box;
     font-family: inherit;
+    background: #fbfdff;
 }
 
 .form-group input::placeholder {
-    color: #aaa;
+    color: #98a7b6;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #606dec;
+    box-shadow: 0 0 0 4px rgba(96, 109, 236, 0.12);
 }
 
 .radio-group {
     display: flex;
-    gap: 5rem;
+    gap: 24px;
+    flex-wrap: wrap;
 }
 
 .radio-group label {
-    font-weight: normal;
+    font-weight: 500;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .button-group {
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: 16px;
     margin-top: 24px;
+    flex-wrap: wrap;
 }
 
 .button-group .back-btn,
 .button-group .submit-btn {
     flex-grow: 1;
     flex-basis: 180px;
-    max-width: 250px;
-    padding: 12px 20px;
+    max-width: 260px;
+    padding: 14px 20px;
     font-size: 16px;
-    font-weight: bold;
-    border-radius: 8px;
+    font-weight: 700;
+    border-radius: 14px;
     border: 1px solid transparent;
     cursor: pointer;
     text-align: center;
-    transition: background-color 0.3s, opacity 0.3s;
+    transition: background-color 0.3s, opacity 0.3s, transform 0.2s ease;
 }
 
 .back-btn {
-    background-color: #f0f2f5;
-    color: #333;
-    border: 1px solid #ddd;
+    background-color: #f0f4f8;
+    color: #1f3652;
+    border: 1px solid #d7e0ea;
 }
 
 .back-btn:hover {
-    background-color: #e4e6e9;
+    background-color: #e4ebf2;
 }
 
 .submit-btn {
-    background-color: #606DEC;
+    background-color: #606dec;
     color: white;
 }
 
-.submit-btn:hover {
+.submit-btn:hover:not(:disabled) {
     background-color: #737ee6;
+    transform: translateY(-1px);
 }
 
 .submit-btn:disabled {
-    background-color: #ccc;
-    color: #666;
+    background-color: #c8d1dc;
+    color: #667788;
     cursor: not-allowed;
-    opacity: 0.7;
-}
-
-.form-group {
-    margin-bottom: 22px;
-    position: relative;
+    opacity: 0.8;
 }
 
 .form-group input.invalid-field {
@@ -194,9 +219,10 @@
     background-color: #375578;
     color: #f0f0f0;
     display: flex;
-    padding: 1.5vh 2vw;
-    font-size: 1.2vw;
+    padding: 18px 24px;
+    font-size: clamp(14px, 1vw, 16px);
     align-items: center;
+    box-sizing: border-box;
 }
 
 .header-box {
@@ -214,14 +240,14 @@
 }
 
 .hightlight {
-    font-size: 2.4vw;
+    font-size: clamp(24px, 2vw, 34px);
     font-weight: bold;
 }
 
 .baggage-options-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
 }
 
 .baggage-option {
@@ -229,19 +255,20 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border: 1px solid #e0e0e0;
-    border-radius: 10px;
+    border: 1px solid #dce6f1;
+    border-radius: 18px;
     cursor: pointer;
-    min-height: 75px;
-    background-color: #fafafa;
+    min-height: 92px;
+    background-color: #fbfdff;
     transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    padding: 12px;
 }
 
 .baggage-option:hover {
     border-color: #80bfff;
     background-color: #f7fbff;
     transform: translateY(-3px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 24px rgba(31, 54, 82, 0.08);
 }
 
 .baggage-option:active {
@@ -249,30 +276,64 @@
 }
 
 .baggage-option.selected {
-    border-color: #606DEC;
-    background-color: #f0f0ff;
-    box-shadow: 0 4px 10px rgba(96, 109, 236, 0.2);
+    border-color: #606dec;
+    background-color: #f0f2ff;
+    box-shadow: 0 10px 24px rgba(96, 109, 236, 0.16);
     transform: translateY(-3px);
 }
 
 .baggage-name {
-    font-weight: bold;
+    font-weight: 700;
     text-align: center;
     padding: 0 10px;
+    color: #21364b;
 }
 
 .baggage-price {
-    font-weight: bold;
-    color: #606DEC;
+    font-weight: 700;
+    color: #606dec;
+    margin-top: 6px;
 }
 
 .baggage-option:first-child .baggage-price {
-    color: #666;
-    font-weight: bold;
+    color: #667788;
 }
 
 .baggage-option:first-child.selected {
-    border-color: #aaa;
-    background-color: #f1f1f1;
+    border-color: #adb8c4;
+    background-color: #f3f5f7;
     box-shadow: none;
+}
+
+@media (max-width: 1100px) {
+    .baggage-content {
+        grid-template-columns: 1fr;
+    }
+
+    .image-section {
+        position: static;
+        order: -1;
+    }
+}
+
+@media (max-width: 760px) {
+    .sidebar-header {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .header-box,
+    .header-box:nth-child(2),
+    .header-box:nth-child(4),
+    .header-box:nth-child(5) {
+        flex: 1 1 40%;
+    }
+
+    .baggage-content {
+        padding: 18px;
+    }
+
+    .journey-summary {
+        grid-template-columns: 1fr;
+    }
 }

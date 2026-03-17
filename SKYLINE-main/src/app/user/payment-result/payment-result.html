@@ -1,0 +1,120 @@
+<app-header></app-header>
+
+<div class="result-shell">
+  <div class="result-card" *ngIf="!isLoading; else loadingTpl">
+    <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
+
+    <ng-container *ngIf="booking as b">
+      <div class="result-header">
+        <div>
+          <p class="eyebrow">Kết quả thanh toán</p>
+          <h2>Đặt chỗ {{ b.ticketCode }}</h2>
+          <p class="header-copy">{{ statusDescription }}</p>
+        </div>
+        <div class="ticket-chip">{{ statusText }}</div>
+      </div>
+
+      <section class="status-panel" [class]="'status-panel ' + statusClass">
+        <span class="status-label">Trạng thái hiện tại</span>
+        <strong>{{ statusText }}</strong>
+      </section>
+
+      <div class="layout-grid">
+        <section class="info-panel">
+          <div class="panel-heading"><h3>Thông tin vé</h3></div>
+          <div class="ticket-list">
+            <div class="ticket-row">
+              <span>Hành khách</span>
+              <strong>{{ b.passengerInfo['fullName'] }}</strong>
+            </div>
+            <div class="ticket-row" *ngIf="passengerEmail">
+              <span>Email đăng nhập</span>
+              <strong>{{ passengerEmail }}</strong>
+            </div>
+            <div class="ticket-row">
+              <span>Chuyến bay</span>
+              <strong>{{ b.flight.flightNo }} | {{ b.flight.from }} → {{ b.flight.to }}</strong>
+            </div>
+            <div class="ticket-row">
+              <span>Số ghế</span>
+              <strong>{{ b.seat }}</strong>
+            </div>
+            <div class="ticket-row">
+              <span>Hành lý</span>
+              <strong *ngIf="b.baggageOption; else noneBaggage">{{ b.baggageOption.code }} - {{ b.baggageOption.name }}</strong>
+            </div>
+            <div class="ticket-row total-row">
+              <span>Tổng thanh toán</span>
+              <strong>{{ b.totalAmount | number:'1.0-0' }} đ</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="info-panel" *ngIf="shouldShowAccountSection">
+          <div class="panel-heading"><h3>Bước tiếp theo</h3></div>
+          <div class="step-box" [class.checking]="accountState.mode === 'checking'">
+            <strong class="step-title">{{ accountState.title }}</strong>
+            <p>{{ accountState.message }}</p>
+
+            <div class="credential-box" *ngIf="accountState.tempPassword">
+              <span>Mật khẩu tạm</span>
+              <strong class="password-value">{{ accountState.tempPassword }}</strong>
+              <button type="button" class="copy-btn" (click)="copyTemporaryPassword()">
+                {{ passwordCopied ? 'Đã sao chép' : 'Sao chép' }}
+              </button>
+            </div>
+
+            <div class="inline-actions">
+              <button class="btn-primary" *ngIf="shouldRequireSignInForLookup" (click)="goToSignIn()">Đăng nhập trước khi tra cứu vé</button>
+              <button class="btn-primary" *ngIf="canLookupTicketNow" (click)="goToCheckTicket()">Đi đến tra cứu vé</button>
+            </div>
+            <p class="signin-hint" *ngIf="shouldRequireSignInForLookup && passengerEmail">
+              Chỉ tài khoản <strong>{{ passengerEmail }}</strong> mới có thể tra cứu vé của đặt chỗ này.
+            </p>
+          </div>
+        </section>
+
+        <section class="info-panel" *ngIf="hasTransactionDetails">
+          <div class="panel-heading"><h3>Chi tiết giao dịch</h3></div>
+          <div class="ticket-list">
+            <div class="ticket-row" *ngIf="payerNameValue">
+              <span>Người chuyển khoản</span>
+              <strong>{{ payerNameValue }}</strong>
+            </div>
+            <div class="ticket-row" *ngIf="transactionRefValue">
+              <span>Mã tham chiếu</span>
+              <strong>{{ transactionRefValue }}</strong>
+            </div>
+            <div class="ticket-row" *ngIf="submittedAtValue">
+              <span>Thời gian gửi xác nhận</span>
+              <strong>{{ submittedAtValue | date:'HH:mm dd/MM/yyyy' }}</strong>
+            </div>
+            <div class="ticket-row" *ngIf="paidAtValue">
+              <span>Thời gian ghi nhận</span>
+              <strong>{{ paidAtValue | date:'HH:mm dd/MM/yyyy' }}</strong>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="actions" *ngIf="isPendingLike">
+        <button class="btn-secondary" (click)="goToCheckout()">Quay lại trang thanh toán</button>
+        <button class="btn-primary" (click)="fetchBooking()">Làm mới trạng thái</button>
+      </div>
+
+      <div class="actions" *ngIf="isFailedLike">
+        <button class="btn-primary" (click)="goToFlightSearch()">Đặt chuyến bay mới</button>
+      </div>
+
+      <ng-template #noneBaggage>
+        <strong>Không mua thêm</strong>
+      </ng-template>
+    </ng-container>
+  </div>
+
+  <ng-template #loadingTpl>
+    <div class="result-card loading-card">Đang tải kết quả thanh toán...</div>
+  </ng-template>
+</div>
+
+<app-footer></app-footer>

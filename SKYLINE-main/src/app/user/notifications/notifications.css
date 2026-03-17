@@ -10,6 +10,73 @@
     flex-grow: 1;
     padding: 40px;
   }
+
+.notification-inbox {
+    margin-bottom: 28px;
+  }
+
+.notification-inbox h2 {
+    margin: 0 0 14px;
+  }
+
+.inbox-empty {
+    background: #ffffff;
+    border: 1px dashed #ccd8e5;
+    border-radius: 12px;
+    padding: 18px;
+    color: #5f7287;
+  }
+
+.inbox-list {
+    display: grid;
+    gap: 14px;
+  }
+
+.inbox-card {
+    background: #ffffff;
+    border: 1px solid #e1e7ef;
+    border-radius: 14px;
+    padding: 16px 18px;
+    box-shadow: 0 8px 20px rgba(27, 47, 72, 0.06);
+  }
+
+.inbox-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+.inbox-type {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #edf4fb;
+    color: #2f597f;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+.inbox-time {
+    color: #789;
+    font-size: 13px;
+  }
+
+.inbox-card h3 {
+    margin: 0 0 6px;
+    color: #243f59;
+    font-size: 18px;
+  }
+
+.inbox-card p {
+    margin: 0;
+    color: #52677c;
+    line-height: 1.5;
+  }
   
   .content h2 {
       flex: 1;
@@ -96,6 +163,11 @@
 @media (max-width: 768px) {
   .content {
       padding: 25px; 
+  }
+
+  .inbox-meta {
+      flex-direction: column;
+      align-items: flex-start;
   }
   
   h2 {

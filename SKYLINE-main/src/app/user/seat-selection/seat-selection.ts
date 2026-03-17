@@ -51,6 +51,8 @@ export class SeatSelection implements OnInit {
     this.currentUser = this.authService.getCurrentUser();
 
     this.selectedFlightId = this.route.snapshot.paramMap.get('flightId');
+    const savedSeat = this.bookingService.getData('selectedSeat');
+    const savedSeatType = this.bookingService.getData('selectedSeatType');
 
     if (this.selectedFlightId) {
       forkJoin({
@@ -62,6 +64,10 @@ export class SeatSelection implements OnInit {
           this.occupiedSeats.set(occupiedSeats);
           this.bookingService.setData('flight', flight);
           this.isLoading.set(false);
+          if (savedSeat && !this.occupiedSeats().includes(savedSeat)) {
+            this.selectedSeat = savedSeat;
+            this.selectedSeatType = savedSeatType || this.resolveSeatType(savedSeat);
+          }
         },
         error: (err) => {
           console.error('Lỗi tải dữ liệu ghế/chuyến bay:', err);
@@ -76,6 +82,7 @@ export class SeatSelection implements OnInit {
 
   selectSeat(seatId: string, seatType: string) {
     if (this.isSeatOccupied(seatId)) {
+      alert('Ghế này đã có người đặt. Vui lòng chọn ghế khác.');
       return;
     }
 
@@ -90,6 +97,15 @@ export class SeatSelection implements OnInit {
     }
   }
 
+  private resolveSeatType(seatCode: string | null): string | null {
+    if (!seatCode) {
+      return null;
+    }
+
+    const matchedSeat = this.seats.find((seat) => seat.id === seatCode);
+
+    return matchedSeat?.seatType || null;
+  }
   tiepTuc() {
     if (!this.selectedSeat) {
       alert('⚠️ Vui lòng chọn ghế trước khi tiếp tục!');

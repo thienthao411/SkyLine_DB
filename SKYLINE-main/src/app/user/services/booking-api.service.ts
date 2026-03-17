@@ -59,6 +59,12 @@ export interface BookingRecord {
   status: string;
 }
 
+export interface AccountEmailPayload {
+  accountStatus: 'existing' | 'created';
+  tempPassword?: string;
+  notificationCreated?: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -94,6 +100,37 @@ export class BookingApiService {
   getBooking(ticketCode: string): Observable<BookingRecord> {
     return this.http
       .get<{ success: boolean; booking: BookingRecord }>(`${this.baseUrl}/bookings/${encodeURIComponent(ticketCode)}`)
+      .pipe(map((response) => response.booking));
+  }
+
+  getTickets(email?: string): Observable<BookingRecord[]> {
+    const query = email ? `?email=${encodeURIComponent(email)}` : '';
+    return this.http
+      .get<{ success: boolean; tickets: BookingRecord[] }>(`${this.baseUrl}/tickets${query}`)
+      .pipe(map((response) => response.tickets ?? []));
+  }
+
+  getTicket(ticketCode: string): Observable<BookingRecord> {
+    return this.http
+      .get<{ success: boolean; ticket: BookingRecord }>(`${this.baseUrl}/tickets/${encodeURIComponent(ticketCode)}`)
+      .pipe(map((response) => response.ticket));
+  }
+
+  updateBookingStatus(ticketCode: string, status: string, paymentData?: Record<string, unknown>): Observable<BookingRecord> {
+    return this.http
+      .patch<{ success: boolean; booking: BookingRecord }>(
+        `${this.baseUrl}/bookings/${encodeURIComponent(ticketCode)}/status`,
+        { status, paymentData }
+      )
+      .pipe(map((response) => response.booking));
+  }
+
+  sendAccountEmail(ticketCode: string, payload: AccountEmailPayload): Observable<BookingRecord> {
+    return this.http
+      .post<{ success: boolean; booking: BookingRecord }>(
+        `${this.baseUrl}/bookings/${encodeURIComponent(ticketCode)}/account-email`,
+        payload,
+      )
       .pipe(map((response) => response.booking));
   }
 }
