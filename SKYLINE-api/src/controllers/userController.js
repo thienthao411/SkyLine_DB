@@ -1,8 +1,14 @@
 const User = require("../models/User");
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 exports.createUser = async (req, res) => {
   try {
+    // Hash password nếu có trong request body
+    if (req.body.password) {
+      req.body.password = await bcrypt.hash(req.body.password, 10);
+    }
 
     const user = new User(req.body);
 
@@ -55,11 +61,11 @@ exports.getUserByEmail = async (req, res) => {
   try {
     console.log('Fetching user by email:', req.params.email);
     const user = await User.findOne({ email: req.params.email });
-    
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    
+
     console.log('User found:', user.fullName);
     res.json(user);
   } catch (error) {
@@ -68,18 +74,107 @@ exports.getUserByEmail = async (req, res) => {
   }
 };
 
+exports.register = async (req, res) => {
+  try {
+    const { fullName, email, password } = req.body;
+
+    // Kiểm tra email đã tồn tại
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email đã được đăng ký!'
+      });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Tạo user mới với các giá trị mặc định
+    const user = new User({
+      fullName: fullName,
+      email: email,
+      password: hashedPassword,
+      avatar: 'assets/img/AVT1.jpg',
+      currentRank: 'Đồng',
+      points: 0,
+      nextRank: 'Bạc',
+      nextThreshold: 500,
+      country: 'Việt Nam',
+      status: 'active',
+      phone: '',
+      birthday: null,
+      gender: '',
+      passport: '',
+      passportExpiry: null,
+      address: ''
+    });
+
+    const savedUser = await user.save();
+
+    // Tạo JWT token
+    const token = jwt.sign(
+      { userId: savedUser._id, email: savedUser.email },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
+    );
+
+    // Trả về user (không bao gồm password) và token
+    const userResponse = savedUser.toObject();
+    delete userResponse.password;
+
+    res.status(201).json({
+      success: true,
+      message: 'Đăng ký thành công!',
+      user: userResponse,
+      token: token
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    // Tìm user theo email
     const user = await User.findOne({ email });
-    
-    if (!user || user.password !== password) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Email hoặc mật khẩu không đúng!'
+      });
     }
-    
-    res.json({ user });
+
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Email hoặc mật khẩu không đúng!'
+      });
+    }
+
+    // Tạo JWT token
+    const token = jwt.sign(
+      { userId: user._id, email: user.email },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
+    );
+
+    // Trả về user (không bao gồm password) và token
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    res.json({
+      success: true,
+      message: 'Đăng nhập thành công!',
+      user: userResponse,
+      token: token
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 

@@ -195,47 +195,6 @@ h1 {
     text-decoration: underline;
 }
 
-.divider {
-    text-align: center;
-    margin: 25px 0;
-    color: #999;
-    font-size: 14px;
-}
-
-/* Social Login */
-.social-login {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 25px;
-}
-
-.btn-google,
-.btn-facebook {
-    flex: 1;
-    padding: 12px;
-    border: 1px solid #e0e0e0;
-    background-color: #fff;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.3s;
-}
-
-.btn-google:hover,
-.btn-facebook:hover {
-    background-color: #f8f8f8;
-}
-
-.btn-google img,
-.btn-facebook img {
-    width: 20px;
-    height: 20px;
-}
-
 /* Register Link */
 .register-link {
     text-align: center;

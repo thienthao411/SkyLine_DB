@@ -1,67 +1,67 @@
 {
-  "hash": "10471545",
-  "configHash": "06db0b51",
-  "lockfileHash": "6619280b",
-  "browserHash": "04a900a3",
+  "hash": "7a3e30b1",
+  "configHash": "b90bf64a",
+  "lockfileHash": "519d20a9",
+  "browserHash": "c216b8e5",
   "optimized": {
     "@angular/common": {
       "src": "../../../../../../node_modules/@angular/common/fesm2022/common.mjs",
       "file": "@angular_common.js",
-      "fileHash": "d6aa87e0",
+      "fileHash": "9db6e7be",
       "needsInterop": false
     },
     "@angular/common/http": {
       "src": "../../../../../../node_modules/@angular/common/fesm2022/http.mjs",
       "file": "@angular_common_http.js",
-      "fileHash": "1b78eda9",
+      "fileHash": "1c1eab34",
       "needsInterop": false
     },
     "@angular/common/locales/vi": {
       "src": "../../../../../../node_modules/@angular/common/locales/vi.js",
       "file": "@angular_common_locales_vi.js",
-      "fileHash": "5bf6c327",
+      "fileHash": "db6dc40f",
       "needsInterop": false
     },
     "@angular/core": {
       "src": "../../../../../../node_modules/@angular/core/fesm2022/core.mjs",
       "file": "@angular_core.js",
-      "fileHash": "c1e9ce5c",
+      "fileHash": "76e45ca5",
       "needsInterop": false
     },
     "@angular/forms": {
       "src": "../../../../../../node_modules/@angular/forms/fesm2022/forms.mjs",
       "file": "@angular_forms.js",
-      "fileHash": "a012615a",
+      "fileHash": "63ef9d25",
       "needsInterop": false
     },
     "@angular/platform-browser": {
       "src": "../../../../../../node_modules/@angular/platform-browser/fesm2022/platform-browser.mjs",
       "file": "@angular_platform-browser.js",
-      "fileHash": "7b8ff622",
+      "fileHash": "b46e1550",
       "needsInterop": false
     },
     "@angular/router": {
       "src": "../../../../../../node_modules/@angular/router/fesm2022/router.mjs",
       "file": "@angular_router.js",
-      "fileHash": "37350ffe",
+      "fileHash": "508519f2",
       "needsInterop": false
     },
     "angularx-qrcode": {
       "src": "../../../../../../node_modules/angularx-qrcode/fesm2022/angularx-qrcode.mjs",
       "file": "angularx-qrcode.js",
-      "fileHash": "6cd5a2b5",
+      "fileHash": "3fde567c",
       "needsInterop": false
     },
     "rxjs": {
       "src": "../../../../../../node_modules/rxjs/dist/esm5/index.js",
       "file": "rxjs.js",
-      "fileHash": "cf85025c",
+      "fileHash": "b6b8d77f",
       "needsInterop": false
     },
     "zone.js": {
       "src": "../../../../../../node_modules/zone.js/fesm2015/zone.js",
       "file": "zone__js.js",
-      "fileHash": "7b9d1891",
+      "fileHash": "af7caadb",
       "needsInterop": true
     }
   },

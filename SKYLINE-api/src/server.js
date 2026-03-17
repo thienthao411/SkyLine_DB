@@ -42,24 +42,3 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-// filepath: d:\Năm 3\Học kỳ 1\PT WEB\Angular_Ex\SKYLINE\SKYLINE-api\src\controllers\userController.js
-exports.createUser = async (req, res) => {
-  try {
-    console.log('=== Creating User ===');
-    console.log('Request body:', req.body);
-    
-    const user = new User(req.body);
-    console.log('User object created:', user);
-    
-    const savedUser = await user.save();
-    console.log('User saved successfully:', savedUser);
-    
-    res.status(201).json(savedUser);
-  } catch (error) {
-    console.error('=== Error Creating User ===');
-    console.error('Error message:', error.message);
-    console.error('Error details:', error);
-    res.status(500).json({ error: error.message });
-  }
-};
-

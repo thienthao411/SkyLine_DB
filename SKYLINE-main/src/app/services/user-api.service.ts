@@ -34,6 +34,14 @@ export class UserApiService {
     return this.http.get<User[]>(this.apiUrl);
   }
 
+  login(email: string, password: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/login`, { email, password });
+  }
+
+  register(userData: { fullName: string; email: string; password: string }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/register`, userData);
+  }
+
   create(user: User): Observable<User> {
     return this.http.post<User>(this.apiUrl, user);
   }
