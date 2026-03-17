@@ -73,7 +73,7 @@
               <tr *ngIf="filteredUsers.length === 0">
                 <td colspan="7" class="no-data">Không tìm thấy người dùng nào.</td>
               </tr>
-              <tr *ngFor="let user of filteredUsers">
+              <tr *ngFor="let user of paginatedUsers">
                 <td class="user-avatar-cell">
                   <img [src]="user.avatar" alt="Avatar" class="user-avatar" />
                 </td>
@@ -84,9 +84,15 @@
                 </td>
                 <td>{{ user.currentRank }}</td>
                 <td>{{ user.points | number }}</td>
-                <td [class]="'status-cell ' + (user.status || 'Hoạt động').toLowerCase().replace(' ', '-')">
-                    {{ user.status || 'Hoạt động' }}
-                </td>
+                <td 
+  [ngClass]="{
+    'status-cell': true,
+    'active': user.status === 'active',
+    'inactive': user.status === 'inactive'
+  }"
+>
+  {{ user.status }}
+</td>
                 <td>{{ user.phone }}</td>
                 <td class="actions">
                   <button title="Xem chi tiết" class="action-btn view" (click)="viewUser(user)">
@@ -113,6 +119,12 @@
             </tbody>
           </table>
         </div>
+
+        <div class="pagination">
+    <button (click)="prevPage()" [disabled]="currentPage === 1"><<</button>
+    <span>Trang {{ currentPage }} / {{ totalPages }}</span>
+    <button (click)="nextPage()" [disabled]="currentPage === totalPages">>></button>
+  </div>
       </div>
 
       <div *ngIf="activeTab === 'form'" class="form-container">
@@ -133,6 +145,8 @@
               />
             </div>
             <div>
+</div>
+            <div>
               <label>Điện thoại</label>
               <input [(ngModel)]="formUser.phone" type="tel" placeholder="Ví dụ: 0912345678" />
             </div>
@@ -150,9 +164,12 @@
             </div>
             
             <div>
-                <label>Trạng thái</label>
-                <input [(ngModel)]="formUser.status" type="text" readonly class="read-only-field" />
-            </div>
+  <label>Trạng thái</label>
+  <select [(ngModel)]="formUser.status">
+    <option value="active">active</option>
+    <option value="inactive">inactive</option>
+  </select>
+</div>
             
           </div>
           <div class="form-column">
@@ -238,6 +255,7 @@
         <div class="modal-buttons">
           <button class="btn btn-modal-close" (click)="closeViewModal()">Đóng</button>
         </div>
+
       </div>
     </div>
   </main>
