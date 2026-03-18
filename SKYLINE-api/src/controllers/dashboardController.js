@@ -290,7 +290,7 @@ exports.getTopRoutes = async (req, res) => {
           as: 'flight'
         }
       },
-      { $unwind: { path: '$flight', preserveNullAndEmpty: false } },
+      { $unwind: { path: '$flight', preserveNullAndEmptyArrays: false } },
       {
         $group: {
           _id: { from: '$flight.from', to: '$flight.to' },
@@ -332,7 +332,7 @@ exports.getTopAirlines = async (req, res) => {
           as: 'flight'
         }
       },
-      { $unwind: { path: '$flight', preserveNullAndEmpty: false } },
+      { $unwind: { path: '$flight', preserveNullAndEmptyArrays: false } },
       {
         $group: {
           _id: '$flight.airline',
