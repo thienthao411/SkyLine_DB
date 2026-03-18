@@ -458,9 +458,57 @@ exports.getTopAirlines = async (req, res) => {
       },
       { $unwind: { path: '$flight', preserveNullAndEmptyArrays: false } },
       {
+        $lookup: {
+          from: 'airlines',
+          let: { flightAirlineId: '$flight.airlineId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: [
+                    { $toString: '$_id' },
+                    { $toString: '$$flightAirlineId' }
+                  ]
+                }
+              }
+            },
+            { $project: { _id: 0, airlineName: 1, airlineCode: 1 } }
+          ],
+          as: 'airlineMeta'
+        }
+      },
+      {
+        $addFields: {
+          airlineNameResolved: {
+            $ifNull: [
+              { $arrayElemAt: ['$airlineMeta.airlineName', 0] },
+              {
+                $ifNull: [
+                  '$flight.airline',
+                  {
+                    $ifNull: ['$flight.airlineCode', 'Unknown']
+                  }
+                ]
+              }
+            ]
+          },
+          airlineCodeResolved: {
+            $ifNull: [
+              '$flight.airlineCode',
+              {
+                $ifNull: [
+                  { $arrayElemAt: ['$airlineMeta.airlineCode', 0] },
+                  ''
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
         $group: {
-          _id: '$flight.airline',
-          airlineCode: { $first: '$flight.airlineCode' },
+          _id: '$airlineNameResolved',
+          airlineCode: { $first: '$airlineCodeResolved' },
           tickets: { $sum: 1 },
           revenue: { $sum: ticketRevenueExpr() }
         }
