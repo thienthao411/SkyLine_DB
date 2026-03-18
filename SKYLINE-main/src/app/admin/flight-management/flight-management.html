@@ -69,11 +69,23 @@
               <div class="date-fields">
                 <div class="field-group">
                   <label for="popover-start-date">Từ ngày:</label>
-                  <input type="date" id="popover-start-date" [(ngModel)]="tempStartDate">
+                  <input
+                    type="date"
+                    id="popover-start-date"
+                    [(ngModel)]="tempStartDate"
+                    lang="en-GB"
+                    placeholder="dd/mm/yyyy"
+                  >
                 </div>
                 <div class="field-group">
                   <label for="popover-end-date">Đến ngày:</label>
-                  <input type="date" id="popover-end-date" [(ngModel)]="tempEndDate">
+                  <input
+                    type="date"
+                    id="popover-end-date"
+                    [(ngModel)]="tempEndDate"
+                    lang="en-GB"
+                    placeholder="dd/mm/yyyy"
+                  >
                 </div>
               </div>
 
@@ -101,30 +113,33 @@
               <tr>
                 <th>Mã chuyến bay</th>
                 <th>Tên hãng bay</th>
-                <th>Sân bay đi</th>
-                <th>Sân bay đến</th>
+                <th>Chặng bay</th>
                 <th>Thời gian cất cánh</th>
-                <th>Thời gian hạ cánh</th>
+                <th>Trạng thái</th>
+                <th>Giá phổ thông</th>
+                <th>Đã đặt</th>
                 <th>Hành động</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngIf="filteredFlights.length === 0">
-                <td colspan="7" class="no-data">Không tìm thấy chuyến bay nào.</td>
+                <td colspan="8" class="no-data">Không tìm thấy chuyến bay nào.</td>
               </tr>
               <tr *ngFor="let flight of paginatedFlights">
                 <td>{{ flight.flightCode }}</td>
                 <td>{{ flight.airline }}</td>
-                <td>{{ flight.departure }}</td>
-                <td>{{ flight.destination }}</td>
+                <td>{{ flight.departure }} → {{ flight.destination }}</td>
                 <td>
                   {{ flight.takeoffTime.hour }}:{{ flight.takeoffTime.minute }} -
                   {{ flight.takeoffTime.day }}/{{ flight.takeoffTime.month }}/{{ flight.takeoffTime.year }}
                 </td>
                 <td>
-                  {{ flight.landingTime.hour }}:{{ flight.landingTime.minute }} -
-                  {{ flight.landingTime.day }}/{{ flight.landingTime.month }}/{{ flight.landingTime.year }}
+                  <span [class]="'promo-status status-' + getFlightStatusKey(flight)" [ngStyle]="getFlightStatusStyle(flight)">
+                    {{ getFlightStatusLabel(flight) }}
+                  </span>
                 </td>
+                <td>{{ getPriceText(flight.priceEconomy, flight.currency) }}</td>
+                <td>{{ getSeatLoadText(flight) }}</td>
                 <td class="actions">
                   <button title="Xem" class="action-btn view" (click)="viewFlight(flight)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -136,13 +151,6 @@
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-width="1.5"></path>
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.5"></path>
-                    </svg>
-                  </button>
-                  <button title="Xóa" class="action-btn delete" (click)="promptDelete(flight.id)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <polyline points="3 6 5 6 21 6" stroke-width="1.5"></polyline>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
-                        stroke-width="1.5"></path>
                     </svg>
                   </button>
                 </td>
@@ -165,141 +173,157 @@
         </div>
       </div>
 
-      <div *ngIf="activeTab === 'form'" class="form-container">
-        <div class="flight-form">
-          <div class="form-column">
-            <div>
+      <div *ngIf="activeTab === 'form'" class="ops-form-tab">
+        <section class="ops-card">
+          <h3>Thông tin chuyến bay</h3>
+          <div class="ops-grid ops-grid-2">
+            <div class="ops-field">
               <label>Mã chuyến bay</label>
-              <input [(ngModel)]="formFlight.flightCode" type="text" placeholder="Ví dụ: VN123" />
+              <input [ngModel]="formFlight.flightCode" (ngModelChange)="onFlightCodeChange($event)" type="text" placeholder="Ví dụ: VN123" />
             </div>
-            <div>
-              <label>Sân bay đi</label>
+
+            <div class="ops-field">
+              <label>Hãng khai thác</label>
+              <select [ngModel]="selectedAirlineOptionKey" (ngModelChange)="onAirlineSelectionChange($event)">
+                <option value="">Chọn hãng khai thác</option>
+                <option *ngFor="let option of airlineSelectionOptions" [value]="option.key">{{ option.label }}</option>
+              </select>
+            </div>
+
+            <div class="ops-field">
+              <label>Sân bay khởi hành</label>
               <input [(ngModel)]="formFlight.departure" type="text" placeholder="Ví dụ: Nội Bài (HAN)" />
             </div>
-          </div>
-          <div class="form-column">
-            <div>
-              <label>Tên hãng bay</label>
-              <input [(ngModel)]="formFlight.airline" type="text" placeholder="Ví dụ: Vietnam Airlines" />
-            </div>
-            <div>
+
+            <div class="ops-field">
               <label>Sân bay đến</label>
               <input [(ngModel)]="formFlight.destination" type="text" placeholder="Ví dụ: Tân Sơn Nhất (SGN)" />
             </div>
           </div>
-        </div>
-        <div class="time-fields-wrapper">
-          <div class="form-column">
-            <div>
-              <label>Thời gian cất cánh</label>
-              <div class="time-inputs">
+        </section>
+
+        <section class="ops-card">
+          <h3>Lịch bay (STD/STA)</h3>
+          <div class="ops-schedule-grid">
+            <div class="ops-time-block">
+              <label>STD - Giờ khởi hành</label>
+              <div class="ops-time-inputs">
                 <select [(ngModel)]="formFlight.takeoffTime.hour">
-                  <option *ngFor="let h of [].constructor(24); let i = index" [value]="i < 10 ? '0'+i : i">{{ i < 10
-                      ? '0' +i : i }} Giờ</option>
+                  <option *ngFor="let h of hourOptions" [value]="h">{{ h }} Giờ</option>
                 </select>
                 <select [(ngModel)]="formFlight.takeoffTime.minute">
-                  <option *ngFor="let m of [].constructor(60); let i = index" [value]="i < 10 ? '0'+i : i">{{ i < 10
-                      ? '0' +i : i }} Phút</option>
+                  <option *ngFor="let m of minuteOptions" [value]="m">{{ m }} Phút</option>
                 </select>
                 <select [(ngModel)]="formFlight.takeoffTime.day">
-                  <option *ngFor="let d of [].constructor(31); let i = index" [value]="(i+1) < 10 ? '0'+(i+1) : (i+1)">
-                    Ngày {{ i + 1 }}</option>
+                  <option *ngFor="let d of dayOptions" [value]="d">Ngày {{ d }}</option>
                 </select>
                 <select [(ngModel)]="formFlight.takeoffTime.month">
-                  <option *ngFor="let m of [].constructor(12); let i = index" [value]="(i+1) < 10 ? '0'+(i+1) : (i+1)">
-                    Tháng {{ i + 1 }}</option>
+                  <option *ngFor="let m of monthOptions" [value]="m">Tháng {{ m }}</option>
                 </select>
                 <select [(ngModel)]="formFlight.takeoffTime.year">
-                  <option value="2025">2025</option>
-                  <option value="2026">2026</option>
+                  <option *ngFor="let y of yearOptions" [value]="y">{{ y }}</option>
                 </select>
               </div>
             </div>
-            <div>
-              <label>Thời gian hạ cánh</label>
-              <div class="time-inputs">
+
+            <div class="ops-time-block">
+              <label>STA - Giờ đến</label>
+              <div class="ops-time-inputs">
                 <select [(ngModel)]="formFlight.landingTime.hour">
-                  <option *ngFor="let h of [].constructor(24); let i = index" [value]="i < 10 ? '0'+i : i">{{ i < 10
-                      ? '0' +i : i }} Giờ</option>
+                  <option *ngFor="let h of hourOptions" [value]="h">{{ h }} Giờ</option>
                 </select>
                 <select [(ngModel)]="formFlight.landingTime.minute">
-                  <option *ngFor="let m of [].constructor(60); let i = index" [value]="i < 10 ? '0'+i : i">{{ i < 10
-                      ? '0' +i : i }} Phút</option>
+                  <option *ngFor="let m of minuteOptions" [value]="m">{{ m }} Phút</option>
                 </select>
                 <select [(ngModel)]="formFlight.landingTime.day">
-                  <option *ngFor="let d of [].constructor(31); let i = index" [value]="(i+1) < 10 ? '0'+(i+1) : (i+1)">
-                    Ngày {{ i + 1 }}</option>
+                  <option *ngFor="let d of dayOptions" [value]="d">Ngày {{ d }}</option>
                 </select>
                 <select [(ngModel)]="formFlight.landingTime.month">
-                  <option *ngFor="let m of [].constructor(12); let i = index" [value]="(i+1) < 10 ? '0'+(i+1) : (i+1)">
-                    Tháng {{ i + 1 }}</option>
+                  <option *ngFor="let m of monthOptions" [value]="m">Tháng {{ m }}</option>
                 </select>
                 <select [(ngModel)]="formFlight.landingTime.year">
-                  <option value="2025">2025</option>
-                  <option value="2026">2026</option>
+                  <option *ngFor="let y of yearOptions" [value]="y">{{ y }}</option>
                 </select>
               </div>
             </div>
           </div>
-        </div>
+          <p class="ops-inline-meta">Đường bay: <strong>{{ routePreview }}</strong> | Block time: <strong>{{ durationPreview }}</strong></p>
+        </section>
 
-        <div class="notes-field">
-          <label>Ghi chú</label>
-          <input [(ngModel)]="formFlight.notes" type="text" />
-        </div>
+        <section class="ops-card">
+          <h3>Khai thác thương mại</h3>
+          <div class="ops-grid ops-grid-3">
+            <div class="ops-field">
+              <label>Tổng ghế khai thác</label>
+              <input [(ngModel)]="formFlight.seatsMax" type="number" min="0" placeholder="Ví dụ: 180" />
+            </div>
+
+            <div class="ops-field">
+              <label>Giá hạng phổ thông (VND)</label>
+              <input [(ngModel)]="formFlight.priceEconomy" type="number" min="0" placeholder="Ví dụ: 1500000" />
+            </div>
+
+            <div class="ops-field">
+              <label>Giá hạng thương gia (VND)</label>
+              <input [(ngModel)]="formFlight.priceBusiness" type="number" min="0" placeholder="Ví dụ: 3200000" />
+            </div>
+          </div>
+        </section>
 
         <div class="form-buttons">
           <button class="btn form-btn-cancel" (click)="cancelForm()">Hủy</button>
-          <button class="btn form-btn-save" (click)="addFlight()" [disabled]="isFormInvalid">
+          <button *ngIf="!isEditMode" class="btn form-btn-save" (click)="addFlight()" [disabled]="isFormInvalid">
             Lưu
           </button>
-          <button class="btn form-btn-edit" (click)="updateFlight()" [disabled]="formFlight.id === 0 || isFormInvalid">
-            Chỉnh sửa
+          <button *ngIf="isEditMode" class="btn form-btn-edit" (click)="updateFlight()" [disabled]="!formFlight.id || isFormInvalid">
+            Cập nhật
           </button>
-        </div>
-      </div>
-    </div>
-
-    <div *ngIf="showDeleteConfirm" class="modal-overlay">
-      <div class="modal-content">
-        <h4>Xác nhận xóa</h4>
-        <p>Bạn có chắc chắn muốn xóa chuyến bay này không? <br> Hành động này không thể hoàn tác.</p>
-        <div class="modal-buttons">
-          <button class="btn btn-modal-cancel" (click)="cancelDelete()">Hủy</button>
-          <button class="btn btn-modal-delete" (click)="confirmDelete()">Xóa</button>
         </div>
       </div>
     </div>
 
     <div *ngIf="showViewModal && flightToView" class="modal-overlay">
       <div class="modal-content modal-view">
-        <h4>Chi tiết chuyến bay #{{ flightToView.flightCode }}</h4>
+        <div class="modal-view-head">
+          <div>
+            <h4>Chuyến bay {{ flightToView.flightCode }}</h4>
+            <p class="route-line">{{ flightToView.airline }}<ng-container *ngIf="flightToView.airlineCode"> ({{ flightToView.airlineCode }})</ng-container></p>
+          </div>
+          <span [class]="'promo-status status-' + getFlightStatusKey(flightToView)" [ngStyle]="getFlightStatusStyle(flightToView)">{{ getFlightStatusLabel(flightToView) }}</span>
+        </div>
+
+        <div class="route-banner">
+          <div class="route-endpoint">
+            <small>Khởi hành</small>
+            <strong>{{ flightToView.departure }}</strong>
+          </div>
+          <div class="route-arrow" aria-hidden="true">→</div>
+          <div class="route-endpoint">
+            <small>Điểm đến</small>
+            <strong>{{ flightToView.destination }}</strong>
+          </div>
+        </div>
+
+        <div class="timeline-strip">
+          <div class="timeline-item">
+            <label>Cất cánh</label>
+            <strong>{{ formatFlightDateTime(flightToView.takeoffTime) }}</strong>
+          </div>
+          <div class="timeline-item">
+            <label>Hạ cánh</label>
+            <strong>{{ formatFlightDateTime(flightToView.landingTime) }}</strong>
+          </div>
+          <div class="timeline-item">
+            <label>Thời lượng</label>
+            <strong>{{ getDurationText(flightToView) }}</strong>
+          </div>
+        </div>
+
         <div class="view-details-grid">
-
-          <div class="detail-item"><label>Mã hiệu chuyến bay</label><span>{{ flightToView.flightCode }}</span></div>
-          <div class="detail-item"><label>Tên hãng bay</label><span>{{ flightToView.airline }}</span></div>
-          <div class="detail-item"><label>Sân bay đi</label><span>{{ flightToView.departure }}</span></div>
-          <div class="detail-item"><label>Sân bay đến</label><span>{{ flightToView.destination }}</span></div>
-
-          <div class="detail-item full-width"><label>Thời gian cất cánh</label>
-            <span>
-              {{ flightToView.takeoffTime.hour }} Giờ {{ flightToView.takeoffTime.minute }} Phút,
-              Ngày {{ flightToView.takeoffTime.day }}/{{ flightToView.takeoffTime.month }}/{{
-              flightToView.takeoffTime.year }}
-            </span>
-          </div>
-
-          <div class="detail-item full-width"><label>Thời gian hạ cánh</label>
-            <span>
-              {{ flightToView.landingTime.hour }} Giờ {{ flightToView.landingTime.minute }} Phút,
-              Ngày {{ flightToView.landingTime.day }}/{{ flightToView.landingTime.month }}/{{
-              flightToView.landingTime.year }}
-            </span>
-          </div>
-
-          <div class="detail-item full-width"><label>Ghi chú</label><span>{{ flightToView.notes || '(Không có)'
-              }}</span>
-          </div>
+          <div class="detail-item"><label>Điểm dừng</label><span>{{ getStopsText(flightToView) }}</span></div>
+          <div class="detail-item"><label>Đã đặt</label><span>{{ getSeatLoadText(flightToView) }}</span></div>
+          <div class="detail-item"><label>Giá phổ thông</label><span>{{ getPriceText(flightToView.priceEconomy, flightToView.currency) }}</span></div>
+          <div class="detail-item"><label>Giá thương gia</label><span>{{ getPriceText(flightToView.priceBusiness, flightToView.currency) }}</span></div>
         </div>
         <div class="modal-buttons">
           <button class="btn btn-modal-close" (click)="closeViewModal()">Đóng</button>
