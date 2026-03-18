@@ -105,6 +105,26 @@
                                   <label><input type="radio" name="status" [value]="'inactive'" [(ngModel)]="currentPromotion.status" /> Chưa kích hoạt</label>
                               </div>
                           </div>
+
+                          <div class="form-row three-cols feature-row">
+                              <div class="form-group">
+                                  <label>Ngày bắt đầu hiệu lực</label>
+                                  <input type="date" [(ngModel)]="currentPromotion.startDate" />
+                              </div>
+
+                              <div class="form-group" *ngIf="isLimitedTime">
+                                  <label>Ngày kết thúc hiệu lực</label>
+                                  <input type="date" [(ngModel)]="currentPromotion.endDate" (ngModelChange)="updateFormValidity()" />
+                              </div>
+
+                              <div class="form-group form-featured-toggle">
+                                  <label for="isFeatured">Khuyến mãi nổi bật</label>
+                                  <div class="switch-wrap">
+                                      <input id="isFeatured" type="checkbox" [(ngModel)]="currentPromotion.isFeatured" />
+                                      <span class="switch-label">{{ currentPromotion.isFeatured ? 'Đang bật' : 'Đang tắt' }}</span>
+                                  </div>
+                              </div>
+                          </div>
                       </div>
                   </div>
 
@@ -115,10 +135,6 @@
                               <option [ngValue]="false">Hiệu lực vô thời hạn</option>
                               <option [ngValue]="true">Hiệu lực đến</option>
                           </select>
-                      </div>
-                      <div class="form-group time-detail-group" *ngIf="isLimitedTime">
-                          <label for="endDate">đến</label>
-                          <input id="endDate" type="text" [(ngModel)]="currentPromotion.endDate" (ngModelChange)="updateFormValidity()" placeholder="DD/MM/YYYY" />
                       </div>
                       <div class="form-group time-detail-group" *ngIf="isLimitedTime">
                           <label for="endTime">Khung giờ</label>
@@ -277,13 +293,14 @@
                               <th>Đến ngày</th>
                               <th>Hình thức khuyến mãi</th>
                               <th>Áp dụng cho</th>
+                              <th>Nổi bật</th>
                               <th>Trạng thái</th>
                               <th>Hành động</th>
                           </tr>
                       </thead>
                       <tbody>
                           <tr *ngIf="filteredPromos.length === 0">
-                              <td colspan="7" class="no-data">Không tìm thấy mã khuyến mãi nào.</td>
+                              <td colspan="8" class="no-data">Không tìm thấy mã khuyến mãi nào.</td>
                           </tr>
                           <tr *ngFor="let promo of filteredPromos" class="promo-item-row">
                               <td class="name-col">
@@ -297,6 +314,11 @@
                               <td>{{ getPromoTypeLabel(promo.type) }}</td>
 
                               <td>{{ promo.applyTarget }}</td>
+                              <td>
+                                  <span [class]="promo.isFeatured ? 'featured-tag featured-on' : 'featured-tag featured-off'">
+                                      {{ promo.isFeatured ? 'Có' : 'Không' }}
+                                  </span>
+                              </td>
                               <td class="status-col">
                                   <span [class]="'promo-status status-' + promo.status">
                                       {{ promo.status === 'active' ? 'Đang chạy' : 

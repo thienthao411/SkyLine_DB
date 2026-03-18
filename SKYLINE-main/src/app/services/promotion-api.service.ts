@@ -7,6 +7,9 @@ export interface PromotionApiItem {
   label: string;
   date: string;
   details: string;
+  isFeatured?: boolean;
+  startDate?: string;
+  endDate?: string;
   target: string;
   applyTime: {
     from: string;
@@ -35,6 +38,7 @@ export interface PromotionApiModel {
   title: string;
   icon: string;
   category?: string;
+  isFeatured?: boolean;
   items: PromotionApiItem[];
 }
 

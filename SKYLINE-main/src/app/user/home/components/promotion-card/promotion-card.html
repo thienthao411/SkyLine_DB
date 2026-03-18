@@ -1,7 +1,8 @@
 <a
   class="promotion-card"
   [class.large]="large"
-  [routerLink]="['/promotion', promotion.id]"
+  [routerLink]="['/promotion']"
+  [queryParams]="{ itemId: promotion.id }"
   [attr.aria-label]="'Xem chi tiết khuyến mãi ' + promotion.title"
 >
   <div class="card-image-wrap">

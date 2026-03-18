@@ -355,6 +355,26 @@
     color: #4B5563;
 }
 
+.featured-tag {
+    display: inline-block;
+    min-width: 42px;
+    text-align: center;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.featured-on {
+    background: #DCFCE7;
+    color: #166534;
+}
+
+.featured-off {
+    background: #F3F4F6;
+    color: #4B5563;
+}
+
 .actions {
     display: flex;
     justify-content: center;
@@ -928,4 +948,34 @@
     .time-inputs {
         grid-template-columns: 1fr;
     }
+}
+
+.feature-row {
+    border-top: 1px solid #E5E7EB;
+    padding-top: 16px;
+    margin-top: 10px;
+}
+
+.form-featured-toggle .switch-wrap {
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    min-height: 42px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f8fafc;
+}
+
+.form-featured-toggle input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #375578;
+    cursor: pointer;
+}
+
+.switch-label {
+    font-size: 13px;
+    color: #375578;
+    font-weight: 600;
 }
