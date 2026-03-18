@@ -310,11 +310,11 @@ export class AdminHomeComponent implements OnInit, OnDestroy {
   toggleSidebar() { this.sidebarOpen = !this.sidebarOpen; }
 
   @HostListener('window:resize')
-  checkSidebarState() { this.sidebarOpen = window.innerWidth > 768; }
+  checkSidebarState() { this.sidebarOpen = window.innerWidth > 900; }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(e: MouseEvent) {
-    if (window.innerWidth <= 768) {
+    if (window.innerWidth <= 900) {
       const target = e.target as HTMLElement;
       const sidebar = document.querySelector('app-admin-sidebar');
       const toggle = document.querySelector('.menu-toggle');

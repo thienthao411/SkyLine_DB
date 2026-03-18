@@ -83,6 +83,76 @@ function ticketRevenueExpr() {
   };
 }
 
+function pad2(n) {
+  return String(n).padStart(2, '0');
+}
+
+function dayKey(date) {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+function monthKey(date) {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}`;
+}
+
+function daysInclusive(start, end) {
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  return Math.floor((end.getTime() - start.getTime()) / oneDayMs) + 1;
+}
+
+function buildCustomTimeline(start, end) {
+  const dayCount = daysInclusive(start, end);
+
+  // <= 45 ngày: hiển thị theo ngày; dài hơn: gom theo tháng; quá dài: gom theo năm.
+  if (dayCount <= 45) {
+    const labels = [];
+    const keys = [];
+    const cur = new Date(start);
+    while (cur <= end) {
+      keys.push(dayKey(cur));
+      labels.push(`${pad2(cur.getDate())}/${pad2(cur.getMonth() + 1)}`);
+      cur.setDate(cur.getDate() + 1);
+    }
+    return {
+      groupId: { $dateToString: { format: '%Y-%m-%d', date: '$parsedBookingDate' } },
+      keys,
+      labels
+    };
+  }
+
+  const monthSpan = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
+  if (monthSpan <= 24) {
+    const labels = [];
+    const keys = [];
+    const cur = new Date(start.getFullYear(), start.getMonth(), 1);
+    const endMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+    while (cur <= endMonth) {
+      keys.push(monthKey(cur));
+      labels.push(`${pad2(cur.getMonth() + 1)}/${cur.getFullYear()}`);
+      cur.setMonth(cur.getMonth() + 1);
+    }
+    return {
+      groupId: { $dateToString: { format: '%Y-%m', date: '$parsedBookingDate' } },
+      keys,
+      labels
+    };
+  }
+
+  const labels = [];
+  const keys = [];
+  for (let y = start.getFullYear(); y <= end.getFullYear(); y++) {
+    const ys = String(y);
+    keys.push(ys);
+    labels.push(ys);
+  }
+
+  return {
+    groupId: { $dateToString: { format: '%Y', date: '$parsedBookingDate' } },
+    keys,
+    labels
+  };
+}
+
 // GET /api/dashboard/core-stats
 // Chỉ lấy dữ liệu 5 collection chính: users, promotions, tickets, flights, airlines.
 exports.getCoreStats = async (req, res) => {
@@ -205,6 +275,25 @@ exports.getRevenueChart = async (req, res) => {
   try {
     const { period = 'month', from, to } = req.query;
     const { start, end } = getDateRange(period, from, to);
+    const hasCustomRange = period === 'custom' && Boolean(from) && Boolean(to);
+
+    if (hasCustomRange) {
+      const timeline = buildCustomTimeline(start, end);
+      const data = await Ticket.aggregate([
+        ...ticketDateStages(start, end),
+        { $group: { _id: timeline.groupId, revenue: { $sum: ticketRevenueExpr() }, count: { $sum: 1 } } },
+        { $sort: { _id: 1 } }
+      ]);
+
+      const values = Array(timeline.keys.length).fill(0);
+      const idxMap = new Map(timeline.keys.map((k, i) => [k, i]));
+      data.forEach(d => {
+        const idx = idxMap.get(String(d._id));
+        if (idx !== undefined) values[idx] = d.revenue;
+      });
+
+      return res.json({ success: true, data: { labels: timeline.labels, values } });
+    }
 
     let groupId;
     if (period === 'day') groupId = { $hour: '$parsedBookingDate' };
@@ -250,6 +339,25 @@ exports.getTicketsChart = async (req, res) => {
   try {
     const { period = 'month', from, to } = req.query;
     const { start, end } = getDateRange(period, from, to);
+    const hasCustomRange = period === 'custom' && Boolean(from) && Boolean(to);
+
+    if (hasCustomRange) {
+      const timeline = buildCustomTimeline(start, end);
+      const data = await Ticket.aggregate([
+        ...ticketDateStages(start, end),
+        { $group: { _id: timeline.groupId, count: { $sum: 1 } } },
+        { $sort: { _id: 1 } }
+      ]);
+
+      const values = Array(timeline.keys.length).fill(0);
+      const idxMap = new Map(timeline.keys.map((k, i) => [k, i]));
+      data.forEach(d => {
+        const idx = idxMap.get(String(d._id));
+        if (idx !== undefined) values[idx] = d.count;
+      });
+
+      return res.json({ success: true, data: { labels: timeline.labels, values } });
+    }
 
     let groupId;
     if (period === 'day') groupId = { $hour: '$parsedBookingDate' };
@@ -350,9 +458,57 @@ exports.getTopAirlines = async (req, res) => {
       },
       { $unwind: { path: '$flight', preserveNullAndEmptyArrays: false } },
       {
+        $lookup: {
+          from: 'airlines',
+          let: { flightAirlineId: '$flight.airlineId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: [
+                    { $toString: '$_id' },
+                    { $toString: '$$flightAirlineId' }
+                  ]
+                }
+              }
+            },
+            { $project: { _id: 0, airlineName: 1, airlineCode: 1 } }
+          ],
+          as: 'airlineMeta'
+        }
+      },
+      {
+        $addFields: {
+          airlineNameResolved: {
+            $ifNull: [
+              { $arrayElemAt: ['$airlineMeta.airlineName', 0] },
+              {
+                $ifNull: [
+                  '$flight.airline',
+                  {
+                    $ifNull: ['$flight.airlineCode', 'Unknown']
+                  }
+                ]
+              }
+            ]
+          },
+          airlineCodeResolved: {
+            $ifNull: [
+              '$flight.airlineCode',
+              {
+                $ifNull: [
+                  { $arrayElemAt: ['$airlineMeta.airlineCode', 0] },
+                  ''
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
         $group: {
-          _id: '$flight.airline',
-          airlineCode: { $first: '$flight.airlineCode' },
+          _id: '$airlineNameResolved',
+          airlineCode: { $first: '$airlineCodeResolved' },
           tickets: { $sum: 1 },
           revenue: { $sum: ticketRevenueExpr() }
         }

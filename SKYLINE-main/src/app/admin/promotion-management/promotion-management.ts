@@ -13,6 +13,7 @@ interface Promotion {
   promoId: string;
   promoName: string;
   promoCode: string;
+    isFeatured: boolean;
   promoType: string; 
   discountValue: number | null;
   maxDiscountAmount: number | null;
@@ -47,6 +48,9 @@ interface JsonItem {
   label: string;
   date: string;
   details: string; 
+    isFeatured?: boolean;
+    startDate?: string;
+    endDate?: string;
   target: string;
     applyTime: {
         from: string;
@@ -74,6 +78,7 @@ interface PromoCategory {
     id?: string;
   title: string;
   icon: string;
+    isFeatured?: boolean;
   items: JsonItem[];
     category?: string;
   visibleCount: number;
@@ -90,6 +95,7 @@ interface PromoListItem {
   endDate: string;
   type: string;
   applyTarget: string;
+    isFeatured: boolean;
   status: 'active' | 'upcoming' | 'expired' | 'draft';
   jsonCategoryId: string;
   jsonItemIndex: number;
@@ -129,7 +135,7 @@ export class PromotionManagement implements OnInit {
     editingPromotionId: string | null = null;
   
   currentPromotion: Promotion = {
-      promoId: '', promoName: '', promoCode: '', promoType: 'percent', discountValue: null,
+      promoId: '', promoName: '', promoCode: '', isFeatured: false, promoType: 'percent', discountValue: null,
       maxDiscountAmount: null, startDate: new Date().toISOString().slice(0, 10), endDate: '', status: 'inactive', notes: '',
       endTime: '', descriptionPlaceholder: '', applyHour: 'any', applyDayOfWeek: 'any',
       applyDayOfMonth: 'any', applyMonth: 'any', applyYear: 'any', applyTimeframe: 'any',
@@ -247,8 +253,8 @@ export class PromotionManagement implements OnInit {
                   const categoryId = category._id || category.id || '';
 
                   (category.items || []).forEach((item, index) => {
-                      const from = this.getApplyFrom(item.applyTime);
-                      const to = this.getApplyTo(item.applyTime);
+                      const from = item.startDate || this.getApplyFrom(item.applyTime);
+                      const to = item.endDate || this.getApplyTo(item.applyTime);
                       const rawLabel = (category.title || item.label || '').replace(/\*\*/g, '').trim();
                       const type = this.detectPromoType(item);
                       const displayName = this.buildPromoDisplayName(rawLabel, item, type);
@@ -263,6 +269,7 @@ export class PromotionManagement implements OnInit {
                           endDate: to || 'Vô thời hạn',
                           type,
                           applyTarget: item.customerTargetType || item.target || 'all',
+                          isFeatured: Boolean(item.isFeatured ?? category.isFeatured),
                           status: this.getPromoStatus(item, to),
                           jsonCategoryId: categoryId,
                           jsonItemIndex: index
@@ -317,14 +324,15 @@ export class PromotionManagement implements OnInit {
               ...this.currentPromotion,
               promoName: ((promoItem.rawLabel || rawData?.label || promoItem.name) || '').replace(/\*\*/g, '').trim(), 
               promoCode: rawData?.promoCode || `CODE-${promoItem.id}`, 
+              isFeatured: Boolean(rawData?.isFeatured),
               
               // 🟢 FIX: Ánh xạ promoType là MÃ CODE và discountValue là GIÁ TRỊ SỐ
               promoType: promoItem.type, // Là mã code: 'percent', 'combo', etc.
               discountValue: discountValue,
               
               maxDiscountAmount: rawData?.maxDiscountAmount || null,
-              startDate: promoItem.startDate,
-              endDate: promoItem.endDate !== 'Vô thời hạn' ? promoItem.endDate : '',
+              startDate: rawData?.startDate || this.getApplyFrom(rawData?.applyTime || '') || promoItem.startDate,
+              endDate: rawData?.endDate || this.getApplyTo(rawData?.applyTime || '') || (promoItem.endDate !== 'Vô thời hạn' ? promoItem.endDate : ''),
               status: promoItem.status === 'active' ? 'active' : 'inactive',
               descriptionPlaceholder: rawData?.details || '', 
               
@@ -356,7 +364,7 @@ export class PromotionManagement implements OnInit {
 
   createEmptyPromotion(): Promotion {
     return {
-        promoId: '', promoName: '', promoCode: '', promoType: 'percent', discountValue: null,
+    promoId: '', promoName: '', promoCode: '', isFeatured: false, promoType: 'percent', discountValue: null,
                 maxDiscountAmount: null, startDate: new Date().toISOString().slice(0, 10), endDate: '', status: 'inactive', notes: '',
         endTime: '', descriptionPlaceholder: '', applyHour: 'any', applyDayOfWeek: 'any',
         applyDayOfMonth: 'any', applyMonth: 'any', applyYear: 'any', applyTimeframe: 'any',
@@ -409,6 +417,14 @@ export class PromotionManagement implements OnInit {
 
         if (requiredValid && this.isLimitedTime && (!p.endDate || p.endDate.trim() === '')) {
             requiredValid = false;
+        }
+
+        if (requiredValid && this.isLimitedTime) {
+            const fromDate = this.parseDate(p.startDate);
+            const toDate = this.parseDate(p.endDate);
+            if (fromDate && toDate && toDate < fromDate) {
+                requiredValid = false;
+            }
         }
 
         this.isDraftInvalid = !draftValid;
@@ -571,8 +587,8 @@ export class PromotionManagement implements OnInit {
         }
 
         const now = new Date();
-        const fromDate = this.parseDate(this.getApplyFrom(item.applyTime));
-        const toDate = this.parseDate(endDate);
+        const fromDate = this.parseDate(item.startDate || this.getApplyFrom(item.applyTime));
+        const toDate = this.parseDate(item.endDate || endDate);
 
         if (fromDate && fromDate > now) {
             return 'upcoming';
@@ -621,12 +637,16 @@ export class PromotionManagement implements OnInit {
             title: this.currentPromotion.promoName,
             icon: 'promo-default.png',
             category: this.currentPromotion.promoType,
+            isFeatured: this.currentPromotion.isFeatured,
             items: [
                 {
                     image: 'promo-default.png',
                     label: this.currentPromotion.promoName,
                     date: fromDate,
                     details: this.currentPromotion.descriptionPlaceholder || this.currentPromotion.notes || '',
+                    isFeatured: this.currentPromotion.isFeatured,
+                    startDate: fromDate,
+                    endDate: toDate,
                     target: this.currentPromotion.customerTargetType,
                     applyTime: {
                         from: fromDate,

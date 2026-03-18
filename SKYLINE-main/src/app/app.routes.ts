@@ -74,6 +74,11 @@ export const routes: Routes = [
   },
 
   {
+    path: 'promotion/:promotionItemId',
+    loadComponent: () => import('./user/promotion-detail/promotion-detail').then(m => m.PromotionDetailComponent)
+  },
+
+  {
     path: 'promotion',
     loadComponent: () => import('./user/promotion/promotion').then(m => m.Promotion)
   },

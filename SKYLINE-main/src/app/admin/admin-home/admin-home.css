@@ -539,11 +539,25 @@
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
   .page-header { flex-direction: column; }
   .dash-content { padding: 16px; gap: 16px; }
+  .page-header { padding: 18px 16px 14px; }
+  .period-tabs {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .period-tabs::-webkit-scrollbar { display: none; }
+  .ptab { flex: 0 0 auto; }
+  .custom-range { width: 100%; }
 }
 
 @media (max-width: 640px) {
   .kpi-grid { grid-template-columns: 1fr; }
-  .period-tabs { flex-wrap: wrap; }
-  .ptab { flex: 1; min-width: 70px; text-align: center; }
+  .period-tabs { flex-wrap: nowrap; }
+  .ptab { min-width: 88px; text-align: center; }
   .kpi-value { font-size: 20px; }
+  .chart-card { padding: 16px; }
+  .ccard-title { font-size: 14px; }
+  .top-item { gap: 10px; }
+  .tstat-num { font-size: 12px; }
+  .tstat-rev { font-size: 10px; }
 }

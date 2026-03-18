@@ -2,11 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms'; 
 import { HttpClientModule } from '@angular/common/http';
+import { ActivatedRoute } from '@angular/router';
 import { HeaderComponent } from '../shared/header/header';
 import { FooterComponent } from '../shared/footer/footer';
 import { PromotionApiModel, PromotionApiService } from '../../services/promotion-api.service';
 
 interface Deal {
+  id: string;
   image: string;
   label: string;
   date: string;
@@ -42,10 +44,19 @@ export class Promotion implements OnInit {
   filteredSections: Section[] = []; 
   searchTerm: string = ''; 
   copyStatusMessage: string | null = null; 
+  pendingDealId: string | null = null;
 
-  constructor(private promotionApi: PromotionApiService) {}
+  constructor(
+    private promotionApi: PromotionApiService,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void { 
+    this.route.queryParamMap.subscribe((params) => {
+      this.pendingDealId = params.get('itemId');
+      this.tryOpenDealFromQuery();
+    });
+
     this.loadPromotions();
   }
 
@@ -55,6 +66,7 @@ export class Promotion implements OnInit {
       next: (data) => {
         this.sections = this.mapApiToSections(data);
         this.applyFilter();
+        this.tryOpenDealFromQuery();
       },
       error: (error) => {
         console.error('Lỗi khi tải khuyến mãi từ API:', error);
@@ -96,8 +108,10 @@ export class Promotion implements OnInit {
       const bucketId = this.resolveBucketId(promo.category);
       const bucket = sectionMap[bucketId];
 
-      for (const item of promo.items || []) {
+      for (const [itemIndex, item] of (promo.items || []).entries()) {
+        const promotionId = promo._id || '';
         bucket.items.push({
+          id: promotionId ? `${promotionId}_${itemIndex}` : `${bucket.id}_${itemIndex}`,
           image: this.getPromoImageSrc(item.image),
           label: promo.title || item.label || '',
           date: item.date || '',
@@ -294,6 +308,21 @@ export class Promotion implements OnInit {
   openPopup(deal: Deal) {
     this.selectedDeal = deal;
     this.copyStatusMessage = null; 
+  }
+
+  private tryOpenDealFromQuery(): void {
+    if (!this.pendingDealId || !this.sections.length) {
+      return;
+    }
+
+    const matched = this.sections
+      .flatMap((section) => section.items)
+      .find((item) => item.id === this.pendingDealId);
+
+    if (matched) {
+      this.openPopup(matched);
+      this.pendingDealId = null;
+    }
   }
 
   closePopup() {

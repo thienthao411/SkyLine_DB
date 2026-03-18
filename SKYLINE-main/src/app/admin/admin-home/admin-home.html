@@ -2,7 +2,7 @@
   <app-admin-sidebar [isOpen]="sidebarOpen"></app-admin-sidebar>
 
   <main class="dash-main">
-    <app-admin-header></app-admin-header>
+    <app-admin-header [currentUser]="currentUser" (toggleSidebarClicked)="toggleSidebar()"></app-admin-header>
 
     <!-- ── PAGE HEADER + FILTER ── -->
     <div class="page-header">
@@ -187,6 +187,13 @@
                 [attr.cx]="ptX(i, revenueChart.values)"
                 [attr.cy]="ptY(i, revenueChart.values)"
                 r="3.5" fill="#fff" stroke="#3b82f6" stroke-width="2" class="chart-dot"/>
+
+              <circle *ngFor="let v of revenueChart.values; let i = index; trackBy: trackByIndex"
+                [attr.cx]="ptX(i, revenueChart.values)"
+                [attr.cy]="ptY(i, revenueChart.values)"
+                r="8" fill="transparent">
+                <title>{{ revenueChart.labels[i] }}: {{ formatNumber(v) }} đ</title>
+              </circle>
 
               <!-- X-axis labels -->
               <text *ngFor="let xl of xLabels(revenueChart.labels); trackBy: trackByIndex"

@@ -64,63 +64,10 @@
     </div>
 </section>
 
-    <!-- Deals Section -->
-<section class="deals-section">
-    <div class="container">
-        <div class="section-header">
-            <p class="section-subtitle">Khám phá hành trình tiếp theo của bạn với những <strong>ưu đãi chuyến bay</strong> hấp dẫn</p>
-            <a href="/promotion" class="view-all-link">Tất cả →</a>
-        </div>
-        
-        <div class="deals-grid">
-            <!-- Small Cards -->
-            <div class="deal-card small">
-                <div class="deal-image">
-                    <img src="assets/images/hcm.png" alt="TP Hồ Chí Minh">
-                </div>
-                <div class="deal-content">
-                    <h3>TP Hồ Chí Minh</h3>
-                    <p class="deal-price">1.900.000</p>
-                    <p class="deal-desc">Trung tâm mua sắm</p>
-                </div>
-            </div>
-
-            <div class="deal-card small">
-                <div class="deal-image">
-                    <img src="assets/images/hanoi.webp" alt="TP Hà Nội">
-                </div>
-                <div class="deal-content">
-                    <h3>TP Hà Nội</h3>
-                    <p class="deal-price">1.999.000</p>
-                    <p class="deal-desc">Thủ đô</p>
-                </div>
-            </div>
-
-            <div class="deal-card small">
-                <div class="deal-image">
-                    <img src="assets/images/danang.webp" alt="TP Đà Nẵng">
-                </div>
-                <div class="deal-content">
-                    <h3>TP Đà Nẵng</h3>
-                    <p class="deal-price">1.000.000</p>
-                    <p class="deal-desc">Thành phố Huế</p>
-                </div>
-            </div>
-
-            <!-- Large Card -->
-            <div class="deal-card large">
-                <div class="deal-image">
-                    <img src="assets/images/hue.webp" alt="TP Huế">
-                </div>
-                <div class="deal-content">
-                    <h3>TP Huế</h3>
-                    <p class="deal-price">1.000.000</p>
-                    <p class="deal-desc">Nối tiếng về kinh thành Huế</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+<app-promotion-list
+    [promotions]="featuredPromotions"
+    [loading]="isLoadingFeaturedPromotions"
+/>
 
     <!-- Airlines Section -->
 <section class="airlines-section">
