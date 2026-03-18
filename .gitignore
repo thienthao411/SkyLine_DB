@@ -30,6 +30,7 @@ yarn-error.log
 
 # Miscellaneous
 /.angular/cache
+/SKYLINE-main/.angular/cache
 .sass-cache/
 /connect.lock
 /coverage
