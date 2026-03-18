@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const RankBenefit = require("../models/RankBenefit");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -193,6 +194,26 @@ exports.deleteUser = async (req, res) => {
     const deleted = await User.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ message: 'User not found' });
     res.json({ message: 'Deleted' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getRankBenefits = async (_req, res) => {
+  try {
+    const rows = await RankBenefit.find({}, { rankKey: 1, name: 1, benefits: 1, order: 1, _id: 0 })
+      .sort({ order: 1, rankKey: 1 })
+      .lean();
+
+    const ranks = rows.reduce((acc, row) => {
+      acc[row.rankKey] = {
+        name: row.name,
+        benefits: Array.isArray(row.benefits) ? row.benefits : [],
+      };
+      return acc;
+    }, {});
+
+    res.json({ ranks });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

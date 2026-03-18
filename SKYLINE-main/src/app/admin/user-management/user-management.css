@@ -285,24 +285,22 @@
 .table-wrapper tr:not(:last-child) td {
     border-bottom: 1px solid #e2e8f0;
 }
-.status-pill {
+.promo-status {
     display: inline-block;
-    padding: 4px 10px;
-    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
     font-weight: 600;
-    border-radius: 8px;
-    min-width: 74px;
-    line-height: 1.2;
-    text-align: center;
+    white-space: nowrap;
 }
 
-.status-pill.hoạt-động {
-    background-color: #D1FAE5;
+.status-active {
+    background: #D1FAE5;
     color: #065F46;
 }
 
-.status-pill.khóa {
-    background-color: #FEE2E2;
+.status-inactive {
+    background: #FEE2E2;
     color: #B91C1C;
 }
 
@@ -375,6 +373,11 @@
     gap: 20px;
 }
 
+.form-column > div {
+    display: flex;
+    flex-direction: column;
+}
+
 .user-form label,
 .notes-field label,
 .time-fields-wrapper label {
@@ -388,6 +391,7 @@
 .user-form input[type="email"],
 .user-form input[type="tel"],
 .user-form input[type="number"],
+.user-form input[type="date"],
 .user-form select,
 .flight-form input[type="text"],
 .flight-form input[type="number"],
@@ -404,6 +408,7 @@
 
 .user-form input:focus,
 .user-form select:focus,
+.user-form input[type="date"]:focus,
 .flight-form input:focus,
 .flight-form select:focus,
 .notes-field input:focus,
@@ -411,6 +416,43 @@
     border-color: #375578;
     outline: none;
     box-shadow: 0 0 0 2px rgba(55, 85, 120, 0.2);
+}
+
+.avatar-upload-group {
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.avatar-upload-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.avatar-preview {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #99BBFF;
+    background: #ffffff;
+}
+
+.avatar-upload-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.avatar-upload-actions input[type="file"] {
+    font-size: 13px;
+}
+
+.avatar-upload-actions small {
+    color: #6b7280;
+    font-size: 12px;
 }
 
 .time-inputs {

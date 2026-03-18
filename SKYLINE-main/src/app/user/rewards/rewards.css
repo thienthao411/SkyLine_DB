@@ -66,6 +66,16 @@
     background-color: #fff;
     color: #375578;
   }
+
+  .rewards-content h2 {
+    font-size: 30px;
+    margin-bottom: 18px;
+  }
+
+  .benefits h3 {
+    font-size: 21px;
+    margin-bottom: 12px;
+  }
   
   .rewards-info {
     background: #f9f9f9;
@@ -73,6 +83,8 @@
     border-radius: 8px;
     margin-bottom: 24px;
     color: #375578;
+    font-size: 15px;
+    line-height: 1.5;
   }
   
   .progress-bar {
@@ -92,16 +104,47 @@
   
   .rank-section {
     margin-bottom: 20px;
+    border: 1px solid #d8e2ee;
+    border-radius: 10px;
+    padding: 12px 14px;
+    background: #ffffff;
   }
   
   .rank-section h4 {
     margin-bottom: 8px;
     color: #333;
+    font-size: 17px;
+    line-height: 1.35;
   }
   
   .rank-section ul {
     margin-left: 20px;
     list-style: circle;
+  }
+
+  .rank-section li {
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  .rank-bronze {
+    border-color: #d6ae89;
+    background: linear-gradient(135deg, #fff4ea 0%, #ffffff 60%, #fff0e2 100%);
+  }
+
+  .rank-silver {
+    border-color: #bcc8d4;
+    background: linear-gradient(135deg, #f1f4f8 0%, #ffffff 60%, #ebf1f6 100%);
+  }
+
+  .rank-gold {
+    border-color: #e4c06e;
+    background: linear-gradient(135deg, #fff6dd 0%, #ffffff 60%, #ffefbf 100%);
+  }
+
+  .rank-platinum {
+    border-color: #aebecd;
+    background: linear-gradient(135deg, #e8eef4 0%, #ffffff 60%, #dce7f0 100%);
   }
   
   /* ---------------------------------------------------- */
