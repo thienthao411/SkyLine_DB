@@ -1,28 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { AdminSidebarComponent } from '../shared/sidebar/sidebar';
 import { AdminHeader } from '../shared/header/admin-header/admin-header';
 import { Router } from '@angular/router';
-
-interface TicketFull {
-  ticket_code: string;
-  flight_id: string;
-  flight_internal_id: string;
-  seat: string;
-  promotion_id: string | null;
-  booking_date: string;
-  price: number;
-  status: string;
-  transaction_id: string;
-  payment_method: string;
-  complaint: string;
-}
+import { TicketFull, TicketService } from '../services/ticket';
 
 @Component({
   selector: 'app-ticket-management',
-  imports: [CommonModule, AdminSidebarComponent, AdminHeader, HttpClientModule, FormsModule],
+  imports: [CommonModule, AdminSidebarComponent, AdminHeader, FormsModule],
   templateUrl: './ticket-management.html',
   styleUrls: ['./ticket-management.css'],
 })
@@ -51,8 +37,10 @@ export class TicketManagement implements OnInit {
 
   currentPageTransactions = 1;
   totalPagesTransactions = 1;
+  isLoading = false;
+  errorMessage = '';
 
-  constructor(private http: HttpClient, private router: Router) { }
+  constructor(private ticketService: TicketService, private router: Router) { }
 
   ngOnInit() {
     this.loadTicketsFull();
@@ -63,9 +51,13 @@ export class TicketManagement implements OnInit {
   }
 
   loadTicketsFull() {
-    this.http.get<TicketFull[]>('assets/data/tickets_full.json').subscribe({
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.ticketService.getTickets().subscribe({
       next: (data) => {
         this.allData = data;
+        this.isLoading = false;
 
         // Thống kê
         this.totalTicketsSold = data.filter(item =>
@@ -83,7 +75,11 @@ export class TicketManagement implements OnInit {
         this.filterTickets();
         this.filterTransactions();
       },
-      error: (err) => console.error('❌ Lỗi load dữ liệu:', err)
+      error: (err) => {
+        this.isLoading = false;
+        this.errorMessage = 'Không thể tải dữ liệu vé từ máy chủ.';
+        console.error('Lỗi load dữ liệu vé:', err);
+      }
     });
   }
 
@@ -244,19 +240,29 @@ export class TicketManagement implements OnInit {
   saveModalChanges() {
     if (!this.modalData) return;
 
-    // cập nhật dữ liệu gốc
-    const index = this.allData.findIndex(t =>
-      (this.activeTab === 'ticket' && t.ticket_code === this.modalData!.ticket_code) ||
-      (this.activeTab === 'transaction' && t.transaction_id === this.modalData!.transaction_id)
-    );
-
-    if (index >= 0) {
-      this.allData[index] = { ...this.modalData };
-      this.filterTickets();
-      this.filterTransactions();
+    if (!this.modalData.id) {
+      this.errorMessage = 'Không tìm thấy ID vé để cập nhật.';
+      return;
     }
 
-    this.isEditMode = false;
+    this.ticketService.updateTicket(this.modalData.id, this.modalData).subscribe({
+      next: (updated) => {
+        const index = this.allData.findIndex((item) => item.id === updated.id);
+
+        if (index >= 0) {
+          this.allData[index] = updated;
+        }
+
+        this.filterTickets();
+        this.filterTransactions();
+        this.modalData = { ...updated };
+        this.isEditMode = false;
+      },
+      error: (err) => {
+        this.errorMessage = 'Cập nhật vé thất bại.';
+        console.error('Lỗi cập nhật vé:', err);
+      }
+    });
   }
 
   closeModal() {
@@ -267,44 +273,9 @@ export class TicketManagement implements OnInit {
 
 
   onEdit(item: TicketFull) {
-    this.modalData = { ...item }; 
+    this.modalData = { ...item };
     this.modalType = this.activeTab;
     this.isModalOpen = true;
-    this.isEditMode = true; 
-  }
-
-
-  // state
-  showDeleteConfirm: boolean = false;
-  itemToDelete: TicketFull | null = null;
-
-  // gọi khi nhấn nút xóa
-  onDelete(item: TicketFull) {
-    this.itemToDelete = item;
-    this.showDeleteConfirm = true;
-  }
-
-  // khi nhấn hủy
-  cancelDelete() {
-    this.showDeleteConfirm = false;
-    this.itemToDelete = null;
-  }
-
-  // khi nhấn xác nhận xóa
-  confirmDelete() {
-    if (!this.itemToDelete) return;
-
-    const type = this.activeTab === 'ticket' ? 'vé' : 'giao dịch';
-
-    if (this.activeTab === 'ticket') {
-      this.allData = this.allData.filter(t => t.ticket_code !== this.itemToDelete!.ticket_code);
-      this.filterTickets();
-    } else {
-      this.allData = this.allData.filter(t => t.transaction_id !== this.itemToDelete!.transaction_id);
-      this.filterTransactions();
-    }
-
-    // reset modal
-    this.cancelDelete();
+    this.isEditMode = true;
   }
 }

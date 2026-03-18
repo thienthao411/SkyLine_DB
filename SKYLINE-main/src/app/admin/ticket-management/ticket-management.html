@@ -78,7 +78,19 @@
         </div>
       </div>
 
-      <div *ngIf="activeTab === 'ticket'" class="list-container">
+      <div class="list-container" *ngIf="isLoading">
+        <div class="table-wrapper">
+          <div class="no-data">Đang tải dữ liệu từ database...</div>
+        </div>
+      </div>
+
+      <div class="list-container" *ngIf="!isLoading && errorMessage">
+        <div class="table-wrapper">
+          <div class="no-data">{{ errorMessage }}</div>
+        </div>
+      </div>
+
+      <div *ngIf="!isLoading && !errorMessage && activeTab === 'ticket'" class="list-container">
         <div class="table-wrapper">
           <table>
             <thead>
@@ -102,8 +114,13 @@
                 <td>{{ t.booking_date }}</td>
                 <td>{{ t.price | number }}</td>
                 <td>
-                  <span [class.status]="true" [class.success]="t.status.toLowerCase() === 'hoàn thành'"
-                    [class.pending]="t.status.toLowerCase() !== 'hoàn thành'">{{ t.status }}</span>
+                  <span
+                    class="status"
+                    [class.status-completed]="t.status.toLowerCase() === 'hoàn thành'"
+                    [class.status-paid]="t.status.toLowerCase() === 'đã thanh toán'"
+                    [class.status-pending]="t.status.toLowerCase() === 'chờ thanh toán'"
+                    [class.status-cancelled]="t.status.toLowerCase() === 'hủy'"
+                  >{{ t.status }}</span>
                 </td>
                 <td class="actions">
                   <button title="Xem" class="action-btn view" (click)="onView(t)">
@@ -118,21 +135,17 @@
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.5"></path>
                     </svg>
                   </button>
-                  <button title="Xóa" class="action-btn delete" (click)="onDelete(t)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <polyline points="3 6 5 6 21 6" stroke-width="1.5"></polyline>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
-                        stroke-width="1.5"></path>
-                    </svg>
-                  </button>
                 </td>
+              </tr>
+              <tr *ngIf="pagedTickets.length === 0">
+                <td class="no-data" colspan="8">Không có dữ liệu vé</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <div *ngIf="activeTab === 'transaction'" class="list-container">
+      <div *ngIf="!isLoading && !errorMessage && activeTab === 'transaction'" class="list-container">
         <div class="table-wrapper">
           <table>
             <thead>
@@ -153,8 +166,13 @@
                 <td>{{ tx.booking_date }}</td>
                 <td>{{ tx.payment_method || 'Chưa có' }}</td>
                 <td>
-                  <span [class.status]="true" [class.success]="tx.status.toLowerCase() === 'hoàn thành'"
-                    [class.pending]="tx.status.toLowerCase() !== 'hoàn thành'">
+                  <span
+                    class="status"
+                    [class.status-completed]="tx.status.toLowerCase() === 'hoàn thành'"
+                    [class.status-paid]="tx.status.toLowerCase() === 'đã thanh toán'"
+                    [class.status-pending]="tx.status.toLowerCase() === 'chờ thanh toán'"
+                    [class.status-cancelled]="tx.status.toLowerCase() === 'hủy'"
+                  >
                     {{ tx.status }}
                   </span>
                 </td>
@@ -177,14 +195,10 @@
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.5"></path>
                     </svg>
                   </button>
-                  <button title="Xóa" class="action-btn delete" (click)="onDelete(tx)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <polyline points="3 6 5 6 21 6" stroke-width="1.5"></polyline>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
-                        stroke-width="1.5"></path>
-                    </svg>
-                  </button>
                 </td>
+              </tr>
+              <tr *ngIf="pagedTransactions.length === 0">
+                <td class="no-data" colspan="7">Không có dữ liệu giao dịch</td>
               </tr>
             </tbody>
           </table>
@@ -209,17 +223,6 @@
 
     </div>
   </main>
-  <div *ngIf="showDeleteConfirm" class="modal-overlay">
-    <div class="modal-content">
-      <h4>Xác nhận xóa</h4>
-      <p>Bạn có chắc chắn muốn xóa {{ activeTab === 'ticket' ? 'vé' : 'giao dịch' }} này không? <br> Hành động này không
-        thể hoàn tác.</p>
-      <div class="modal-buttons">
-        <button class="btn btn-modal-cancel" (click)="cancelDelete()">Hủy</button>
-        <button class="btn btn-modal-delete" (click)="confirmDelete()">Xóa</button>
-      </div>
-    </div>
-  </div>
 
   <div class="modal-overlay" *ngIf="isModalOpen">
     <div class="modal-content modal-view">
