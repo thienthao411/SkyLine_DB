@@ -141,6 +141,9 @@ export class FlightService {
 
     return (
       normalized === 'active' ||
+      normalized === 'đang hợp tác' ||
+      normalized === 'dang hop tac' ||
+      normalized === 'danghoptac' ||
       normalized === 'hoat dong' ||
       normalized === 'hoatdong' ||
       normalized === 'dang hoat dong' ||

@@ -253,6 +253,99 @@
     gap: 20px;
 }
 
+.logo-upload-group {
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.logo-upload-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.logo-upload-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.logo-preview-card {
+    width: 88px;
+    height: 88px;
+    border-radius: 12px;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.logo-preview-card.empty {
+    background: linear-gradient(180deg, #f8fafc 0%, #eef4fb 100%);
+    color: #6b7280;
+    font-size: 12px;
+    text-align: center;
+    padding: 8px;
+}
+
+.logo-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #ffffff;
+}
+
+.logo-upload-actions .upload-file-input {
+    width: 100%;
+    font-size: 13px;
+    color: #375578;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    padding: 6px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.logo-upload-actions .upload-file-input::file-selector-button,
+.logo-upload-actions .upload-file-input::-webkit-file-upload-button {
+    border: 1px solid #375578;
+    border-radius: 8px;
+    padding: 7px 10px;
+    margin-right: 8px;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 12px;
+    background: linear-gradient(135deg, #375578 0%, #4f7398 100%);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.logo-upload-actions .upload-file-input:hover::file-selector-button,
+.logo-upload-actions .upload-file-input:hover::-webkit-file-upload-button {
+    filter: brightness(1.05);
+    box-shadow: 0 4px 10px rgba(55, 85, 120, 0.28);
+}
+
+.logo-upload-actions .upload-file-input:active::file-selector-button,
+.logo-upload-actions .upload-file-input:active::-webkit-file-upload-button {
+    transform: translateY(1px);
+}
+
+.logo-upload-actions .upload-file-input:focus {
+    outline: none;
+    border-color: #375578;
+    box-shadow: 0 0 0 3px rgba(55, 85, 120, 0.18);
+}
+
+.logo-upload-actions small {
+    color: #6b7280;
+    font-size: 12px;
+}
+
 .flight-form label {
     display: block;
     font-weight: bold;
@@ -419,6 +512,17 @@
     font-weight: 500;
 }
 
+.view-logo-preview {
+    width: 100%;
+    max-width: 180px;
+    height: 100px;
+    object-fit: contain;
+    border-radius: 10px;
+    border: 1px solid #dbe5f0;
+    background: #ffffff;
+    padding: 8px;
+}
+
 .modal-view .detail-item.full-width {
     grid-column: 1 / -1;
 }
@@ -502,6 +606,16 @@
     .tabs button {
         font-size: 14px;
         padding: 8px 12px;
+    }
+
+    .logo-upload-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .logo-preview-card {
+        width: 100%;
+        height: 120px;
     }
 }
 

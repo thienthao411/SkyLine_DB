@@ -32,14 +32,14 @@
           </div>
 
           <div class="filter-wrap">
-            <select [(ngModel)]="selectedAirline" (change)="onAirlineChange($event)">
+            <select [(ngModel)]="selectedAirline" (ngModelChange)="onAirlineChange()">
               <option value="all">Tất cả trạng thái</option>
-              <option value="Đang hợp tác">Đang hợp tác</option>
-              <option value="Ngừng hợp tác">Ngừng hợp tác</option>
+              <option value="active">Đang hoạt động</option>
+              <option value="inactive">Ngừng hợp tác</option>
             </select>
           </div>
 
-          <button class="btn btn-add-new" (click)="navigateToAddForm()">
+          <button class="btn btn-add-new" (click)="switchTab('form')">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -64,16 +64,16 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngIf="paginatedFlights.length === 0">
+              <tr *ngIf="paginatedAirlines.length === 0">
                 <td colspan="7" class="no-data">Không tìm thấy thông tin hãng bay nào.</td>
               </tr>
-              <tr *ngFor="let airline of paginatedFlights">
+              <tr *ngFor="let airline of paginatedAirlines">
                 <td>{{ airline.airlineCode }}</td>
                 <td>{{ airline.airlineName }}</td>
                 <td>{{ airline.country }}</td>
                 <td>{{ airline.hotline }}</td>
                 <td>{{ airline.commissionRate }}</td>
-                <td>{{ airline.status }}</td>
+                <td>{{ formatStatus(airline.status) }}</td>
                 <td class="actions">
                   <button title="Xem" class="action-btn view" (click)="viewAirline(airline)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -87,7 +87,7 @@
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.5"></path>
                     </svg>
                   </button>
-                  <button title="Xóa" class="action-btn delete" (click)="promptDelete(airline.airlineCode)">
+                  <button title="Xóa" class="action-btn delete" (click)="promptDelete(airline)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <polyline points="3 6 5 6 21 6" stroke-width="1.5"></polyline>
                       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
@@ -119,48 +119,63 @@
           <div class="form-column">
             <div>
               <label>Mã hãng bay</label>
-              <input [(ngModel)]="emptyFormAirline.airlineCode" type="text" placeholder="Ví dụ: VN" />
+              <input [(ngModel)]="formAirline.airlineCode" type="text" placeholder="Ví dụ: VN" />
             </div>
             <div>
               <label>Quốc gia</label>
-              <input [(ngModel)]="emptyFormAirline.country" type="text" placeholder="Ví dụ: Vietnam" />
+              <input [(ngModel)]="formAirline.country" type="text" placeholder="Ví dụ: Vietnam" />
             </div>
             <div>
               <label>Tên hãng bay</label>
-              <input [(ngModel)]="emptyFormAirline.airlineName" type="text" placeholder="Ví dụ: Vietnam Airlines" />
+              <input [(ngModel)]="formAirline.airlineName" type="text" placeholder="Ví dụ: Vietnam Airlines" />
             </div>
             <div>
               <label>Hotline</label>
-              <input [(ngModel)]="emptyFormAirline.hotline" type="text" placeholder="Ví dụ: 1900 1100" />
+              <input [(ngModel)]="formAirline.hotline" type="text" placeholder="Ví dụ: 1900 1100" />
             </div>
           </div>
 
           <div class="form-column">
+            <div class="logo-upload-group">
+              <label>Upload logo</label>
+              <div class="logo-upload-row">
+                <div class="logo-preview-card" *ngIf="logoPreviewUrl; else emptyLogoPreview">
+                  <img [src]="logoPreviewUrl" alt="Logo hãng bay" class="logo-preview" />
+                </div>
+                <ng-template #emptyLogoPreview>
+                  <div class="logo-preview-card empty">
+                    <span>Chưa có logo</span>
+                  </div>
+                </ng-template>
+                <div class="logo-upload-actions">
+                  <input class="upload-file-input" type="file" accept="image/*" (change)="onLogoSelected($event)" />
+                  <small *ngIf="selectedLogoName; else logoUploadHint">Đã chọn: {{ selectedLogoName }}</small>
+                  <ng-template #logoUploadHint>
+                    <small>Ảnh sẽ được gửi lên Cloudinary khi lưu thông tin hãng bay.</small>
+                  </ng-template>
+                </div>
+              </div>
+            </div>
             <div>
               <label>Tỷ lệ hoa hồng (%)</label>
-              <input [(ngModel)]="emptyFormAirline.commissionRate" type="number" placeholder="Ví dụ: 5" />
+              <input [(ngModel)]="formAirline.commissionRate" type="number" placeholder="Ví dụ: 5" />
             </div>
             <div>
               <label>Trạng thái</label>
-              <select [(ngModel)]="emptyFormAirline.status">
-                <option value="Đang hợp tác">Đang hợp tác</option>
-                <option value="Ngừng hợp tác">Ngừng hợp tác</option>
+              <select [(ngModel)]="formAirline.status">
+                <option value="active">Đang hoạt động</option>
+                <option value="inactive">Ngừng hợp tác</option>
               </select>
-            </div>
-            <div>
-              <label>Ghi chú</label>
-              <input [(ngModel)]="emptyFormAirline.notes" type="text" />
             </div>
           </div>
         </div>
 
         <div class="form-buttons">
           <button class="btn form-btn-cancel" (click)="cancelForm()">Hủy</button>
-          <button class="btn form-btn-save" (click)="addAirline()" [disabled]="isFormInvalid">
+          <button *ngIf="!isEditMode" class="btn form-btn-save" (click)="addAirline()" [disabled]="isFormInvalid">
             Lưu
           </button>
-          <button class="btn form-btn-edit" (click)="updateAirline()"
-            [disabled]="emptyFormAirline.id === 0 || isFormInvalid">
+          <button *ngIf="isEditMode" class="btn form-btn-edit" (click)="updateAirline()" [disabled]="isFormInvalid">
             Chỉnh sửa
           </button>
         </div>
@@ -170,7 +185,7 @@
     <div *ngIf="showDeleteConfirm" class="modal-overlay">
       <div class="modal-content">
         <h4>Xác nhận xóa</h4>
-        <p>Bạn có chắc chắn muốn xóa hãng bay này không? Hành động này không thể hoàn tác.</p>
+        <p>Bạn có chắc chắn muốn chuyển hãng bay này sang trạng thái deleted không?</p>
         <div class="modal-buttons">
           <button class="btn btn-modal-cancel" (click)="cancelDelete()">Hủy</button>
           <button class="btn btn-modal-delete" (click)="confirmDelete()">Xóa</button>
@@ -182,6 +197,10 @@
       <div class="modal-content modal-view">
         <h4>Chi tiết hãng bay #{{ airlineToView.airlineCode }}</h4>
         <div class="view-details-grid">
+          <div class="detail-item full-width" *ngIf="airlineToView.img">
+            <label>Logo</label>
+            <img [src]="airlineToView.img" [alt]="airlineToView.airlineName" class="view-logo-preview" />
+          </div>
 
           <div class="detail-item"><label>Mã hãng bay</label><span>{{ airlineToView.airlineCode }}</span></div>
           <div class="detail-item"><label>Tên hãng bay</label><span>{{ airlineToView.airlineName }}</span></div>
@@ -191,10 +210,7 @@
             <span>{{ airlineToView.commissionRate }}</span>
           </div>
           <div class="detail-item full-width"><label>Trạng thái</label>
-            <span>{{ airlineToView.status }}</span>
-          </div>
-          <div class="detail-item full-width"><label>Ghi chú</label><span>{{ airlineToView.notes || '(Không có)'
-              }}</span>
+            <span>{{ formatStatus(airlineToView.status) }}</span>
           </div>
         </div>
         <div class="modal-buttons">
