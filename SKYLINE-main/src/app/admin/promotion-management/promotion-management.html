@@ -30,12 +30,12 @@
                       <input type="text" placeholder="Tìm theo tên, mã..." [(ngModel)]="searchTerm" />
                   </div>
                   <div class="filter-wrap">
-                      <select [(ngModel)]="selectedStatusFilter">
+                      <select [(ngModel)]="selectedStatusFilter" (ngModelChange)="onManageFilterChange()">
                           <option *ngFor="let option of statusOptions" [value]="option.value">{{ option.label }}</option>
                       </select>
                   </div>
                   <div class="filter-wrap">
-                      <select [(ngModel)]="selectedTypeFilter">
+                      <select [(ngModel)]="selectedTypeFilter" (ngModelChange)="onManageFilterChange()">
                           <option *ngFor="let option of typeOptions" [value]="option.value">{{ option.label }}</option>
                       </select>
                   </div>
@@ -67,8 +67,32 @@
                           <input id="promoCode" type="text" [(ngModel)]="currentPromotion.promoCode" (ngModelChange)="updateFormValidity()" placeholder="Mã chương trình" />
                       </div>
                       <div class="form-group">
+                          <label for="promoCategory">Nhóm khuyến mãi</label>
+                          <select id="promoCategory" [(ngModel)]="currentPromotion.promotionCategory">
+                              <option *ngFor="let option of categoryOptions" [value]="option.value">{{ option.label }}</option>
+                          </select>
+                      </div>
+
+                      <div class="form-group">
                           <label for="description">Mô tả</label>
                           <input id="description" type="text" [(ngModel)]="currentPromotion.descriptionPlaceholder" placeholder="Mô tả" />
+                      </div>
+                  </div>
+
+                  <div class="form-row banner-upload-row">
+                      <div class="form-group banner-upload-group">
+                          <label for="promoBanner">Banner khuyến mãi</label>
+                          <div class="banner-upload-body">
+                              <img
+                                  [src]="currentPromotion.bannerImage || fallbackBanner"
+                                  alt="Banner preview"
+                                  class="banner-preview"
+                              />
+                              <div class="banner-upload-actions">
+                                  <input id="promoBanner" type="file" accept="image/*" (change)="onBannerSelected($event)" />
+                                  <small>PNG/JPG, đề xuất tỉ lệ 16:9, tối đa 5MB.</small>
+                              </div>
+                          </div>
                       </div>
                   </div>
 
@@ -105,25 +129,25 @@
                                   <label><input type="radio" name="status" [value]="'inactive'" [(ngModel)]="currentPromotion.status" /> Chưa kích hoạt</label>
                               </div>
                           </div>
+                      </div>
+                  </div>
 
-                          <div class="form-row three-cols feature-row">
-                              <div class="form-group">
-                                  <label>Ngày bắt đầu hiệu lực</label>
-                                  <input type="date" [(ngModel)]="currentPromotion.startDate" />
-                              </div>
+                  <div class="form-row three-cols feature-row">
+                      <div class="form-group">
+                          <label>Ngày bắt đầu hiệu lực</label>
+                          <input type="date" [(ngModel)]="currentPromotion.startDate" />
+                      </div>
 
-                              <div class="form-group" *ngIf="isLimitedTime">
-                                  <label>Ngày kết thúc hiệu lực</label>
-                                  <input type="date" [(ngModel)]="currentPromotion.endDate" (ngModelChange)="updateFormValidity()" />
-                              </div>
+                      <div class="form-group" *ngIf="isLimitedTime">
+                          <label>Ngày kết thúc hiệu lực</label>
+                          <input type="date" [(ngModel)]="currentPromotion.endDate" (ngModelChange)="updateFormValidity()" />
+                      </div>
 
-                              <div class="form-group form-featured-toggle">
-                                  <label for="isFeatured">Khuyến mãi nổi bật</label>
-                                  <div class="switch-wrap">
-                                      <input id="isFeatured" type="checkbox" [(ngModel)]="currentPromotion.isFeatured" />
-                                      <span class="switch-label">{{ currentPromotion.isFeatured ? 'Đang bật' : 'Đang tắt' }}</span>
-                                  </div>
-                              </div>
+                      <div class="form-group form-featured-toggle">
+                          <label for="isFeatured">Khuyến mãi nổi bật</label>
+                          <div class="switch-wrap">
+                              <input id="isFeatured" type="checkbox" [(ngModel)]="currentPromotion.isFeatured" />
+                              <span class="switch-label">{{ currentPromotion.isFeatured ? 'Đang bật' : 'Đang tắt' }}</span>
                           </div>
                       </div>
                   </div>
@@ -139,49 +163,6 @@
                       <div class="form-group time-detail-group" *ngIf="isLimitedTime">
                           <label for="endTime">Khung giờ</label>
                           <input id="endTime" type="text" [(ngModel)]="currentPromotion.endTime" placeholder="HH:mm:ss" />
-                      </div>
-                  </div>
-
-                  <div class="form-group calendar-group">
-                      <label>Lịch áp dụng chi tiết:</label>
-                      <div class="form-row time-detail-group seven-cols">
-                          <div class="form-group">
-                              <select [(ngModel)]="currentPromotion.applyHour">
-                                  <option [ngValue]="'any'">Giờ</option>
-                                  <option *ngFor="let h of hours" [value]="h">{{ h }}</option>
-                              </select>
-                          </div>
-                          <div class="form-group">
-                              <select [(ngModel)]="currentPromotion.applyDayOfWeek">
-                                  <option [ngValue]="'any'">Thứ</option>
-                                  <option *ngFor="let day of daysOfWeek" [value]="day">{{ day }}</option>
-                              </select>
-                          </div>
-                          <div class="form-group">
-                              <select [(ngModel)]="currentPromotion.applyDayOfMonth">
-                                  <option [ngValue]="'any'">Ngày</option>
-                                  <option *ngFor="let day of daysOfMonth" [value]="day">{{ day }}</option>
-                              </select>
-                          </div>
-                          <div class="form-group">
-                              <select [(ngModel)]="currentPromotion.applyMonth">
-                                  <option [ngValue]="'any'">Tháng</option>
-                                  <option *ngFor="let month of months" [value]="month">{{ month }}</option>
-                              </select>
-                          </div>
-                          <div class="form-group">
-                              <select [(ngModel)]="currentPromotion.applyYear">
-                                  <option [ngValue]="'any'">Năm</option>
-                                  <option *ngFor="let year of years" [value]="year">{{ year }}</option>
-                              </select>
-                          </div>
-                          <div class="form-group">
-                              <select [(ngModel)]="currentPromotion.applyTimeframe">
-                                  <option [ngValue]="'any'">Khung giờ</option>
-                                  <option *ngFor="let tf of timeframes" [value]="tf">{{ tf }}</option>
-                              </select>
-                          </div>
-                          <button class="btn btn-add-time" (click)="addTimeDetail()">Thêm</button>
                       </div>
                   </div>
 
@@ -289,6 +270,7 @@
                       <thead>
                           <tr>
                               <th>Tên chương trình</th>
+                              <th>Nhóm</th>
                               <th>Từ ngày</th>
                               <th>Đến ngày</th>
                               <th>Hình thức khuyến mãi</th>
@@ -300,14 +282,15 @@
                       </thead>
                       <tbody>
                           <tr *ngIf="filteredPromos.length === 0">
-                              <td colspan="8" class="no-data">Không tìm thấy mã khuyến mãi nào.</td>
+                              <td colspan="9" class="no-data">Không tìm thấy mã khuyến mãi nào.</td>
                           </tr>
-                          <tr *ngFor="let promo of filteredPromos" class="promo-item-row">
+                          <tr *ngFor="let promo of paginatedPromos" class="promo-item-row">
                               <td class="name-col">
                                   <div class="promo-name">{{ promo.name.replace('**', '').replace('**', '').trim() }}</div>
                                   <div class="promo-code" *ngIf="promo.promoCode">Mã: {{ promo.promoCode }}</div>
                                   <div class="promo-code" *ngIf="!promo.promoCode">Mã: N/A</div>
                               </td>
+                              <td>{{ getCategoryLabel(promo.promotionCategory) }}</td>
                               <td>{{ promo.startDate }}</td>
                               <td>{{ promo.endDate }}</td>
                               
@@ -351,6 +334,12 @@
                       </tbody>
                   </table>
               </div>
+
+              <div class="pagination">
+                  <button (click)="prevPage()" [disabled]="currentPage === 1">&lt;&lt;</button>
+                  <span>Trang {{ currentPage }} / {{ totalPages }}</span>
+                  <button (click)="nextPage()" [disabled]="currentPage === totalPages">&gt;&gt;</button>
+              </div>
           </div>
 
           <div *ngIf="showModalType === 'cancel' || showModalType === 'draft' || showModalType === 'activate'" class="modal-overlay">
@@ -380,7 +369,7 @@
                       
                       <ng-container *ngIf="getPromoRawData() as rawData">
                           <div class="detail-item full-width promo-image-wrap">
-                              <img [src]="rawData.image" alt="Hình ảnh khuyến mãi" class="promo-image-detail">
+                              <img [src]="getPromoImageSrc(rawData.image)" alt="Hình ảnh khuyến mãi" class="promo-image-detail">
                           </div>
                       
                           <div class="detail-item full-width">
@@ -391,6 +380,11 @@
                           <div class="detail-item">
                               <label>Trạng Thái</label>
                               <span [class]="'promo-status status-' + promoToView.status">{{ promoToView.status === 'active' ? 'Đang chạy' : promoToView.status === 'upcoming' ? 'Sắp diễn ra' : promoToView.status === 'expired' ? 'Hết hạn' : 'Nháp' }}</span>
+                          </div>
+
+                          <div class="detail-item">
+                              <label>Nhóm khuyến mãi</label>
+                              <span>{{ getCategoryLabel(promoToView.promotionCategory) }}</span>
                           </div>
                           
                           <div class="detail-item">

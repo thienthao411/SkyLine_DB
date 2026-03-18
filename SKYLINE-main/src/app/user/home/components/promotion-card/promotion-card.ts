@@ -21,7 +21,8 @@ export class PromotionCardComponent {
     if (
       this.promotion.image.startsWith('http') ||
       this.promotion.image.startsWith('assets/') ||
-      this.promotion.image.startsWith('/assets/')
+      this.promotion.image.startsWith('/assets/') ||
+      this.promotion.image.startsWith('data:image/')
     ) {
       return this.promotion.image;
     }

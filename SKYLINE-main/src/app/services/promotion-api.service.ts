@@ -45,6 +45,7 @@ export interface PromotionApiModel {
 export interface FeaturedPromotionItem {
   id: string;
   promotionId: string;
+  category: string;
   itemIndex: number;
   image: string;
   title: string;

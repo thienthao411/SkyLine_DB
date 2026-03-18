@@ -77,6 +77,9 @@ export class Promotion implements OnInit {
   }
 
   private mapApiToSections(data: PromotionApiModel[]): Section[] {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
     const sectionMap: Record<string, Section> = {
       special: {
         id: 'special',
@@ -109,6 +112,19 @@ export class Promotion implements OnInit {
       const bucket = sectionMap[bucketId];
 
       for (const [itemIndex, item] of (promo.items || []).entries()) {
+        const status = String(item.status || 'active').toLowerCase();
+        const endDateRaw = item.endDate || item.applyTime?.to || '';
+        const parsedEndDate = this.parsePromotionDate(endDateRaw);
+
+        // Do not show expired promotions on user-facing UI.
+        if (status === 'expired') {
+          continue;
+        }
+
+        if (parsedEndDate && parsedEndDate < now) {
+          continue;
+        }
+
         const promotionId = promo._id || '';
         bucket.items.push({
           id: promotionId ? `${promotionId}_${itemIndex}` : `${bucket.id}_${itemIndex}`,
@@ -178,9 +194,42 @@ export class Promotion implements OnInit {
     return `${value.toLocaleString('vi-VN')} VND`;
   }
 
+  private parsePromotionDate(value?: string): Date | null {
+    if (!value) return null;
+
+    const raw = String(value).trim();
+    if (!raw) return null;
+
+    const native = new Date(raw);
+    if (!Number.isNaN(native.getTime())) {
+      native.setHours(0, 0, 0, 0);
+      return native;
+    }
+
+    const normalized = raw.replace(/-/g, '/');
+    const parts = normalized.split('/');
+    if (parts.length === 3) {
+      const [d, m, y] = parts.map(Number);
+      const parsed = new Date(y, m - 1, d);
+      if (!Number.isNaN(parsed.getTime())) {
+        parsed.setHours(0, 0, 0, 0);
+        return parsed;
+      }
+    }
+
+    return null;
+  }
+
   private getPromoImageSrc(image?: string): string {
     if (!image) return 'https://placehold.co/400x200/cccccc/333333?text=Promo';
-    if (image.startsWith('http') || image.startsWith('assets/')) return image;
+    if (
+      image.startsWith('http') ||
+      image.startsWith('assets/') ||
+      image.startsWith('/assets/') ||
+      image.startsWith('data:image/')
+    ) {
+      return image;
+    }
     return `assets/img/${image}`;
   }
 

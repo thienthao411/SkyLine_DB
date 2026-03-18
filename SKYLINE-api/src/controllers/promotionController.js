@@ -45,6 +45,7 @@ const buildFeaturedItem = (promotionDoc, item, itemIndex, now) => {
   return {
     id: `${promotionDoc._id}_${itemIndex}`,
     promotionId: String(promotionDoc._id),
+    category: promotionDoc?.category || "special",
     itemIndex,
     image: item?.image || "",
     title: item?.label || promotionDoc?.title || "Khuyen mai",

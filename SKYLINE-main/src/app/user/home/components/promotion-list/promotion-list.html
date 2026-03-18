@@ -8,9 +8,19 @@
     </div>
 
     @if (loading) {
-      <div class="deals-grid skeleton-grid" aria-label="Đang tải khuyến mãi">
-        @for (_ of [1, 2, 3, 4]; track $index) {
-          <div class="skeleton-card" [class.full-width]="$index === 3"></div>
+      <div class="category-sections">
+        @for (_ of [1, 2, 3]; track $index) {
+          <div class="category-block skeleton-block">
+            <div class="category-title-row">
+              <div class="skeleton-title"></div>
+            </div>
+
+            <div class="deals-grid skeleton-grid" aria-label="Đang tải khuyến mãi">
+              @for (__ of [1, 2, 3]; track $index) {
+                <div class="skeleton-card"></div>
+              }
+            </div>
+          </div>
         }
       </div>
     } @else if (promotions.length === 0) {
@@ -19,20 +29,29 @@
         <p>Ưu đãi mới sẽ xuất hiện khi có chương trình phù hợp với thời gian hiện tại.</p>
       </div>
     } @else {
-      <div class="deals-grid">
-        @for (promo of visiblePromotions; track trackById($index, promo)) {
-          <div class="card-slot" [class.full-width]="$index === 3 && visiblePromotions.length === 4">
-            <app-promotion-card [promotion]="promo" [large]="$index === 3 && visiblePromotions.length === 4" />
-          </div>
+      <div class="category-sections">
+        @for (section of sections; track section.id) {
+          <section class="category-block" [id]="section.id">
+            <div class="category-title-row">
+              <h3><i [class]="section.iconClass"></i> {{ section.title }}</h3>
+            </div>
+
+            @if (section.items.length === 0) {
+              <div class="empty-mini-state">
+                Chưa có khuyến mãi nổi bật cho mục này.
+              </div>
+            } @else {
+              <div class="deals-grid">
+                @for (promo of section.items; track trackByPromotionId($index, promo)) {
+                  <div class="card-slot">
+                    <app-promotion-card [promotion]="promo" />
+                  </div>
+                }
+              </div>
+            }
+          </section>
         }
       </div>
-
-      @if (canSlide) {
-        <div class="slider-controls">
-          <button type="button" class="slide-btn" (click)="previous()" aria-label="Khuyến mãi trước">←</button>
-          <button type="button" class="slide-btn" (click)="next()" aria-label="Khuyến mãi tiếp theo">→</button>
-        </div>
-      }
     }
   </div>
 </section>

@@ -19,18 +19,20 @@
 .card-image-wrap {
   position: relative;
   width: 100%;
-  height: 210px;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
 }
 
 .promotion-card.large .card-image-wrap {
-  height: 300px;
+  aspect-ratio: 16 / 9;
 }
 
 .card-image-wrap img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  background: #eef3f9;
 }
 
 .discount-badge {
@@ -71,7 +73,7 @@
 @media (max-width: 768px) {
   .card-image-wrap,
   .promotion-card.large .card-image-wrap {
-    height: 210px;
+    aspect-ratio: 16 / 9;
   }
 
   .card-content h3 {

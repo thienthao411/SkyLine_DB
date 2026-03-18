@@ -60,7 +60,7 @@ export class Home implements OnInit {
   loadFeaturedPromotions(): void {
     this.isLoadingFeaturedPromotions = true;
 
-    this.promotionApi.getFeatured({ limit: 8, sortBy: 'newest' }).subscribe({
+    this.promotionApi.getFeatured({ limit: 10, sortBy: 'newest' }).subscribe({
       next: (promotions) => {
         this.featuredPromotions = promotions;
         this.isLoadingFeaturedPromotions = false;

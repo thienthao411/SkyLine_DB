@@ -180,7 +180,8 @@
 }
 
 .main-content-panel {
-    margin: 0 20px 20px 30px; /* Tăng margin trái lên 30px */
+    width: min(1400px, calc(100% - 40px));
+    margin: 0 auto 20px;
     background: #fff;
     border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -279,6 +280,35 @@
     border: 1px solid #e2e8f0;
     border-radius: 10px;
     overflow-x: auto;
+}
+
+.pagination {
+    margin-top: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.pagination button {
+    min-width: 42px;
+    height: 36px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #fff;
+    color: #375578;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.pagination button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.pagination span {
+    color: #375578;
+    font-weight: 600;
 }
 
 .promo-name {
@@ -424,6 +454,8 @@
 .form-container.promo-form {
     padding: 0 20px 20px 20px;
     color: #374151;
+    max-width: 1180px;
+    margin: 0 auto;
 }
 
 /* Input Styles */
@@ -437,15 +469,22 @@
 
 .form-group input[type="text"],
 .form-group input[type="number"],
+.form-group input[type="date"],
+.form-group input[type="time"],
 .form-group textarea,
 .form-group select {
     width: 100%;
     padding: 10px 12px;
+    min-height: 42px;
     border: 1px solid #D1D5DB;
     border-radius: 5px;
     box-sizing: border-box;
     font-size: 14px;
     color: #374151;
+}
+
+.form-group textarea {
+    min-height: 96px;
 }
 
 .form-group select {
@@ -466,6 +505,53 @@
 .form-row .form-group {
     flex: 1;
     margin-bottom: 0;
+}
+
+.banner-upload-row {
+    margin-top: 4px;
+}
+
+.banner-upload-group {
+    width: 100%;
+}
+
+.banner-upload-body {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px;
+    background: #f8fafc;
+}
+
+.banner-preview {
+    flex: 0 0 460px;
+    width: 460px;
+    max-width: 100%;
+    aspect-ratio: 16 / 9;
+    display: block;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+}
+
+.banner-upload-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.banner-upload-actions input[type="file"] {
+    max-width: 100%;
+}
+
+.banner-upload-actions small {
+    color: #6b7280;
+    font-size: 12px;
 }
 
 .form-row.three-cols>.form-group {
@@ -502,19 +588,21 @@
 /* Lịch áp dụng chi tiết (7 cột) */
 .form-row.time-detail-group {
     display: flex;
-    gap: 5px;
+    gap: 12px;
     align-items: flex-end;
+    flex-wrap: wrap;
 }
 
 .form-row.time-detail-group.seven-cols .form-group {
-    flex-basis: 15%;
+    flex: 1 1 140px;
+    min-width: 140px;
 }
 
 .form-row.time-detail-group .btn-add-time {
     background: #375578;
     color: white;
     padding: 8px 12px;
-    height: 38px;
+    height: 42px;
     font-weight: normal;
     border-radius: 5px;
     min-width: unset;
@@ -787,9 +875,12 @@
     padding: 10px;
 }
 .promo-image-detail {
-    max-width: 100%;
-    height: 220px; 
+    width: 100%;
+    max-width: 620px;
+    aspect-ratio: 16 / 9;
+    height: auto;
     object-fit: cover; 
+    object-position: center;
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     border: 1px solid #eee;
@@ -979,6 +1070,20 @@
     border-top: 1px solid #E5E7EB;
     padding-top: 16px;
     margin-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.feature-row .form-group {
+    flex: unset;
+    margin: 0;
+}
+
+@media (max-width: 1100px) {
+    .feature-row {
+        grid-template-columns: 1fr;
+    }
 }
 
 .form-featured-toggle .switch-wrap {
@@ -1003,4 +1108,16 @@
     font-size: 13px;
     color: #375578;
     font-weight: 600;
+}
+
+@media (max-width: 900px) {
+    .banner-upload-body {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .banner-preview {
+        flex-basis: auto;
+        width: 100%;
+    }
 }

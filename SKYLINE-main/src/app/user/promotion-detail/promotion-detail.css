@@ -31,13 +31,16 @@
 
 .detail-image-wrap {
   position: relative;
-  height: 420px;
+  width: 100%;
+  aspect-ratio: 16 / 9;
 }
 
 .detail-image-wrap img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  background: #eef3f9;
 }
 
 .detail-badge {
@@ -115,7 +118,7 @@
   }
 
   .detail-image-wrap {
-    height: 240px;
+    aspect-ratio: 16 / 9;
   }
 
   .detail-content {

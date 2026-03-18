@@ -214,6 +214,16 @@
   padding-bottom: 15px;
 }
 
+.deal-card > img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  object-position: center;
+  background: #eef3f9;
+}
+
 .deal-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 12px 26px rgba(25, 55, 87, 0.16);
@@ -389,10 +399,13 @@
 /* Ảnh popup */
 .popup-content img {
   width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
   border-radius: 12px;
   margin-bottom: 15px;
-  object-fit: cover;
-  max-height: 250px;
+  object-fit: contain;
+  object-position: center;
+  background: #eef3f9;
 }
 
 .popup-details h3 {

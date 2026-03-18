@@ -13,6 +13,8 @@ interface Promotion {
   promoId: string;
   promoName: string;
   promoCode: string;
+    bannerImage: string;
+    promotionCategory: string;
     isFeatured: boolean;
   promoType: string; 
   discountValue: number | null;
@@ -91,6 +93,7 @@ interface PromoListItem {
   name: string;
     rawLabel: string;
     promoCode: string;
+    promotionCategory: string;
   startDate: string;
   endDate: string;
   type: string;
@@ -118,6 +121,7 @@ interface PromoListItem {
 export class PromotionManagement implements OnInit {
   activeMainTab: 'create' | 'manage' = 'manage'; 
   activeStep: 'info' | 'apply' = 'info';
+        readonly fallbackBanner = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
     showSuccessPopup = false;
     successPopupMessage = '';
     private successPopupTimer: ReturnType<typeof setTimeout> | null = null;
@@ -125,6 +129,8 @@ export class PromotionManagement implements OnInit {
   searchTerm: string = '';
   selectedStatusFilter: string = 'all';
   selectedTypeFilter: string = 'all';
+    currentPage = 1;
+    pageSize = 10;
   isLimitedTime: boolean = false;
   isFormInvalid: boolean = true;
   isDraftInvalid: boolean = true;
@@ -135,7 +141,7 @@ export class PromotionManagement implements OnInit {
     editingPromotionId: string | null = null;
   
   currentPromotion: Promotion = {
-      promoId: '', promoName: '', promoCode: '', isFeatured: false, promoType: 'percent', discountValue: null,
+      promoId: '', promoName: '', promoCode: '', bannerImage: '', promotionCategory: 'special', isFeatured: false, promoType: 'percent', discountValue: null,
       maxDiscountAmount: null, startDate: new Date().toISOString().slice(0, 10), endDate: '', status: 'inactive', notes: '',
       endTime: '', descriptionPlaceholder: '', applyHour: 'any', applyDayOfWeek: 'any',
       applyDayOfMonth: 'any', applyMonth: 'any', applyYear: 'any', applyTimeframe: 'any',
@@ -143,6 +149,9 @@ export class PromotionManagement implements OnInit {
       departureAirport: '', arrivalAirport: '', minOrderValue: null, territory: '',
       applyCountType: '1', applyChannel: 'all', customerTargetType: 'all',
   };
+
+    // Populated from category values already present in Mongo data.
+    categoryOptions: Array<{ value: string; label: string }> = [];
 
   promos: PromoListItem[] = [];
   
@@ -192,6 +201,40 @@ export class PromotionManagement implements OnInit {
       return this.promoTypeDescriptions[typeCode as keyof typeof this.promoTypeDescriptions] || this.promoTypeDescriptions['default'];
   }
 
+  getCategoryLabel(category: string | undefined): string {
+      const key = String(category || '').trim().toLowerCase();
+      if (key === 'special') return 'Chiến dịch đặc biệt';
+      if (key === 'payment') return 'Thanh toán & Trả sau';
+      if (key === 'related') return 'Ưu đãi liên quan';
+      return category || 'Chưa phân nhóm';
+  }
+
+  private syncCategoryOptionsFromData(): void {
+      const values = Array.from(
+          new Set(
+              this.rawJsonData
+                  .map(category => String(category.category || '').trim())
+                  .filter(value => !!value)
+          )
+      );
+
+      this.categoryOptions = values.map(value => ({
+          value,
+          label: this.getCategoryLabel(value)
+      }));
+
+      this.ensureCategoryOption(this.currentPromotion.promotionCategory);
+  }
+
+  private ensureCategoryOption(value: string | undefined): void {
+      const key = String(value || '').trim();
+      if (!key) return;
+
+      if (!this.categoryOptions.some(option => option.value === key)) {
+          this.categoryOptions.push({ value: key, label: this.getCategoryLabel(key) });
+      }
+  }
+
   formatApplyTarget(target: string): string {
       const map: Record<string, string> = {
           all: 'Tất cả khách hàng',
@@ -233,7 +276,14 @@ export class PromotionManagement implements OnInit {
 
   getPromoImageSrc(image?: string): string {
       if (!image) return 'assets/img/default_promo.jpg';
-      if (image.startsWith('http') || image.startsWith('assets/')) return image;
+      if (
+          image.startsWith('http') ||
+          image.startsWith('assets/') ||
+          image.startsWith('/assets/') ||
+          image.startsWith('data:image/')
+      ) {
+          return image;
+      }
       return `assets/img/${image}`;
   }
 
@@ -265,6 +315,7 @@ export class PromotionManagement implements OnInit {
                           name: displayName,
                           rawLabel,
                           promoCode: (item.promoCode || '').trim(),
+                          promotionCategory: (category.category as any) || 'special',
                           startDate: from,
                           endDate: to || 'Vô thời hạn',
                           type,
@@ -278,6 +329,8 @@ export class PromotionManagement implements OnInit {
               });
 
               this.promos = flattenedPromos;
+              this.syncCategoryOptionsFromData();
+              this.currentPage = 1;
           },
           error: (err) => {
               console.error('Lỗi khi tải dữ liệu khuyến mãi từ API:', err);
@@ -324,6 +377,8 @@ export class PromotionManagement implements OnInit {
               ...this.currentPromotion,
               promoName: ((promoItem.rawLabel || rawData?.label || promoItem.name) || '').replace(/\*\*/g, '').trim(), 
               promoCode: rawData?.promoCode || `CODE-${promoItem.id}`, 
+              bannerImage: rawData?.image || '',
+              promotionCategory: promoItem.promotionCategory || 'special',
               isFeatured: Boolean(rawData?.isFeatured),
               
               // 🟢 FIX: Ánh xạ promoType là MÃ CODE và discountValue là GIÁ TRỊ SỐ
@@ -350,6 +405,7 @@ export class PromotionManagement implements OnInit {
               applyChannel: rawData?.applyChannel || 'all',
               customerTargetType: rawData?.customerTargetType || 'all',
           };
+          this.ensureCategoryOption(this.currentPromotion.promotionCategory);
           this.isLimitedTime = promoItem.endDate !== 'Vô thời hạn';
           
           this.activeMainTab = 'create';
@@ -364,7 +420,7 @@ export class PromotionManagement implements OnInit {
 
   createEmptyPromotion(): Promotion {
     return {
-    promoId: '', promoName: '', promoCode: '', isFeatured: false, promoType: 'percent', discountValue: null,
+    promoId: '', promoName: '', promoCode: '', bannerImage: '', promotionCategory: 'special', isFeatured: false, promoType: 'percent', discountValue: null,
                 maxDiscountAmount: null, startDate: new Date().toISOString().slice(0, 10), endDate: '', status: 'inactive', notes: '',
         endTime: '', descriptionPlaceholder: '', applyHour: 'any', applyDayOfWeek: 'any',
         applyDayOfMonth: 'any', applyMonth: 'any', applyYear: 'any', applyTimeframe: 'any',
@@ -440,6 +496,33 @@ export class PromotionManagement implements OnInit {
         this.updateFormValidity();
     }
 
+    async onBannerSelected(event: Event): Promise<void> {
+        const input = event.target as HTMLInputElement;
+        const file = input.files?.[0];
+
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            alert('Vui lòng chọn đúng file ảnh banner.');
+            input.value = '';
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Ảnh banner quá lớn. Vui lòng chọn ảnh nhỏ hơn 5MB.');
+            input.value = '';
+            return;
+        }
+
+        try {
+            this.currentPromotion.bannerImage = await this.compressBannerImage(file);
+        } catch (error) {
+            console.error(error);
+            alert('Không thể xử lý ảnh banner. Vui lòng thử ảnh khác.');
+            input.value = '';
+        }
+    }
+
     addTimeDetail() {
         alert(`Đã thêm lịch áp dụng chi tiết: Giờ=${this.currentPromotion.applyHour}, Thứ=${this.currentPromotion.applyDayOfWeek}, Ngày=${this.currentPromotion.applyDayOfMonth}`);
     }
@@ -466,6 +549,31 @@ export class PromotionManagement implements OnInit {
         }
 
         return result;
+    }
+
+    get paginatedPromos(): PromoListItem[] {
+        if (this.currentPage > this.totalPages) {
+            this.currentPage = this.totalPages;
+        }
+
+        const start = (this.currentPage - 1) * this.pageSize;
+        return this.filteredPromos.slice(start, start + this.pageSize);
+    }
+
+    get totalPages(): number {
+        return Math.max(1, Math.ceil(this.filteredPromos.length / this.pageSize));
+    }
+
+    onManageFilterChange(): void {
+        this.currentPage = 1;
+    }
+
+    nextPage(): void {
+        if (this.currentPage < this.totalPages) this.currentPage++;
+    }
+
+    prevPage(): void {
+        if (this.currentPage > 1) this.currentPage--;
     }
 
     deletePromo(id: number) {
@@ -524,7 +632,8 @@ export class PromotionManagement implements OnInit {
               },
               error: (err) => {
                   console.error('Lỗi lưu khuyến mãi:', err);
-                  alert('Không thể lưu khuyến mãi. Vui lòng kiểm tra backend/MongoDB.');
+                  const message = err?.error?.error || err?.error?.message || err?.statusText || 'Không thể lưu khuyến mãi.';
+                  alert(`Lưu thất bại: ${message}`);
               }
           });
       }
@@ -636,11 +745,11 @@ export class PromotionManagement implements OnInit {
         return {
             title: this.currentPromotion.promoName,
             icon: 'promo-default.png',
-            category: this.currentPromotion.promoType,
+            category: this.currentPromotion.promotionCategory,
             isFeatured: this.currentPromotion.isFeatured,
             items: [
                 {
-                    image: 'promo-default.png',
+                    image: this.currentPromotion.bannerImage || 'promo-default.png',
                     label: this.currentPromotion.promoName,
                     date: fromDate,
                     details: this.currentPromotion.descriptionPlaceholder || this.currentPromotion.notes || '',
@@ -671,5 +780,63 @@ export class PromotionManagement implements OnInit {
                 }
             ]
         };
+    }
+
+    private compressBannerImage(file: File): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const source = reader.result;
+                if (typeof source !== 'string') {
+                    reject(new Error('Invalid file result'));
+                    return;
+                }
+
+                const image = new Image();
+                image.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        reject(new Error('Canvas context unavailable'));
+                        return;
+                    }
+
+                    const presets = [
+                        { width: 1280, height: 720, quality: 0.8 },
+                        { width: 960, height: 540, quality: 0.72 },
+                        { width: 720, height: 405, quality: 0.65 },
+                        { width: 640, height: 360, quality: 0.58 },
+                        { width: 480, height: 270, quality: 0.5 }
+                    ];
+
+                    const maxDataUrlLength = 90_000;
+
+                    for (const preset of presets) {
+                        const ratio = Math.min(preset.width / image.width, preset.height / image.height, 1);
+                        const width = Math.max(1, Math.round(image.width * ratio));
+                        const height = Math.max(1, Math.round(image.height * ratio));
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.clearRect(0, 0, width, height);
+                        ctx.drawImage(image, 0, 0, width, height);
+
+                        const compressed = canvas.toDataURL('image/jpeg', preset.quality);
+                        if (compressed.length <= maxDataUrlLength) {
+                            resolve(compressed);
+                            return;
+                        }
+                    }
+
+                    reject(new Error('Banner image is too large after optimization'));
+                };
+
+                image.onerror = () => reject(new Error('Image load failed'));
+                image.src = source;
+            };
+
+            reader.onerror = () => reject(new Error('File read failed'));
+            reader.readAsDataURL(file);
+        });
     }
 }

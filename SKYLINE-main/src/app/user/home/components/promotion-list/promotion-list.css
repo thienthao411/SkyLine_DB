@@ -31,39 +31,44 @@
   flex-shrink: 0;
 }
 
+.category-sections {
+  display: grid;
+  gap: 30px;
+}
+
+.category-block {
+  border: 1px solid #edf0ff;
+  border-radius: 16px;
+  padding: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+}
+
+.category-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.category-title-row h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #202858;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.category-title-row h3 i {
+  color: #4d5bda;
+}
+
 .deals-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
-}
-
-.card-slot.full-width {
-  grid-column: span 3;
-}
-
-.slider-controls {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.slide-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid #d7dbf4;
-  background: #fff;
-  color: #2d356f;
-  cursor: pointer;
-  font-size: 18px;
-  transition: all 0.2s ease;
-}
-
-.slide-btn:hover {
-  background: #6366f1;
-  border-color: #6366f1;
-  color: #fff;
 }
 
 .empty-state {
@@ -84,20 +89,32 @@
 }
 
 .skeleton-grid {
-  min-height: 360px;
+  min-height: 180px;
 }
 
 .skeleton-card {
   border-radius: 14px;
-  min-height: 280px;
+  min-height: 240px;
   background: linear-gradient(110deg, #f4f6ff 8%, #e9ecff 18%, #f4f6ff 33%);
   background-size: 200% 100%;
   animation: shimmer 1.3s linear infinite;
 }
 
-.skeleton-card.full-width {
-  grid-column: span 3;
-  min-height: 320px;
+.skeleton-title {
+  width: 260px;
+  height: 22px;
+  border-radius: 8px;
+  background: linear-gradient(110deg, #f4f6ff 8%, #e9ecff 18%, #f4f6ff 33%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s linear infinite;
+}
+
+.empty-mini-state {
+  border: 1px dashed #d5d9f0;
+  border-radius: 12px;
+  text-align: center;
+  padding: 26px 16px;
+  color: #677292;
 }
 
 @keyframes shimmer {
@@ -109,11 +126,6 @@
 @media (max-width: 1024px) {
   .deals-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-
-  .card-slot.full-width,
-  .skeleton-card.full-width {
-    grid-column: span 2;
   }
 }
 
@@ -127,12 +139,15 @@
     grid-template-columns: 1fr;
   }
 
-  .card-slot.full-width,
-  .skeleton-card.full-width {
-    grid-column: span 1;
+  .category-block {
+    padding: 14px;
   }
 
-  .slider-controls {
-    justify-content: center;
+  .category-title-row h3 {
+    font-size: 18px;
+  }
+
+  .skeleton-title {
+    width: 180px;
   }
 }
