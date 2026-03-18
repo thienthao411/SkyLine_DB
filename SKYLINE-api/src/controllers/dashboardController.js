@@ -67,6 +67,22 @@ function ticketDateStages(start, end) {
   ];
 }
 
+function ticketRevenueExpr() {
+  return {
+    $convert: {
+      input: {
+        $ifNull: [
+          '$totalPrice',
+          { $ifNull: ['$totalAmount', '$price'] }
+        ]
+      },
+      to: 'double',
+      onError: 0,
+      onNull: 0
+    }
+  };
+}
+
 // GET /api/dashboard/core-stats
 // Chỉ lấy dữ liệu 5 collection chính: users, promotions, tickets, flights, airlines.
 exports.getCoreStats = async (req, res) => {
@@ -108,7 +124,7 @@ exports.getOverview = async (req, res) => {
         {
           $group: {
             _id: null,
-            totalRevenue: { $sum: '$price' },
+            totalRevenue: { $sum: ticketRevenueExpr() },
             totalTickets: { $sum: 1 },
             cancelledTickets: { $sum: { $cond: [{ $eq: ['$status', 'cancelled'] }, 1, 0] } }
           }
@@ -119,7 +135,7 @@ exports.getOverview = async (req, res) => {
         {
           $group: {
             _id: null,
-            totalRevenue: { $sum: '$price' },
+            totalRevenue: { $sum: ticketRevenueExpr() },
             totalTickets: { $sum: 1 }
           }
         }
@@ -198,7 +214,7 @@ exports.getRevenueChart = async (req, res) => {
 
     const data = await Ticket.aggregate([
       ...ticketDateStages(start, end),
-      { $group: { _id: groupId, revenue: { $sum: '$price' }, count: { $sum: 1 } } },
+      { $group: { _id: groupId, revenue: { $sum: ticketRevenueExpr() }, count: { $sum: 1 } } },
       { $sort: { _id: 1 } }
     ]);
 
@@ -295,7 +311,7 @@ exports.getTopRoutes = async (req, res) => {
         $group: {
           _id: { from: '$flight.from', to: '$flight.to' },
           tickets: { $sum: 1 },
-          revenue: { $sum: '$price' }
+          revenue: { $sum: ticketRevenueExpr() }
         }
       },
       { $sort: { tickets: -1 } },
@@ -338,7 +354,7 @@ exports.getTopAirlines = async (req, res) => {
           _id: '$flight.airline',
           airlineCode: { $first: '$flight.airlineCode' },
           tickets: { $sum: 1 },
-          revenue: { $sum: '$price' }
+          revenue: { $sum: ticketRevenueExpr() }
         }
       },
       { $sort: { tickets: -1 } },
@@ -385,11 +401,11 @@ exports.getDonutStats = async (req, res) => {
       ]),
       Ticket.aggregate([
         ...ticketDateStages(start, end),
-        { $group: { _id: null, revenue: { $sum: '$price' } } }
+        { $group: { _id: null, revenue: { $sum: ticketRevenueExpr() } } }
       ]),
       Ticket.aggregate([
         ...ticketDateStages(prevStart, prevEnd),
-        { $group: { _id: null, revenue: { $sum: '$price' } } }
+        { $group: { _id: null, revenue: { $sum: ticketRevenueExpr() } } }
       ])
     ]);
 
