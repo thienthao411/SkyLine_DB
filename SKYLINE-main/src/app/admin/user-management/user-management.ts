@@ -84,6 +84,21 @@ export class UserManagement implements OnInit {
       || !f.address?.trim();
   }
 
+  get isCreateFormInvalid(): boolean {
+    const f = this.formUser;
+    return !f.fullName?.trim()
+      || !f.email?.trim()
+      || !f.password?.trim()
+      || !f.phone?.trim()
+      || !f.birthday?.trim()
+      || !f.address?.trim();
+  }
+
+  get isUpdateFormInvalid(): boolean {
+    const f = this.formUser;
+    return !f.fullName?.trim() || !f.email?.trim();
+  }
+
   // ================= FILTER =================
   get filteredUsers(): User[] {
     const term = this.searchTerm.trim().toLowerCase();
@@ -192,6 +207,34 @@ prevPage() {
     this.activeTab = 'form';
   }
 
+  onAvatarSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng chọn đúng file ảnh.');
+      input.value = '';
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn 2MB.');
+      input.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result === 'string') {
+        this.formUser.avatar = result;
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
   // ================= ADD =================
   addUser() {
     if (this.users.find(u => u.email === this.formUser.email)) {
@@ -199,11 +242,7 @@ prevPage() {
       return;
     }
 
-    const payload: User = {
-      ...this.formUser,
-      birthday: this.toDateInput(this.formUser.birthday),
-      passportExpiry: this.toDateInput(this.formUser.passportExpiry)
-    };
+    const payload = this.buildUserPayload(this.formUser);
 
     this.userApi.create(payload).subscribe({
       next: (created) => {
@@ -227,11 +266,7 @@ prevPage() {
       return;
     }
 
-    const payload: User = {
-      ...this.formUser,
-      birthday: this.toDateInput(this.formUser.birthday),
-      passportExpiry: this.toDateInput(this.formUser.passportExpiry)
-    };
+    const payload = this.buildUserPayload(this.formUser);
 
     this.userApi.update(existing._id, payload).subscribe({
       next: (updated) => {
@@ -315,5 +350,42 @@ prevPage() {
     }
 
     return '';
+  }
+
+  private toNullableDateInput(value: any): string | null {
+    const date = this.toDateInput(value);
+    return date || null;
+  }
+
+  private buildUserPayload(source: User): User {
+    const payload: User = {
+      ...source,
+      birthday: this.toNullableDateInput(source.birthday) as any,
+      passportExpiry: this.toNullableDateInput(source.passportExpiry) as any,
+    };
+
+    if (!payload.password || !String(payload.password).trim()) {
+      delete payload.password;
+    }
+
+    return payload;
+  }
+
+  getRankLabel(rank: string | undefined | null): string {
+    const value = String(rank || '').trim();
+    if (!value) return '';
+
+    const normalized = value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, '')
+      .toLowerCase();
+
+    if (normalized === 'bronze' || normalized === 'dong') return 'Hạng Đồng';
+    if (normalized === 'silver' || normalized === 'bac') return 'Hạng Bạc';
+    if (normalized === 'gold' || normalized === 'vang') return 'Hạng Vàng';
+    if (normalized === 'platinum' || normalized === 'bachkim') return 'Hạng Bạch Kim';
+
+    return value;
   }
 }

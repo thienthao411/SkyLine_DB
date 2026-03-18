@@ -36,7 +36,7 @@
           <div class="filter-wrap">
             <select [(ngModel)]="selectedRank" (ngModelChange)="onFilterChange()">
               <option value="all">Tất cả Rank</option>
-              <option *ngFor="let rank of uniqueRanks" [value]="rank">{{ rank }}</option>
+              <option *ngFor="let rank of uniqueRanks" [value]="rank">{{ getRankLabel(rank) }}</option>
             </select>
           </div>
           <div class="filter-wrap">
@@ -82,16 +82,10 @@
                   <br>
                   <span class="small-text">{{ user.email }}</span>
                 </td>
-                <td>{{ user.currentRank }}</td>
+                <td>{{ getRankLabel(user.currentRank) }}</td>
                 <td>{{ user.points | number }}</td>
                 <td>
-                  <span
-                    [ngClass]="{
-                      'status-pill': true,
-                      'active': user.status === 'active',
-                      'inactive': user.status === 'inactive'
-                    }"
-                  >
+                  <span [class]="'promo-status status-' + (user.status || 'inactive')">
                     {{ user.status }}
                   </span>
                 </td>
@@ -132,6 +126,17 @@
       <div *ngIf="activeTab === 'form'" class="form-container">
         <div class="user-form">
           <div class="form-column">
+            <div class="avatar-upload-group">
+              <label>Ảnh đại diện</label>
+              <div class="avatar-upload-row">
+                <img [src]="formUser.avatar || 'assets/img/AVT0.jpg'" alt="Avatar preview" class="avatar-preview" />
+                <div class="avatar-upload-actions">
+                  <input type="file" accept="image/*" (change)="onAvatarSelected($event)" />
+                  <small>PNG/JPG, tối đa khoảng 2MB.</small>
+                </div>
+              </div>
+            </div>
+
             <div>
               <label>Họ và Tên</label>
               <input [(ngModel)]="formUser.fullName" type="text" placeholder="Ví dụ: Nguyễn Văn An" />
@@ -146,8 +151,6 @@
                 [class.read-only-field]="!isAddingMode"
               />
             </div>
-            <div>
-</div>
             <div>
               <label>Điện thoại</label>
               <input [(ngModel)]="formUser.phone" type="tel" placeholder="Ví dụ: 0912345678" />
@@ -182,7 +185,7 @@
             <div>
               <label>Hạng thành viên (Rank)</label>
               <select [(ngModel)]="formUser.currentRank">
-                <option *ngFor="let rank of formRankOptions" [value]="rank">{{ rank }}</option>
+                <option *ngFor="let rank of formRankOptions" [value]="rank">{{ getRankLabel(rank) }}</option>
               </select>
             </div>
             <div>
@@ -205,13 +208,13 @@
           
           <button class="btn form-btn-save" 
             (click)="addUser()"
-            [disabled]="isFormInvalid || !isAddingMode">
+            [disabled]="isCreateFormInvalid || !isAddingMode">
             Lưu (Thêm mới)
           </button>
           
           <button class="btn form-btn-edit" 
             (click)="updateUser()"
-            [disabled]="!formUser.email || isAddingMode || isFormInvalid">
+            [disabled]="!formUser.email || isAddingMode || isUpdateFormInvalid">
             Chỉnh sửa
           </button>
         </div>
@@ -239,9 +242,9 @@
               <div class="detail-item"><label>Giới tính</label><span>{{ userToView.gender || '(Chưa cập nhật)' }}</span></div>
           <div class="detail-item"><label>Quốc gia</label><span>{{ userToView.country }}</span></div>
 
-          <div class="detail-item"><label>Hạng hiện tại</label><span>**{{ userToView.currentRank }}**</span></div>
+            <div class="detail-item"><label>Hạng hiện tại</label><span>**{{ getRankLabel(userToView.currentRank) }}**</span></div>
           <div class="detail-item"><label>Điểm tích lũy</label><span>{{ userToView.points | number }}</span></div>
-          <div class="detail-item"><label>Hạng tiếp theo</label><span>{{ userToView.nextRank }} (Cần: {{
+            <div class="detail-item"><label>Hạng tiếp theo</label><span>{{ getRankLabel(userToView.nextRank) }} (Cần: {{
               userToView.nextThreshold | number }} điểm)</span></div>
           <div class="detail-item full-width">
             <label>Địa chỉ</label>

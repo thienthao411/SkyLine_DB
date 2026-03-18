@@ -22,6 +22,10 @@ export interface User {
   status?: string;
 }
 
+export interface RankBenefitsConfig {
+  ranks: Record<string, { name: string; benefits: string[] }>;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -36,6 +40,10 @@ export class UserApiService {
 
   getByEmail(email: string): Observable<User> {
     return this.http.get<User>(`${this.apiUrl}/email/${encodeURIComponent(email)}`);
+  }
+
+  getRankBenefits(): Observable<RankBenefitsConfig> {
+    return this.http.get<RankBenefitsConfig>(`${this.apiUrl}/rank-benefits`);
   }
 
   login(email: string, password: string): Observable<any> {
