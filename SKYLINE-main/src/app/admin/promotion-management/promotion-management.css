@@ -386,30 +386,34 @@
 }
 
 .featured-tag {
-    display: inline-block;
-    min-width: 42px;
-    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
     padding: 4px 8px;
-    border-radius: 999px;
+    border-radius: 4px;
     font-size: 12px;
     font-weight: 600;
 }
 
-.featured-on {
-    background: #DCFCE7;
-    color: #166534;
+.featured-icon {
+    width: 14px;
+    text-align: center;
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 700;
 }
 
-.featured-off {
-    background: #F3F4F6;
-    color: #4B5563;
+.table-wrapper td.actions {
+    display: table-cell;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+    min-width: 96px;
 }
 
-.actions {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
+.table-wrapper td.actions .action-btn + .action-btn {
+    margin-left: 8px;
 }
 
 .action-btn {
@@ -419,7 +423,7 @@
     padding: 6px;
     color: #6B7280;
     background: none;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
@@ -545,8 +549,46 @@
     flex: 1;
 }
 
-.banner-upload-actions input[type="file"] {
+.banner-upload-actions .upload-file-input {
+    width: 100%;
     max-width: 100%;
+    font-size: 13px;
+    color: #375578;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    padding: 6px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.banner-upload-actions .upload-file-input::file-selector-button,
+.banner-upload-actions .upload-file-input::-webkit-file-upload-button {
+    border: 1px solid #375578;
+    border-radius: 8px;
+    padding: 8px 14px;
+    margin-right: 12px;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 13px;
+    background: linear-gradient(135deg, #375578 0%, #4f7398 100%);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.banner-upload-actions .upload-file-input:hover::file-selector-button,
+.banner-upload-actions .upload-file-input:hover::-webkit-file-upload-button {
+    filter: brightness(1.05);
+    box-shadow: 0 4px 10px rgba(55, 85, 120, 0.28);
+}
+
+.banner-upload-actions .upload-file-input:active::file-selector-button,
+.banner-upload-actions .upload-file-input:active::-webkit-file-upload-button {
+    transform: translateY(1px);
+}
+
+.banner-upload-actions .upload-file-input:focus {
+    outline: none;
+    border-color: #375578;
+    box-shadow: 0 0 0 3px rgba(55, 85, 120, 0.18);
 }
 
 .banner-upload-actions small {
@@ -1106,8 +1148,8 @@
 
 .switch-label {
     font-size: 13px;
-    color: #375578;
     font-weight: 600;
+    line-height: 1;
 }
 
 @media (max-width: 900px) {

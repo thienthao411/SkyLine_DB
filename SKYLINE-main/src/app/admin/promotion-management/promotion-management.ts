@@ -249,6 +249,12 @@ export class PromotionManagement implements OnInit {
       return map[target] || target || 'N/A';
   }
 
+  private resolveCustomerTarget(item: JsonItem): string {
+      const raw = String(item.customerTargetType || item.target || 'all').trim().toLowerCase();
+      const supported = ['all', 'new', 'returning', 'gold', 'silver', 'vip', 'payment', 'loyal'];
+      return supported.includes(raw) ? raw : 'all';
+  }
+
   formatApplyCount(value?: string): string {
       if (value === 'multiple' || value === 'multi' || value === 'unlimited') return 'Nhiều lần';
       if (value === '1' || value === 'once') return 'Một lần';
@@ -319,7 +325,7 @@ export class PromotionManagement implements OnInit {
                           startDate: from,
                           endDate: to || 'Vô thời hạn',
                           type,
-                          applyTarget: item.customerTargetType || item.target || 'all',
+                          applyTarget: this.resolveCustomerTarget(item),
                           isFeatured: Boolean(item.isFeatured ?? category.isFeatured),
                           status: this.getPromoStatus(item, to),
                           jsonCategoryId: categoryId,
@@ -544,6 +550,7 @@ export class PromotionManagement implements OnInit {
                 p.name.toLowerCase().includes(term) ||
                 p.promoCode.toLowerCase().includes(term) ||
                 p.applyTarget.toLowerCase().includes(term) ||
+                this.formatApplyTarget(p.applyTarget).toLowerCase().includes(term) ||
                 p.type.toLowerCase().includes(term)
             );
         }
@@ -722,7 +729,7 @@ export class PromotionManagement implements OnInit {
             return cleaned;
         }
 
-        const target = this.formatApplyTarget(item.customerTargetType || item.target || 'all');
+        const target = this.formatApplyTarget(this.resolveCustomerTarget(item));
         const discount = this.formatDiscountValue(type, item.discountValueRaw ?? null);
         const detail = (item.details || '').trim();
 

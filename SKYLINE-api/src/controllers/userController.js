@@ -26,18 +26,9 @@ exports.createUser = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
   try {
-    console.log('=== DEBUG getUsers ===');
-    console.log('Database name:', mongoose.connection.name);
-    console.log('Collection name:', User.collection.name);
-    console.log('Model name:', User.modelName);
-    
-    const users = await User.find();
-    console.log('Users found:', users.length);
-    console.log('Users data:', users);
-    
+    const users = await User.find({}, { password: 0 }).lean();
     res.json(users);
   } catch (error) {
-    console.log('Error fetching users:', error.message);
     res.status(500).json({ error: error.message });
   }
 };

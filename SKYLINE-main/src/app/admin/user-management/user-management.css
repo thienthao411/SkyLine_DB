@@ -471,8 +471,46 @@
     gap: 6px;
 }
 
-.avatar-upload-actions input[type="file"] {
+.avatar-upload-actions .upload-file-input {
+    width: 100%;
+    min-width: 320px;
     font-size: 13px;
+    color: #375578;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    padding: 6px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.avatar-upload-actions .upload-file-input::file-selector-button,
+.avatar-upload-actions .upload-file-input::-webkit-file-upload-button {
+    border: 1px solid #375578;
+    border-radius: 8px;
+    padding: 7px 10px;
+    margin-right: 8px;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 12px;
+    background: linear-gradient(135deg, #375578 0%, #4f7398 100%);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.avatar-upload-actions .upload-file-input:hover::file-selector-button,
+.avatar-upload-actions .upload-file-input:hover::-webkit-file-upload-button {
+    filter: brightness(1.05);
+    box-shadow: 0 4px 10px rgba(55, 85, 120, 0.28);
+}
+
+.avatar-upload-actions .upload-file-input:active::file-selector-button,
+.avatar-upload-actions .upload-file-input:active::-webkit-file-upload-button {
+    transform: translateY(1px);
+}
+
+.avatar-upload-actions .upload-file-input:focus {
+    outline: none;
+    border-color: #375578;
+    box-shadow: 0 0 0 3px rgba(55, 85, 120, 0.18);
 }
 
 .avatar-upload-actions small {
@@ -722,6 +760,10 @@
     
     .user-form { 
         grid-template-columns: 1fr;
+    }
+
+    .avatar-upload-actions .upload-file-input {
+        min-width: 0;
     }
 
     .form-buttons {

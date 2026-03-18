@@ -11,6 +11,7 @@ interface Deal {
   id: string;
   image: string;
   label: string;
+  periodText: string;
   date: string;
   details: string;
   target: string;
@@ -130,6 +131,7 @@ export class Promotion implements OnInit {
           id: promotionId ? `${promotionId}_${itemIndex}` : `${bucket.id}_${itemIndex}`,
           image: this.getPromoImageSrc(item.image),
           label: promo.title || item.label || '',
+          periodText: this.buildPeriodText(item.startDate, item.endDate, item.applyTime?.from, item.applyTime?.to, item.date),
           date: item.date || '',
           details: item.details || promo.title || '',
           target: this.formatTarget(item.customerTargetType || item.target),
@@ -162,6 +164,46 @@ export class Promotion implements OnInit {
     const fromText = from || 'Không giới hạn';
     const toText = to || 'Không giới hạn';
     return `${fromText} - ${toText}`;
+  }
+
+  private buildPeriodText(startDate?: string, endDate?: string, from?: string, to?: string, fallbackDate?: string): string {
+    const startText = this.formatDisplayDate(startDate);
+    const endText = this.formatDisplayDate(endDate);
+
+    if (startText && endText) {
+      return `${startText} - ${endText}`;
+    }
+
+    if (startText) {
+      return `Bắt đầu: ${startText}`;
+    }
+
+    if (endText) {
+      return `Kết thúc: ${endText}`;
+    }
+
+    if (from || to) {
+      const fromText = from || 'Không giới hạn';
+      const toText = to || 'Không giới hạn';
+      return `${fromText} - ${toText}`;
+    }
+
+    if (fallbackDate) {
+      return fallbackDate;
+    }
+
+    return 'Đang cập nhật thời gian áp dụng';
+  }
+
+  private formatDisplayDate(value?: string): string {
+    if (!value) return '';
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return value;
+    }
+
+    return parsed.toLocaleDateString('vi-VN');
   }
 
   private formatTarget(target?: string): string {
