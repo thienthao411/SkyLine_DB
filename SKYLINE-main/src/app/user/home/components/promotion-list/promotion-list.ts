@@ -15,7 +15,7 @@ export class PromotionListComponent {
   @Input() loading = false;
 
   get visiblePromotions(): FeaturedPromotionItem[] {
-    return this.promotions;
+    return this.promotions.slice(0, 3);
   }
 
   trackByPromotionId(_index: number, item: FeaturedPromotionItem): string {

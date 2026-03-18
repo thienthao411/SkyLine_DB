@@ -30,14 +30,11 @@ const toNumber = (value) => {
 };
 
 const buildFeaturedItem = (promotionDoc, item, itemIndex, now) => {
-  const isFeatured = (item?.isFeatured ?? promotionDoc?.isFeatured) === true;
-  if (!isFeatured) return null;
+  // Homepage must mirror the admin per-item toggle exactly.
+  if (item?.isFeatured !== true) return null;
 
   const startDate = parseDateSafely(item?.startDate || item?.applyTime?.from);
   const endDate = parseDateSafely(item?.endDate || item?.applyTime?.to);
-
-  if (startDate && now < startDate) return null;
-  if (endDate && now > endDate) return null;
 
   const discountValueRaw = item?.discountValueRaw ?? item?.maxDiscountAmount ?? null;
   const discountRuleType = item?.ruleType === "percentage" ? "percentage" : "amount";

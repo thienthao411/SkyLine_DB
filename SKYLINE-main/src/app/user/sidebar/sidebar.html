@@ -1,10 +1,23 @@
 <aside class="sidebar">
   <div class="avatar">
-    <img
-      class="avatar-img"
-      [src]="user.avatar || fallbackAvatar"
-      alt="Avatar"
+    <button class="avatar-btn" type="button" (click)="avatarInput.click()" aria-label="Thay ảnh đại diện">
+      <img
+        class="avatar-img"
+        [src]="user.avatar || fallbackAvatar"
+        alt="Avatar"
+      />
+      <span class="avatar-overlay">Đổi ảnh</span>
+    </button>
+    <input
+      #avatarInput
+      class="avatar-input"
+      type="file"
+      accept="image/*"
+      (change)="onAvatarSelected($event)"
     />
+    <button class="change-avatar-btn" type="button" (click)="avatarInput.click()">
+      Thay ảnh đại diện
+    </button>
     <h3>{{ user.fullName }}</h3>
   </div>
 

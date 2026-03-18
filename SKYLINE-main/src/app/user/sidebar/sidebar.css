@@ -29,6 +29,63 @@
   transition: width 0.3s ease, height 0.3s ease;
 }
 
+.avatar-btn {
+  display: block;
+  margin: 0 auto;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+  border-radius: 50%;
+}
+
+.avatar-overlay {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  background: rgba(18, 35, 61, 0.78);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.avatar-btn:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.avatar-input {
+  display: none;
+}
+
+.change-avatar-btn {
+  display: block;
+  margin: 8px auto 10px;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.change-avatar-btn:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.change-avatar-btn:active {
+  transform: translateY(1px);
+}
+
 .avatar h3 {
   font-size: 18px;
   color: #ffffff;
