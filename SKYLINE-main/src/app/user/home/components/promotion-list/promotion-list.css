@@ -1,6 +1,12 @@
 .deals-section {
-  padding: 60px 0;
+  padding: 52px 0;
   background: #fff;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
 .section-header {
@@ -12,63 +18,57 @@
 }
 
 .section-subtitle {
-  font-size: 16px;
-  color: #666;
-  line-height: 1.8;
+  font-size: 15px;
+  color: #4d6483;
+  line-height: 1.7;
   margin: 0;
 }
 
 .section-subtitle strong {
   font-weight: 700;
-  color: #6155f5;
+  color: #214b7a;
 }
 
 .view-all-link {
-  color: #6366f1;
+  color: #2d4f7d;
   text-decoration: none;
   font-size: 14px;
   font-weight: 700;
   flex-shrink: 0;
 }
 
-.category-sections {
-  display: grid;
-  gap: 30px;
-}
-
-.category-block {
+.featured-block {
   border: 1px solid #edf0ff;
   border-radius: 16px;
   padding: 18px;
-  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
 }
 
-.category-title-row {
+.featured-title-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 16px;
+  border-bottom: 1px solid #e6edf5;
+  padding-bottom: 12px;
 }
 
-.category-title-row h3 {
+.featured-title-row h3 {
   margin: 0;
   font-size: 20px;
-  font-weight: 800;
-  color: #202858;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.category-title-row h3 i {
-  color: #4d5bda;
+  font-weight: 700;
+  color: #214b7a;
 }
 
 .deals-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
+}
+
+.card-slot {
+  min-width: 0;
 }
 
 .empty-state {
@@ -109,14 +109,6 @@
   animation: shimmer 1.3s linear infinite;
 }
 
-.empty-mini-state {
-  border: 1px dashed #d5d9f0;
-  border-radius: 12px;
-  text-align: center;
-  padding: 26px 16px;
-  color: #677292;
-}
-
 @keyframes shimmer {
   to {
     background-position-x: -200%;
@@ -139,11 +131,11 @@
     grid-template-columns: 1fr;
   }
 
-  .category-block {
+  .featured-block {
     padding: 14px;
   }
 
-  .category-title-row h3 {
+  .featured-title-row h3 {
     font-size: 18px;
   }
 

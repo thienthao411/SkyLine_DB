@@ -2,26 +2,22 @@
   <div class="container">
     <div class="section-header">
       <p class="section-subtitle">
-        Khám phá hành trình tiếp theo của bạn với những <strong>ưu đãi chuyến bay</strong> hấp dẫn
+        Khám phá hành trình tiếp theo của bạn với những <strong>mã ưu đãi nổi bật</strong>
       </p>
       <a class="view-all-link" [routerLink]="['/promotion']">Tất cả →</a>
     </div>
 
     @if (loading) {
-      <div class="category-sections">
-        @for (_ of [1, 2, 3]; track $index) {
-          <div class="category-block skeleton-block">
-            <div class="category-title-row">
-              <div class="skeleton-title"></div>
-            </div>
+      <div class="featured-block skeleton-block">
+        <div class="featured-title-row">
+          <h3>Mã ưu đãi nổi bật</h3>
+        </div>
 
-            <div class="deals-grid skeleton-grid" aria-label="Đang tải khuyến mãi">
-              @for (__ of [1, 2, 3]; track $index) {
-                <div class="skeleton-card"></div>
-              }
-            </div>
-          </div>
-        }
+        <div class="deals-grid skeleton-grid" aria-label="Đang tải khuyến mãi">
+          @for (__ of [1, 2, 3, 4, 5, 6]; track $index) {
+            <div class="skeleton-card"></div>
+          }
+        </div>
       </div>
     } @else if (promotions.length === 0) {
       <div class="empty-state">
@@ -29,29 +25,19 @@
         <p>Ưu đãi mới sẽ xuất hiện khi có chương trình phù hợp với thời gian hiện tại.</p>
       </div>
     } @else {
-      <div class="category-sections">
-        @for (section of sections; track section.id) {
-          <section class="category-block" [id]="section.id">
-            <div class="category-title-row">
-              <h3><i [class]="section.iconClass"></i> {{ section.title }}</h3>
-            </div>
+      <section class="featured-block" id="featured-promotions">
+        <div class="featured-title-row">
+          <h3>Mã ưu đãi nổi bật</h3>
+        </div>
 
-            @if (section.items.length === 0) {
-              <div class="empty-mini-state">
-                Chưa có khuyến mãi nổi bật cho mục này.
-              </div>
-            } @else {
-              <div class="deals-grid">
-                @for (promo of section.items; track trackByPromotionId($index, promo)) {
-                  <div class="card-slot">
-                    <app-promotion-card [promotion]="promo" />
-                  </div>
-                }
-              </div>
-            }
-          </section>
-        }
-      </div>
+        <div class="deals-grid">
+          @for (promo of visiblePromotions; track trackByPromotionId($index, promo)) {
+            <div class="card-slot">
+              <app-promotion-card [promotion]="promo" />
+            </div>
+          }
+        </div>
+      </section>
     }
   </div>
 </section>
