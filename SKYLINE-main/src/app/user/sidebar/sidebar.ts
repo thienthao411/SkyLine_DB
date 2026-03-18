@@ -9,9 +9,10 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   styleUrl: './sidebar.css',
 })
 export class Sidebar implements OnInit {
+  readonly fallbackAvatar = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
   user: any = {
     fullName: 'Khách chưa đăng nhập',
-    avatar: 'assets/img/AVT0.jpg'
+    avatar: this.fallbackAvatar
   };
 
   ngOnInit(): void {

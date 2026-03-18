@@ -477,6 +477,10 @@
                   </div>
               </div>
           </div>
+
+                    <div *ngIf="showSuccessPopup" class="success-toast" role="status" aria-live="polite">
+                            {{ successPopupMessage }}
+                    </div>
         </div>
       </main>
     </div>

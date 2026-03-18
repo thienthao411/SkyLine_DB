@@ -10,9 +10,10 @@ import { NotificationEntry, NotificationService } from '../services/notification
   styleUrl: './notifications.css',
 })
 export class Notifications implements OnInit {
+  readonly fallbackAvatar = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
   user = {
     fullName: 'Trần Thiên Thảo',
-    avatar: 'assets/img/AVT.jpg'
+    avatar: this.fallbackAvatar
   };
 
   inbox: NotificationEntry[] = [];

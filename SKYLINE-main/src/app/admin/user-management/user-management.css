@@ -348,6 +348,31 @@
     color: #EF4444;
 }
 
+.success-toast {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 4000;
+    background: #10b981;
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-weight: 600;
+    box-shadow: 0 10px 24px rgba(16, 185, 129, 0.28);
+    animation: toast-in 0.22s ease-out;
+}
+
+@keyframes toast-in {
+    from {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
 
 /* =================== FORM (Giữ nguyên) =================== */
 .form-container {

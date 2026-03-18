@@ -2,7 +2,7 @@
   <div class="avatar">
     <img
       class="avatar-img"
-      [src]="user.avatar || 'assets/img/AVT0.jpg'"
+      [src]="user.avatar || fallbackAvatar"
       alt="Avatar"
     />
     <h3>{{ user.fullName }}</h3>
@@ -20,14 +20,6 @@
 
       <li routerLink="/checkticket" routerLinkActive="active">
         <i class="fa fa-ticket-alt"></i> Tra cứu vé
-      </li>
-
-      <li routerLink="/history" routerLinkActive="active">
-        <i class="fa fa-history"></i> Lịch sử giao dịch
-      </li>
-
-      <li routerLink="/wallet" routerLinkActive="active">
-        <i class="fa fa-wallet"></i> Ví & Thanh toán
       </li>
 
       <li routerLink="/rewards" routerLinkActive="active">

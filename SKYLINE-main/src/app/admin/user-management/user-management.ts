@@ -14,6 +14,10 @@ import { UserApiService, User } from '../../services/user-api.service';
   styleUrls: ['./user-management.css'],
 })
 export class UserManagement implements OnInit {
+  readonly fallbackAvatar = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+  showSuccessPopup = false;
+  successPopupMessage = '';
+  private successPopupTimer: ReturnType<typeof setTimeout> | null = null;
 
   activeTab: string = 'list';
   searchTerm: string = '';
@@ -50,7 +54,7 @@ export class UserManagement implements OnInit {
   // ================= FORM =================
   emptyFormUser: User = {
     fullName: '',
-    avatar: 'assets/img/AVT0.jpg',
+    avatar: this.fallbackAvatar,
     currentRank: 'Bạc',
     points: 0,
     nextRank: 'Bạc',
@@ -207,7 +211,7 @@ prevPage() {
     this.activeTab = 'form';
   }
 
-  onAvatarSelected(event: Event): void {
+  async onAvatarSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
 
@@ -225,14 +229,14 @@ prevPage() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result;
-      if (typeof result === 'string') {
-        this.formUser.avatar = result;
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const compressed = await this.compressAvatarImage(file);
+      this.formUser.avatar = compressed;
+    } catch (error) {
+      console.error(error);
+      alert('Không thể xử lý ảnh. Vui lòng thử ảnh khác.');
+      input.value = '';
+    }
   }
 
   // ================= ADD =================
@@ -273,14 +277,29 @@ prevPage() {
         const idx = this.users.findIndex(u => u._id === updated._id);
         if (idx !== -1) this.users[idx] = updated;
 
-        alert('Cập nhật thành công!');
+        this.openSuccessPopup('Chỉnh sửa người dùng thành công!');
         this.cancelForm();
       },
       error: (err) => {
         console.error(err);
-        alert('Cập nhật thất bại!');
+        const message = err?.error?.error || err?.error?.message || 'Cập nhật thất bại!';
+        alert(message);
       }
     });
+  }
+
+  private openSuccessPopup(message: string): void {
+    this.successPopupMessage = message;
+    this.showSuccessPopup = true;
+
+    if (this.successPopupTimer) {
+      clearTimeout(this.successPopupTimer);
+    }
+
+    this.successPopupTimer = setTimeout(() => {
+      this.showSuccessPopup = false;
+      this.successPopupTimer = null;
+    }, 2200);
   }
 
   // ================= DELETE =================
@@ -364,11 +383,63 @@ prevPage() {
       passportExpiry: this.toNullableDateInput(source.passportExpiry) as any,
     };
 
+    if (payload._id) {
+      delete payload._id;
+    }
+
     if (!payload.password || !String(payload.password).trim()) {
       delete payload.password;
     }
 
     return payload;
+  }
+
+  private compressAvatarImage(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result;
+        if (typeof result !== 'string') {
+          reject(new Error('Invalid file reader result'));
+          return;
+        }
+
+        const image = new Image();
+        image.onload = () => {
+          const maxSide = 720;
+          const ratio = Math.min(maxSide / image.width, maxSide / image.height, 1);
+          const width = Math.max(1, Math.round(image.width * ratio));
+          const height = Math.max(1, Math.round(image.height * ratio));
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Canvas context not available'));
+            return;
+          }
+
+          ctx.drawImage(image, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+
+          // Keep payload under ~1.5MB (base64 string length).
+          if (dataUrl.length > 1_500_000) {
+            reject(new Error('Image payload too large after compression'));
+            return;
+          }
+
+          resolve(dataUrl);
+        };
+
+        image.onerror = () => reject(new Error('Image load failed'));
+        image.src = result;
+      };
+
+      reader.onerror = () => reject(new Error('File read failed'));
+      reader.readAsDataURL(file);
+    });
   }
 
   getRankLabel(rank: string | undefined | null): string {

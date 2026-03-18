@@ -129,7 +129,7 @@
             <div class="avatar-upload-group">
               <label>Ảnh đại diện</label>
               <div class="avatar-upload-row">
-                <img [src]="formUser.avatar || 'assets/img/AVT0.jpg'" alt="Avatar preview" class="avatar-preview" />
+                <img [src]="formUser.avatar || fallbackAvatar" alt="Avatar preview" class="avatar-preview" />
                 <div class="avatar-upload-actions">
                   <input type="file" accept="image/*" (change)="onAvatarSelected($event)" />
                   <small>PNG/JPG, tối đa khoảng 2MB.</small>
@@ -220,6 +220,11 @@
         </div>
       </div>
     </div>
+
+    <div *ngIf="showSuccessPopup" class="success-toast" role="status" aria-live="polite">
+      {{ successPopupMessage }}
+    </div>
+
     <div *ngIf="showDeleteConfirm" class="modal-overlay">
       <div class="modal-content">
         <h4>Xác nhận xóa</h4>

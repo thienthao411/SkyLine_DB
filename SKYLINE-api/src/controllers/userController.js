@@ -181,7 +181,18 @@ exports.login = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
-    const updated = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const payload = { ...req.body };
+
+    // Avoid immutable field update errors when client sends whole object.
+    delete payload._id;
+
+    if (payload.birthday === '') payload.birthday = null;
+    if (payload.passportExpiry === '') payload.passportExpiry = null;
+    if (payload.password !== undefined && String(payload.password).trim() === '') {
+      delete payload.password;
+    }
+
+    const updated = await User.findByIdAndUpdate(req.params.id, payload, { new: true });
     if (!updated) return res.status(404).json({ message: 'User not found' });
     res.json(updated);
   } catch (error) {

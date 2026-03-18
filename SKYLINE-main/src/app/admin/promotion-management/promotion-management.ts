@@ -112,6 +112,9 @@ interface PromoListItem {
 export class PromotionManagement implements OnInit {
   activeMainTab: 'create' | 'manage' = 'manage'; 
   activeStep: 'info' | 'apply' = 'info';
+    showSuccessPopup = false;
+    successPopupMessage = '';
+    private successPopupTimer: ReturnType<typeof setTimeout> | null = null;
 
   searchTerm: string = '';
   selectedStatusFilter: string = 'all';
@@ -482,6 +485,7 @@ export class PromotionManagement implements OnInit {
           this.activeStep = 'info';
           this.isLimitedTime = false;
       } else if (this.showModalType === 'draft' || this.showModalType === 'activate') {
+          const isEditing = !!this.editingPromotionId;
           const status = this.showModalType === 'activate' ? 'active' : 'draft';
           const payload = this.buildPromotionPayload(status);
 
@@ -491,7 +495,11 @@ export class PromotionManagement implements OnInit {
 
           request$.subscribe({
               next: () => {
-                  alert(`Đã ${this.showModalType === 'activate' ? 'Lưu & Kích hoạt' : 'Lưu bản nháp'} chương trình thành công!`);
+                                    this.openSuccessPopup(
+                                        isEditing
+                                            ? 'Chỉnh sửa khuyến mãi thành công!'
+                                            : `Đã ${this.showModalType === 'activate' ? 'Lưu & Kích hoạt' : 'Lưu bản nháp'} chương trình thành công!`
+                                    );
                   this.activeMainTab = 'manage';
                   this.currentPromotion = this.createEmptyPromotion();
                   this.editingPromotionId = null;
@@ -505,6 +513,20 @@ export class PromotionManagement implements OnInit {
           });
       }
       this.closeModal();
+    }
+
+    private openSuccessPopup(message: string): void {
+        this.successPopupMessage = message;
+        this.showSuccessPopup = true;
+
+        if (this.successPopupTimer) {
+            clearTimeout(this.successPopupTimer);
+        }
+
+        this.successPopupTimer = setTimeout(() => {
+            this.showSuccessPopup = false;
+            this.successPopupTimer = null;
+        }, 2200);
     }
 
     saveAndContinue() {
