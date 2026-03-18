@@ -38,6 +38,25 @@ export interface PromotionApiModel {
   items: PromotionApiItem[];
 }
 
+export interface FeaturedPromotionItem {
+  id: string;
+  promotionId: string;
+  itemIndex: number;
+  image: string;
+  title: string;
+  shortDescription: string;
+  discountValueRaw: number | null;
+  discountRuleType: 'percentage' | 'amount';
+  discountBadge: string;
+  startDate: string | null;
+  endDate: string | null;
+  createdAt: string | null;
+  promoCode: string;
+  target: string;
+  applyChannel: string;
+  isFeatured: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -48,6 +67,28 @@ export class PromotionApiService {
 
   getAll(): Observable<PromotionApiModel[]> {
     return this.http.get<PromotionApiModel[]>(this.apiUrl);
+  }
+
+  getFeatured(options?: {
+    limit?: number;
+    sortBy?: 'newest' | 'highestDiscount';
+  }): Observable<FeaturedPromotionItem[]> {
+    const query: string[] = [];
+
+    if (options?.limit) {
+      query.push(`limit=${encodeURIComponent(options.limit)}`);
+    }
+
+    if (options?.sortBy) {
+      query.push(`sortBy=${encodeURIComponent(options.sortBy)}`);
+    }
+
+    const suffix = query.length > 0 ? `?${query.join('&')}` : '';
+    return this.http.get<FeaturedPromotionItem[]>(`${this.apiUrl}/featured${suffix}`);
+  }
+
+  getFeaturedById(itemId: string): Observable<FeaturedPromotionItem> {
+    return this.http.get<FeaturedPromotionItem>(`${this.apiUrl}/featured/${encodeURIComponent(itemId)}`);
   }
 
   create(payload: PromotionApiModel): Observable<PromotionApiModel> {

@@ -6,6 +6,8 @@ import { Router} from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { HeaderComponent } from '../shared/header/header';
 import { FooterComponent } from '../shared/footer/footer';
+import { PromotionListComponent } from './components/promotion-list/promotion-list';
+import { FeaturedPromotionItem, PromotionApiService } from '../../services/promotion-api.service';
 
 interface Review {
   id: number;
@@ -18,7 +20,7 @@ interface Review {
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, FormsModule, HeaderComponent, FooterComponent],
+  imports: [CommonModule, FormsModule, HeaderComponent, FooterComponent, PromotionListComponent],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
@@ -26,6 +28,8 @@ export class Home implements OnInit {
   reviews: Review[] = [];
   displayedReviews: Review[] = [];
   reviewsToShow: number = 3;
+  featuredPromotions: FeaturedPromotionItem[] = [];
+  isLoadingFeaturedPromotions = true;
 
   // Flight search data
   cities = [
@@ -41,14 +45,32 @@ export class Home implements OnInit {
   travelDate: string = '';
 
   constructor(
-    private authService: AuthService, 
+    private authService: AuthService,
     private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+    private promotionApi: PromotionApiService
   ) {}
 
   ngOnInit(): void {
     // Load reviews from JSON
     this.loadReviews();
+    this.loadFeaturedPromotions();
+  }
+
+  loadFeaturedPromotions(): void {
+    this.isLoadingFeaturedPromotions = true;
+
+    this.promotionApi.getFeatured({ limit: 8, sortBy: 'newest' }).subscribe({
+      next: (promotions) => {
+        this.featuredPromotions = promotions;
+        this.isLoadingFeaturedPromotions = false;
+      },
+      error: (error) => {
+        console.error('Error loading featured promotions:', error);
+        this.featuredPromotions = [];
+        this.isLoadingFeaturedPromotions = false;
+      }
+    });
   }
 
   // Get available arrival cities (excluding selected departure)

@@ -1,0 +1,138 @@
+.deals-section {
+  padding: 60px 0;
+  background: #fff;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  gap: 20px;
+}
+
+.section-subtitle {
+  font-size: 16px;
+  color: #666;
+  line-height: 1.8;
+  margin: 0;
+}
+
+.section-subtitle strong {
+  font-weight: 700;
+  color: #6155f5;
+}
+
+.view-all-link {
+  color: #6366f1;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.deals-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.card-slot.full-width {
+  grid-column: span 3;
+}
+
+.slider-controls {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.slide-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #d7dbf4;
+  background: #fff;
+  color: #2d356f;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.2s ease;
+}
+
+.slide-btn:hover {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: #fff;
+}
+
+.empty-state {
+  border: 1px dashed #d5d9f0;
+  border-radius: 14px;
+  text-align: center;
+  padding: 40px 18px;
+}
+
+.empty-state h3 {
+  margin: 0 0 10px;
+  color: #202858;
+}
+
+.empty-state p {
+  margin: 0;
+  color: #677292;
+}
+
+.skeleton-grid {
+  min-height: 360px;
+}
+
+.skeleton-card {
+  border-radius: 14px;
+  min-height: 280px;
+  background: linear-gradient(110deg, #f4f6ff 8%, #e9ecff 18%, #f4f6ff 33%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s linear infinite;
+}
+
+.skeleton-card.full-width {
+  grid-column: span 3;
+  min-height: 320px;
+}
+
+@keyframes shimmer {
+  to {
+    background-position-x: -200%;
+  }
+}
+
+@media (max-width: 1024px) {
+  .deals-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .card-slot.full-width,
+  .skeleton-card.full-width {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 768px) {
+  .section-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .deals-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-slot.full-width,
+  .skeleton-card.full-width {
+    grid-column: span 1;
+  }
+
+  .slider-controls {
+    justify-content: center;
+  }
+}

@@ -4,11 +4,21 @@ const promotionSchema = new mongoose.Schema({
   title: String,
   icon: String,
   category: String,
+  isFeatured: {
+    type: Boolean,
+    default: false
+  },
   items: [{
     image: String,
     label: String,
     date: String,
     details: String,
+    isFeatured: {
+      type: Boolean,
+      default: false
+    },
+    startDate: String,
+    endDate: String,
     target: String,
     applyTime: {
       from: String,

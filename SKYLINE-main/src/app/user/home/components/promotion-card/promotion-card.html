@@ -1,0 +1,16 @@
+<a
+  class="promotion-card"
+  [class.large]="large"
+  [routerLink]="['/promotion', promotion.id]"
+  [attr.aria-label]="'Xem chi tiết khuyến mãi ' + promotion.title"
+>
+  <div class="card-image-wrap">
+    <img [src]="imageSrc" [alt]="promotion.title" (error)="onImageError($event)" />
+    <span class="discount-badge">{{ promotion.discountBadge }}</span>
+  </div>
+
+  <div class="card-content">
+    <h3>{{ promotion.title }}</h3>
+    <p class="card-description">{{ promotion.shortDescription || 'Ưu đãi dành cho hành trình tiếp theo của bạn.' }}</p>
+  </div>
+</a>

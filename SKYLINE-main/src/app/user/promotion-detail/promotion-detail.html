@@ -1,0 +1,39 @@
+<app-header></app-header>
+
+<section class="promotion-detail-section">
+  <div class="container">
+    @if (isLoading) {
+      <div class="detail-loading">Đang tải chi tiết khuyến mãi...</div>
+    } @else if (notFound || !promotion) {
+      <div class="detail-empty">
+        <h2>Không tìm thấy khuyến mãi</h2>
+        <p>Khuyến mãi có thể đã hết hạn hoặc không còn ở chế độ nổi bật.</p>
+        <a [routerLink]="['/promotion']" class="back-btn">Xem tất cả khuyến mãi</a>
+      </div>
+    } @else {
+      <article class="detail-card">
+        <div class="detail-image-wrap">
+          <img [src]="imageSrc" [alt]="promotion.title" (error)="onImageError($event)" />
+          <span class="detail-badge">{{ promotion.discountBadge }}</span>
+        </div>
+
+        <div class="detail-content">
+          <h1>{{ promotion.title }}</h1>
+          <p class="detail-description">{{ promotion.shortDescription || 'Ưu đãi đặc biệt dành cho hành trình kế tiếp của bạn.' }}</p>
+
+          <div class="detail-meta">
+            <p><strong>Hiệu lực:</strong> {{ validityText }}</p>
+            <p><strong>Mã khuyến mãi:</strong> {{ promotion.promoCode || 'Không yêu cầu' }}</p>
+          </div>
+
+          <div class="detail-actions">
+            <a [routerLink]="['/promotion']" class="back-btn">Xem tất cả khuyến mãi</a>
+            <a [routerLink]="['/home']" class="secondary-btn">Về trang chủ</a>
+          </div>
+        </div>
+      </article>
+    }
+  </div>
+</section>
+
+<app-footer></app-footer>
