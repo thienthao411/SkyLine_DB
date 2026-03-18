@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, forkJoin, map } from 'rxjs';
+import { Observable, forkJoin, map, catchError, of } from 'rxjs';
 
 export interface Flight {
   id: string;
@@ -107,11 +107,16 @@ export class FlightService {
   getFlights(): Observable<Flight[]> {
     return forkJoin({
       flights: this.http.get<ApiFlight[]>(this.flightApiUrl),
-      airlines: this.http.get<ApiAirline[]>(this.airlineApiUrl)
+      airlines: this.http.get<ApiAirline[]>(this.airlineApiUrl).pipe(
+        catchError(() => of([] as ApiAirline[]))
+      )
     }).pipe(
       map(({ flights, airlines }) => {
-        this.buildAirlineLookups(airlines);
-        return flights.map((apiFlight) => this.transformApiFlightToFlight(apiFlight));
+        const safeAirlines = Array.isArray(airlines) ? airlines : [];
+        const safeFlights = Array.isArray(flights) ? flights : [];
+
+        this.buildAirlineLookups(safeAirlines);
+        return safeFlights.map((apiFlight) => this.transformApiFlightToFlight(apiFlight));
       })
     );
   }
