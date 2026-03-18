@@ -10,6 +10,7 @@ const airlineRoutes = require("./routes/airlineRoutes");
 const flightRoutes = require("./routes/flightRoutes");
 const promotionRoutes = require("./routes/promotionRoutes");
 const ticketRoutes = require("./routes/ticketRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use("/api/airlines", airlineRoutes);
 app.use("/api/flights", flightRoutes);
 app.use("/api/promotions", promotionRoutes);
 app.use("/api/tickets", ticketRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.get("/", (req, res) => {
   res.send("Skyline API running");

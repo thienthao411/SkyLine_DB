@@ -1,244 +1,363 @@
-<div class="admin-container">
-  <!-- Sidebar Component -->
+<div class="admin-root">
   <app-admin-sidebar [isOpen]="sidebarOpen"></app-admin-sidebar>
 
-  <!-- Main Content -->
-  <main class="main-content">
-    <!-- Header -->
+  <main class="dash-main">
     <app-admin-header></app-admin-header>
 
-    <!-- Welcome Section -->
-    <section class="welcome-section">
-      <div class="welcome-text">
+    <!-- ── PAGE HEADER + FILTER ── -->
+    <div class="page-header">
+      <div class="page-title">
         <h1>Tổng quan</h1>
-        <p>Chào, Tường Vy, mừng bạn đến với trang admin!</p>
-      </div>
-      <div class="date-filter">
-        <button class="filter-btn" (click)="toggleDateDropdown()">
-          <img src="/assets/icons/Calendar1.png" alt="Calendar Icon">
-          <div>
-            <span>Lọc thời gian</span>
-            <span class="date-range">{{ dateRange }}</span>
-          </div>
-        </button>
-
-        <div class="date-dropdown unified-dropdown" *ngIf="showFilterDropdown">
-          <!-- Step 1: Year Selection -->
-          <div *ngIf="filterStep === 'year'" class="filter-step">
-            <div class="dropdown-header">
-              <h4>Chọn năm</h4>
-            </div>
-
-            <div class="month-selection">
-              <button *ngFor="let year of availableYears" class="month-btn" [class.active]="selectedYear === year"
-                (click)="selectYear(year)">
-                <div class="month-info">
-                  <span class="month-label">Năm {{ year }}</span>
-                </div>
-              </button>
-            </div>
-
-            <div class="dropdown-actions">
-              <button class="cancel-btn" (click)="toggleDateDropdown()">Hủy</button>
-            </div>
-          </div>
-
-          <!-- Step 2: Month Selection -->
-          <div *ngIf="filterStep === 'month'" class="filter-step">
-            <div class="dropdown-header">
-              <button class="back-btn" (click)="goBackToYear()">← Quay lại</button>
-              <h4>Chọn tháng ({{ selectedYear }})</h4>
-            </div>
-
-            <div class="month-selection">
-              <button *ngFor="let month of availableMonths; let i = index" class="month-btn"
-                [class.active]="selectedMonthIndex === i" (click)="selectMonth(i)">
-                <div class="month-info">
-                  <span class="month-label">Tháng {{ month.month }}/{{ month.year }}</span>
-                  <span class="month-stats">{{ month.ticketsSold }} vé - {{ formatRevenue(month.revenueActual) }}M VNĐ</span>
-                </div>
-              </button>
-            </div>
-
-            <div class="dropdown-actions">
-              <button class="cancel-btn" (click)="toggleDateDropdown()">Hủy</button>
-              <button class="apply-btn" *ngIf="availableWeeks.length === 0" (click)="applyMonthFilter()">Áp dụng</button>
-            </div>
-          </div>
-
-          <!-- Step 3: Week Selection -->
-          <div *ngIf="filterStep === 'week'" class="filter-step">
-            <div class="dropdown-header">
-              <button class="back-btn" (click)="goBackToMonth()">← Quay lại</button>
-              <h4>Chọn tuần (Tháng {{ availableMonths[selectedMonthIndex]?.month }}/{{ selectedYear }})</h4>
-            </div>
-
-            <div class="month-selection">
-              <button *ngFor="let week of availableWeeks; let i = index" class="month-btn"
-                [class.active]="selectedWeekIndex === i" (click)="selectWeek(i)">
-                <div class="month-info">
-                  <span class="month-label">{{ formatWeekRange(week) }}</span>
-                  <span class="month-stats">{{ getTotalTicketsForWeek(week) }} vé</span>
-                </div>
-              </button>
-            </div>
-
-            <div class="dropdown-actions">
-              <button class="cancel-btn" (click)="toggleDateDropdown()">Hủy</button>
-              <button class="apply-btn" (click)="applyWeekFilter()">Áp dụng</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Statistics Cards -->
-    <section class="stats-grid">
-      <div class="stat-card" *ngFor="let stat of stats" [style.background-color]="stat.bgColor">
-        <div class="stat-icon"><img *ngIf="stat.image" [src]="stat.image" [alt]="stat.label"></div>
-        <div class="stat-content">
-          <p class="stat-label">{{ stat.label }}</p>
-          <h3 class="stat-value">{{ stat.value }} <span class="stat-unit">{{ stat.unit }}</span></h3>
-        </div>
-      </div>
-    </section>
-
-    <!-- Charts Section -->
-    <section class="charts-section">
-      <div class="chart-container donut-charts">
-        <h3 class="chart-title">Tỷ lệ và tốc độ tăng trưởng kinh doanh</h3>
-        <div class="donut-grid">
-          <div class="donut-item" *ngFor="let chart of chartData">
-            <svg class="donut-chart" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" [attr.r]="donutRadius" fill="none" [attr.stroke]="chart.color" stroke-width="18" opacity="0.15"></circle>
-              <circle cx="50" cy="50" [attr.r]="donutRadius" fill="none" [attr.stroke]="chart.color" stroke-width="18" [attr.stroke-dasharray]="getDonutStrokeDasharray(chart.percentage)" stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 50 50)"></circle>
-              <text x="50" y="48" text-anchor="middle" class="donut-percentage">{{ chart.percentage }}</text>
-              <text x="50" y="58" text-anchor="middle" class="donut-percentage-symbol">%</text>
-            </svg>
-            <p class="donut-label">{{ chart.label }}</p>
-          </div>
-        </div>
+        <p class="page-sub">Theo dõi hiệu suất kinh doanh theo thời gian thực</p>
       </div>
 
-      <div class="chart-container line-chart">
-        <div class="chart-header-row">
-          <div class="chart-header-left">
-            <h3 class="chart-title">Số lượng vé được đặt trong tuần</h3>
-            <p class="chart-subtitle">Hiển thị lượng đặt vé mỗi ngày trong tuần</p>
-          </div>
-          <button class="download-btn">
-            <img src="/assets/icons/download.png" alt="Download Icon">
-            Lưu báo cáo
+      <!-- TIME FILTER -->
+      <div class="filter-dropdown-wrap">
+        <!-- Period tabs -->
+        <div class="period-tabs">
+          <button *ngFor="let p of periods" class="ptab"
+            [class.active]="period === p.key"
+            (click)="selectPeriod(p.key)">
+            {{ p.label }}
           </button>
         </div>
 
-        <div class="line-chart-area">
-          <svg viewBox="0 0 700 280" class="line-svg">
-            <!-- Grid line (bottom only) -->
-            <line x1="40" y1="220" x2="680" y2="220" stroke="#E8EBF0" stroke-width="2"></line>
-
-            <!-- Smooth curve path (dynamic) -->
-            <path [attr.d]="generateWeeklyPath()" fill="none" stroke="#42A5F5" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
-
-            <!-- Area fill with smooth curve (dynamic) -->
-            <path [attr.d]="generateWeeklyAreaPath()" fill="url(#gradient)" opacity="0.4"></path>
-
-            <!-- Hover areas (generated from weeklyData) -->
-            <rect *ngFor="let day of weeklyData; let i = index" class="hover-area" 
-              [attr.data-day]="day.day" 
-              [attr.data-value]="day.value" 
-              [attr.x]="getHoverRectX(i)" 
-              y="0" 
-              [attr.width]="getHoverRectWidth()" 
-              height="220" 
-              fill="transparent"></rect>
-
-            <!-- Data points (generated from weeklyData) -->
-            <g class="data-points">
-              <circle *ngFor="let day of weeklyData; let i = index" 
-                class="data-point" 
-                [attr.data-index]="i" 
-                [attr.cx]="getDataPointCx(i)" 
-                [attr.cy]="getDataPointCy(i)" 
-                r="6" 
-                fill="white" 
-                stroke="#42A5F5" 
-                stroke-width="3" 
-                opacity="0"></circle>
-            </g>
-
-            <!-- X-axis labels -->
-            <text x="80" y="250" text-anchor="middle" class="axis-label">Sunday</text>
-            <text x="170" y="250" text-anchor="middle" class="axis-label">Monday</text>
-            <text x="260" y="250" text-anchor="middle" class="axis-label">Tuesday</text>
-            <text x="350" y="250" text-anchor="middle" class="axis-label">Wednesday</text>
-            <text x="440" y="250" text-anchor="middle" class="axis-label">Thursday</text>
-            <text x="530" y="250" text-anchor="middle" class="axis-label">Friday</text>
-            <text x="620" y="250" text-anchor="middle" class="axis-label">Saturday</text>
-
-            <!-- Gradient definition -->
-            <defs>
-              <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" style="stop-color:#42A5F5;stop-opacity:0.6" />
-                <stop offset="100%" style="stop-color:#42A5F5;stop-opacity:0" />
-              </linearGradient>
-            </defs>
-          </svg>
-
-          <!-- Tooltip -->
-          <div class="chart-tooltip" style="display: none;">
-            <div class="tooltip-day"></div>
-            <div class="tooltip-value"></div>
+        <!-- Custom date range (shown only when custom) -->
+        <div class="custom-range" *ngIf="period === 'custom'">
+          <div class="cr-input">
+            <label>Từ</label>
+            <input type="date" [(ngModel)]="customFrom" class="date-input">
           </div>
+          <span class="cr-sep">—</span>
+          <div class="cr-input">
+            <label>Đến</label>
+            <input type="date" [(ngModel)]="customTo" class="date-input">
+          </div>
+          <button class="apply-btn" (click)="applyFilter()">Áp dụng</button>
         </div>
       </div>
-    </section>
+    </div>
 
-    <!-- Monthly Revenue Chart -->
-    <section class="revenue-chart">
-      <h3 class="chart-title">Doanh thu theo tháng/năm</h3>
-      <div class="revenue-legend">
-        <span class="legend-item"><span class="dot blue"></span> Năm 2024</span>
-        <span class="legend-item"><span class="dot red"></span> Năm 2025</span>
-      </div>
-      <div class="revenue-chart-area">
-        <svg viewBox="0 0 1000 300" class="revenue-svg">
-          <line x1="40" y1="260" x2="960" y2="260" stroke="#E8EBF0" stroke-width="2"></line>
-          <line x1="40" y1="200" x2="960" y2="200" stroke="#E8EBF0" stroke-width="1" stroke-dasharray="5,5" opacity="0.5"></line>
-          <line x1="40" y1="140" x2="960" y2="140" stroke="#E8EBF0" stroke-width="1" stroke-dasharray="5,5" opacity="0.5"></line>
-          <line x1="40" y1="80" x2="960" y2="80" stroke="#E8EBF0" stroke-width="1" stroke-dasharray="5,5" opacity="0.5"></line>
-          <line x1="40" y1="20" x2="960" y2="20" stroke="#E8EBF0" stroke-width="1" stroke-dasharray="5,5" opacity="0.5"></line>
+    <!-- ── ERROR BANNER ── -->
+    <div class="error-banner" *ngIf="error">
+      <span class="err-icon">⚠</span> {{ error }}
+    </div>
 
-          <path [attr.d]="revenuePath2024" fill="none" stroke="#42A5F5" stroke-width="3" stroke-linecap="round"></path>
-          <path [attr.d]="revenuePath2025" fill="none" stroke="#EF5350" stroke-width="3" stroke-linecap="round"></path>
+    <!-- ── LOADING OVERLAY ── -->
+    <div class="loading-bar" *ngIf="loading">
+      <div class="loading-progress"></div>
+    </div>
 
-          <rect *ngFor="let label of monthlyRevenue.labels; let i = index" class="revenue-hover-area" [attr.data-month]="i + 1" [attr.x]="getRevenueHoverX(i)" y="0" [attr.width]="getRevenueHoverWidth()" height="260" fill="transparent"></rect>
+    <div class="dash-content" [class.loading-dim]="loading">
 
-          <g class="revenue-data-points-2024">
-            <circle *ngFor="let label of monthlyRevenue.labels; let i = index" [attr.data-index]="i" [attr.cx]="getRevenueDataPoint(i, 2024).cx" [attr.cy]="getRevenueDataPoint(i, 2024).cy" r="6" fill="white" stroke="#42A5F5" stroke-width="3" opacity="0"></circle>
-          </g>
+      <!-- ── KPI CARDS ── -->
+      <section class="kpi-grid">
 
-          <g class="revenue-data-points-2025">
-            <circle *ngFor="let label of monthlyRevenue.labels; let i = index" [attr.data-index]="i" [attr.cx]="getRevenueDataPoint(i, 2025).cx" [attr.cy]="getRevenueDataPoint(i, 2025).cy" r="6" fill="white" stroke="#EF5350" stroke-width="3" opacity="0"></circle>
-          </g>
-
-          <text *ngFor="let label of monthlyRevenue.labels; let i = index" [attr.x]="getRevenueLabelX(i)" y="285" text-anchor="middle" class="axis-label">{{ i + 1 }}</text>
-
-          <text x="10" y="265" text-anchor="start" class="axis-label-y">0M</text>
-          <text x="10" y="205" text-anchor="start" class="axis-label-y">{{ getRevenueYAxisLabels()[0] }}</text>
-          <text x="10" y="145" text-anchor="start" class="axis-label-y">{{ getRevenueYAxisLabels()[1] }}</text>
-          <text x="10" y="85" text-anchor="start" class="axis-label-y">{{ getRevenueYAxisLabels()[2] }}</text>
-          <text x="10" y="25" text-anchor="start" class="axis-label-y">{{ getRevenueYAxisLabels()[3] }}</text>
-        </svg>
-
-        <div class="revenue-tooltip" style="display: none;">
-          <div class="revenue-tooltip-month"></div>
-          <div class="revenue-tooltip-values">
-            <div class="revenue-tooltip-2024"><span class="dot-inline blue"></span><span class="year-label">2024:</span><span class="value-label value-2024"></span></div>
-            <div class="revenue-tooltip-2025"><span class="dot-inline red"></span><span class="year-label">2025:</span><span class="value-label value-2025"></span></div>
+        <!-- Revenue -->
+        <div class="kpi-card">
+          <div class="kpi-left">
+            <div class="kpi-icon rev-icon">
+              <span class="kpi-emoji">💰</span>
+            </div>
+          </div>
+          <div class="kpi-body">
+            <p class="kpi-label">Tổng doanh thu</p>
+            <h3 class="kpi-value">{{ formatRevenue(overview.totalRevenue) }} <span class="kpi-unit">VNĐ</span></h3>
+            <div class="kpi-trend" [ngClass]="growthClass(overview.revenueGrowth)">
+              <span class="trend-arrow">{{ growthArrow(overview.revenueGrowth) }}</span>
+              <span>{{ absGrowth(overview.revenueGrowth) }}%</span>
+              <span class="trend-label">so với kỳ trước</span>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+
+        <!-- Tickets -->
+        <div class="kpi-card">
+          <div class="kpi-left">
+            <div class="kpi-icon tkt-icon">
+              <span class="kpi-emoji">🎫</span>
+            </div>
+          </div>
+          <div class="kpi-body">
+            <p class="kpi-label">Tổng vé đã bán</p>
+            <h3 class="kpi-value">{{ formatNumber(overview.totalTickets) }}</h3>
+            <div class="kpi-trend" [ngClass]="growthClass(overview.ticketGrowth)">
+              <span class="trend-arrow">{{ growthArrow(overview.ticketGrowth) }}</span>
+              <span>{{ absGrowth(overview.ticketGrowth) }}%</span>
+              <span class="trend-label">so với kỳ trước</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flights -->
+        <div class="kpi-card">
+          <div class="kpi-left">
+            <div class="kpi-icon flt-icon">
+              <span class="kpi-emoji">✈️</span>
+            </div>
+          </div>
+          <div class="kpi-body">
+            <p class="kpi-label">Tổng chuyến bay</p>
+            <h3 class="kpi-value">{{ formatNumber(overview.totalFlights) }}</h3>
+            <div class="kpi-trend" [ngClass]="growthClass(overview.flightGrowth)">
+              <span class="trend-arrow">{{ growthArrow(overview.flightGrowth) }}</span>
+              <span>{{ absGrowth(overview.flightGrowth) }}%</span>
+              <span class="trend-label">so với kỳ trước</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seat Fill Rate -->
+        <div class="kpi-card">
+          <div class="kpi-left">
+            <div class="kpi-icon seat-icon">
+              <span class="kpi-emoji">💺</span>
+            </div>
+          </div>
+          <div class="kpi-body">
+            <p class="kpi-label">Tỷ lệ lấp đầy ghế</p>
+            <h3 class="kpi-value">{{ overview.seatFillRate }}<span class="kpi-unit">%</span></h3>
+            <div class="mini-progress">
+              <div class="mini-bar" [style.width.%]="overview.seatFillRate"
+                   [style.background]="overview.seatFillRate >= 70 ? '#22c55e' : overview.seatFillRate >= 40 ? '#f59e0b' : '#ef4444'"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cancellation Rate -->
+        <div class="kpi-card">
+          <div class="kpi-left">
+            <div class="kpi-icon cancel-icon">
+              <span class="kpi-emoji">🚫</span>
+            </div>
+          </div>
+          <div class="kpi-body">
+            <p class="kpi-label">Tỷ lệ huỷ vé</p>
+            <h3 class="kpi-value">{{ overview.cancellationRate }}<span class="kpi-unit">%</span></h3>
+            <div class="mini-progress">
+              <div class="mini-bar" [style.width.%]="overview.cancellationRate"
+                   [style.background]="overview.cancellationRate <= 5 ? '#22c55e' : overview.cancellationRate <= 15 ? '#f59e0b' : '#ef4444'"></div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ── ROW 2: Revenue + Donut charts ── -->
+      <section class="row-2">
+
+        <!-- REVENUE LINE CHART -->
+        <div class="chart-card revenue-chart-card">
+          <div class="chart-card-hdr">
+            <div>
+              <h3 class="ccard-title">Doanh thu theo thời gian</h3>
+              <p class="ccard-sub">Biểu đồ đường — {{ filterLabel }}</p>
+            </div>
+          </div>
+
+          <div class="svg-wrap" *ngIf="revenueChart.values.length > 0; else emptyRevenue">
+            <svg [attr.viewBox]="'0 0 ' + svgW + ' ' + (svgH + 30)" preserveAspectRatio="xMidYMid meet" class="chart-svg">
+              <defs>
+                <linearGradient id="revGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.35"/>
+                  <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:0"/>
+                </linearGradient>
+              </defs>
+
+              <!-- Grid lines -->
+              <line *ngFor="let y of gridLines(revenueChart.values)"
+                x1="55" [attr.y1]="y" [attr.x2]="svgW - 10" [attr.y2]="y"
+                stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4,4"/>
+
+              <!-- Y-axis labels -->
+              <text *ngFor="let lbl of yAxisLabels(revenueChart.values)"
+                x="50" [attr.y]="lbl.y + 4"
+                text-anchor="end" class="axis-txt">{{ lbl.label }}</text>
+
+              <!-- Area fill -->
+              <path [attr.d]="areaPath(revenueChart.values)" fill="url(#revGrad)"/>
+
+              <!-- Line -->
+              <path [attr.d]="linePath(revenueChart.values)"
+                fill="none" stroke="#3b82f6" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round"/>
+
+              <!-- Data dots -->
+              <circle *ngFor="let v of revenueChart.values; let i = index; trackBy: trackByIndex"
+                [attr.cx]="ptX(i, revenueChart.values)"
+                [attr.cy]="ptY(i, revenueChart.values)"
+                r="3.5" fill="#fff" stroke="#3b82f6" stroke-width="2" class="chart-dot"/>
+
+              <!-- X-axis labels -->
+              <text *ngFor="let xl of xLabels(revenueChart.labels); trackBy: trackByIndex"
+                [attr.x]="xl.x" [attr.y]="svgH + 16"
+                text-anchor="middle" class="axis-txt">{{ xl.label }}</text>
+            </svg>
+          </div>
+
+          <ng-template #emptyRevenue>
+            <div class="chart-empty">Không có dữ liệu trong kỳ này</div>
+          </ng-template>
+        </div>
+
+        <!-- DONUT CHARTS -->
+        <div class="chart-card donut-card">
+          <h3 class="ccard-title">Chỉ số hiệu suất</h3>
+          <div class="donut-grid">
+
+            <!-- Seat fill -->
+            <div class="donut-item">
+              <svg viewBox="0 0 100 100" class="donut-svg">
+                <circle cx="50" cy="50" r="38" fill="none" stroke="#fee2e2" stroke-width="14"/>
+                <circle cx="50" cy="50" r="38" fill="none" stroke="#ef4444" stroke-width="14"
+                  [attr.stroke-dasharray]="donutStrokeDash(donutStats.seatFillRate)"
+                  stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 50 50)"/>
+                <text x="50" y="46" text-anchor="middle" class="donut-val">{{ donutStats.seatFillRate }}</text>
+                <text x="50" y="57" text-anchor="middle" class="donut-sym">%</text>
+              </svg>
+              <p class="donut-lbl">Tỷ lệ ghế được đặt</p>
+            </div>
+
+            <!-- Revenue growth -->
+            <div class="donut-item">
+              <svg viewBox="0 0 100 100" class="donut-svg">
+                <circle cx="50" cy="50" r="38" fill="none" stroke="#dcfce7" stroke-width="14"/>
+                <circle cx="50" cy="50" r="38" fill="none" stroke="#22c55e" stroke-width="14"
+                  [attr.stroke-dasharray]="donutStrokeDash(donutStats.revenueGrowth)"
+                  stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 50 50)"/>
+                <text x="50" y="46" text-anchor="middle" class="donut-val">{{ donutStats.revenueGrowth }}</text>
+                <text x="50" y="57" text-anchor="middle" class="donut-sym">%</text>
+              </svg>
+              <p class="donut-lbl">Tăng trưởng doanh thu</p>
+            </div>
+
+            <!-- Plan attainment -->
+            <div class="donut-item">
+              <svg viewBox="0 0 100 100" class="donut-svg">
+                <circle cx="50" cy="50" r="38" fill="none" stroke="#dbeafe" stroke-width="14"/>
+                <circle cx="50" cy="50" r="38" fill="none" stroke="#3b82f6" stroke-width="14"
+                  [attr.stroke-dasharray]="donutStrokeDash(donutStats.planAttainment)"
+                  stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 50 50)"/>
+                <text x="50" y="46" text-anchor="middle" class="donut-val">{{ donutStats.planAttainment }}</text>
+                <text x="50" y="57" text-anchor="middle" class="donut-sym">%</text>
+              </svg>
+              <p class="donut-lbl">Đạt kế hoạch doanh thu</p>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ── ROW 3: Tickets bar chart ── -->
+      <section class="row-3">
+        <div class="chart-card tkt-chart-card">
+          <div class="chart-card-hdr">
+            <div>
+              <h3 class="ccard-title">Số lượng vé đặt theo thời gian</h3>
+              <p class="ccard-sub">Biểu đồ cột — {{ filterLabel }}</p>
+            </div>
+          </div>
+
+          <div class="svg-wrap" *ngIf="ticketsChart.values.length > 0; else emptyTickets">
+            <svg [attr.viewBox]="'0 0 ' + svgW + ' ' + (svgH + 30)" preserveAspectRatio="xMidYMid meet" class="chart-svg">
+              <defs>
+                <linearGradient id="barGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1"/>
+                  <stop offset="100%" style="stop-color:#a5b4fc;stop-opacity:0.8"/>
+                </linearGradient>
+              </defs>
+
+              <!-- Grid lines -->
+              <line *ngFor="let y of gridLines(ticketsChart.values)"
+                x1="55" [attr.y1]="y" [attr.x2]="svgW - 10" [attr.y2]="y"
+                stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4,4"/>
+
+              <!-- Y-axis labels -->
+              <text *ngFor="let lbl of yAxisLabels(ticketsChart.values)"
+                x="50" [attr.y]="lbl.y + 4"
+                text-anchor="end" class="axis-txt">{{ lbl.label }}</text>
+
+              <!-- Bars -->
+              <rect *ngFor="let v of ticketsChart.values; let i = index; trackBy: trackByIndex"
+                [attr.x]="barX(i, ticketsChart.values)"
+                [attr.y]="barY(v, ticketsChart.values)"
+                [attr.width]="barWidth(ticketsChart.values)"
+                [attr.height]="barH(v, ticketsChart.values)"
+                fill="url(#barGrad)" rx="3"/>
+
+              <!-- X-axis labels -->
+              <text *ngFor="let xl of xLabels(ticketsChart.labels); trackBy: trackByIndex"
+                [attr.x]="xl.x" [attr.y]="svgH + 16"
+                text-anchor="middle" class="axis-txt">{{ xl.label }}</text>
+            </svg>
+          </div>
+
+          <ng-template #emptyTickets>
+            <div class="chart-empty">Không có dữ liệu trong kỳ này</div>
+          </ng-template>
+        </div>
+      </section>
+
+      <!-- ── ROW 4: Top routes + Top airlines ── -->
+      <section class="row-4">
+
+        <!-- TOP ROUTES -->
+        <div class="chart-card top-card">
+          <div class="chart-card-hdr">
+            <h3 class="ccard-title">Top tuyến bay</h3>
+            <span class="badge-tag">Top 5</span>
+          </div>
+
+          <div class="top-empty" *ngIf="topRoutes.length === 0">Không có dữ liệu</div>
+
+          <div class="top-list" *ngIf="topRoutes.length > 0">
+            <div class="top-item" *ngFor="let r of topRoutes; let i = index">
+              <div class="top-rank" [ngClass]="'rank-' + (i + 1)">{{ i + 1 }}</div>
+              <div class="top-info">
+                <div class="top-name">{{ r.route }}</div>
+                <div class="top-bar-wrap">
+                  <div class="top-bar" [style.width.%]="routeBarW(r.tickets)"
+                       [style.background]="i === 0 ? '#3b82f6' : i === 1 ? '#6366f1' : '#8b5cf6'"></div>
+                </div>
+              </div>
+              <div class="top-stats">
+                <span class="tstat-num">{{ formatNumber(r.tickets) }} vé</span>
+                <span class="tstat-rev">{{ formatRevenue(r.revenue) }} ₫</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TOP AIRLINES -->
+        <div class="chart-card top-card">
+          <div class="chart-card-hdr">
+            <h3 class="ccard-title">Top hãng bay</h3>
+            <span class="badge-tag">Top 5</span>
+          </div>
+
+          <div class="top-empty" *ngIf="topAirlines.length === 0">Không có dữ liệu</div>
+
+          <div class="top-list" *ngIf="topAirlines.length > 0">
+            <div class="top-item" *ngFor="let a of topAirlines; let i = index">
+              <div class="top-rank" [ngClass]="'rank-' + (i + 1)">{{ i + 1 }}</div>
+              <div class="top-info">
+                <div class="top-name">{{ a.airline || a.airlineCode || 'Unknown' }}</div>
+                <div class="top-bar-wrap">
+                  <div class="top-bar" [style.width.%]="airlineBarW(a.tickets)"
+                       [style.background]="i === 0 ? '#f59e0b' : i === 1 ? '#f97316' : '#ef4444'"></div>
+                </div>
+              </div>
+              <div class="top-stats">
+                <span class="tstat-num">{{ formatNumber(a.tickets) }} vé</span>
+                <span class="tstat-rev">{{ formatRevenue(a.revenue) }} ₫</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </div><!-- /.dash-content -->
   </main>
 </div>
