@@ -197,8 +197,6 @@
   padding: 30px 0;
 }
 
-<<<<<<< HEAD
-=======
 .status {
   display: inline-flex;
   align-items: center;
@@ -251,8 +249,6 @@
 .highlight-row td {
   background: #fff7cc;
 }
-
->>>>>>> 3c18987 (thêm thông báo)
 .actions {
   display: flex;
   justify-content: center;
