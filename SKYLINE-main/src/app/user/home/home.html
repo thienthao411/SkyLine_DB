@@ -75,50 +75,24 @@
         <div class="section-header">
             <h2>Đối tác hàng không <strong>tiêu biểu</strong></h2>
         </div>
-        
-        <div class="airlines-grid">
-            <div class="airline-card">
-                <div class="airline-logo">
-                    <img src="assets/images/vietjet.jpg" alt="VietJet Air" width="200" height="200">
-                </div>
-                <p class="airline-desc">Hãng hàng không giá rẻ với mạng lưới đường bay rộng khắp, uy tín và tin cậy trong phục vụ khách hàng, mang đến trải nghiệm bay tuyệt vời cho bạn trên từng hành trình.</p>
-            </div>
-            
-            <div class="airline-card">
-                <div class="airline-logo">
-                    <img src="assets/images/VietnamAirlines.jpg" alt="Vietnam Airlines">
-                </div>
-                <p class="airline-desc">Hãng hàng không giá rẻ với mạng lưới đường bay rộng khắp, uy tín và tin cậy trong phục vụ khách hàng, mang đến trải nghiệm bay tuyệt vời cho bạn trên từng hành trình.</p>
-            </div>
-            
-            <div class="airline-card">
-                <div class="airline-logo">
-                    <img src="assets/images/bamboo.png" alt="Bamboo Airways">
-                </div>
-                <p class="airline-desc">Hãng hàng không giá rẻ với mạng lưới đường bay rộng khắp, uy tín và tin cậy trong phục vụ khách hàng, mang đến trải nghiệm bay tuyệt vời cho bạn trên từng hành trình.</p>
-            </div>
 
-            <div class="airline-card">
-                <div class="airline-logo">
-                    <img src="assets/images/pacific.png" alt="Pacific Airlines">
-                </div>
-                <p class="airline-desc">Hãng hàng không với dịch vụ chuyên nghiệp, cam kết mang đến sự hài lòng tối đa cho hành khách với giá cả phải chăng và chất lượng dịch vụ xuất sắc.</p>
+        @if (isLoadingAirlines) {
+            <p class="airline-empty">Đang tải danh sách hãng hàng không...</p>
+        } @else if (airlines.length === 0) {
+            <p class="airline-empty">Chưa có dữ liệu hãng hàng không từ hệ thống.</p>
+        } @else {
+            <div class="airlines-grid">
+                @for (airline of airlines; track airline.id) {
+                    <div class="airline-card">
+                        <div class="airline-logo">
+                            <img [src]="airline.logo" [alt]="airline.name" loading="lazy">
+                        </div>
+                        <h3 class="airline-name">{{ airline.name }}</h3>
+                        <p class="airline-desc">Hotline liên hệ: <strong>{{ airline.hotline }}</strong></p>
+                    </div>
+                }
             </div>
-
-            <div class="airline-card">
-                <div class="airline-logo">
-                    <img src="assets/images/viettravel.jpg" alt="VietTravel Airlines">
-                </div>
-                <p class="airline-desc">Hãng hàng không quốc tế uy tín hàng đầu thế giới, mang đến trải nghiệm bay đẳng cấp với dịch vụ 5 sao và đội ngũ tiếp viên chuyên nghiệp.</p>
-            </div>
-
-            <div class="airline-card">
-                <div class="airline-logo">
-                    <img src="assets/images/jetstar.png" alt="Jestar Pacific">
-                </div>
-                <p class="airline-desc">Hãng hàng không quốc gia Thái Lan với truyền thống phục vụ lâu đời, kết hợp giữa sự thân thiện và chuyên nghiệp trong từng chuyến bay.</p>
-            </div>
-        </div>
+        }
     </div>
 </section>
 

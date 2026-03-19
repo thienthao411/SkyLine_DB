@@ -8,6 +8,7 @@ import { HeaderComponent } from '../shared/header/header';
 import { FooterComponent } from '../shared/footer/footer';
 import { PromotionListComponent } from './components/promotion-list/promotion-list';
 import { FeaturedPromotionItem, PromotionApiService } from '../../services/promotion-api.service';
+import { AirlineApiModel, AirlineApiService } from '../../services/airline-api.service';
 
 interface Review {
   id: number;
@@ -16,6 +17,13 @@ interface Review {
   rating: number;
   review: string;
   date: string;
+}
+
+interface AirlinePartner {
+  id: string;
+  name: string;
+  hotline: string;
+  logo: string;
 }
 
 @Component({
@@ -30,6 +38,8 @@ export class Home implements OnInit {
   reviewsToShow: number = 3;
   featuredPromotions: FeaturedPromotionItem[] = [];
   isLoadingFeaturedPromotions = true;
+  airlines: AirlinePartner[] = [];
+  isLoadingAirlines = true;
 
   // Flight search data
   cities = [
@@ -48,13 +58,45 @@ export class Home implements OnInit {
     private authService: AuthService,
     private router: Router,
     private http: HttpClient,
-    private promotionApi: PromotionApiService
+    private promotionApi: PromotionApiService,
+    private airlineApi: AirlineApiService
   ) {}
 
   ngOnInit(): void {
     // Load reviews from JSON
     this.loadReviews();
     this.loadFeaturedPromotions();
+    this.loadAirlines();
+  }
+
+  loadAirlines(): void {
+    this.isLoadingAirlines = true;
+
+    this.airlineApi.getAll().subscribe({
+      next: (airlines) => {
+        this.airlines = airlines
+          .filter((item) => {
+            const status = (item.status ?? '').trim().toLowerCase();
+            return status === '' || status === 'đang hợp tác' || status === 'active';
+          })
+          .map((item, index) => this.toAirlinePartner(item, index));
+        this.isLoadingAirlines = false;
+      },
+      error: (error) => {
+        console.error('Error loading airlines:', error);
+        this.airlines = [];
+        this.isLoadingAirlines = false;
+      }
+    });
+  }
+
+  private toAirlinePartner(item: AirlineApiModel, index: number): AirlinePartner {
+    return {
+      id: item._id ?? `${item.airlineCode ?? 'airline'}-${index}`,
+      name: item.airlineName?.trim() || item.airlineCode?.trim() || 'Hang hang khong',
+      hotline: item.hotline?.trim() || 'Dang cap nhat',
+      logo: item.logo?.trim() || 'assets/images/VietnamAirlines.jpg'
+    };
   }
 
   loadFeaturedPromotions(): void {

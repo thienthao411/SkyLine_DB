@@ -364,6 +364,13 @@ select.search-input {
     box-shadow: 0 2px 12px rgba(0,0,0,0.08);
 }
 
+.airline-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2f354b;
+    margin: 0 0 8px;
+}
+
 .airline-logo {
     height: 120px;
     display: flex;
@@ -385,6 +392,15 @@ select.search-input {
     color: #666;
     line-height: 1.6;
     margin: 0;
+}
+
+.airline-desc strong {
+    color: #1f5ea8;
+}
+
+.airline-empty {
+    margin: 8px 0 0;
+    color: #7a819e;
 }
 
 .view-more {

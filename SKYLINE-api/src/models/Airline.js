@@ -4,6 +4,7 @@ const airlineSchema = new mongoose.Schema({
   airlineCode: String,
   airlineName: String,
   img: String,
+  logo: String,
   country: String,
   hotline: String,
   commissionRate: Number,
