@@ -234,6 +234,21 @@
   border-color: #fca5a5;
 }
 
+.status-processing {
+  color: #92400e;
+  background: #ffedd5;
+  border-color: #fdba74;
+}
+
+.status-failed {
+  color: #991b1b;
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.highlight-row td {
+  background: #fff7cc;
+}
 .actions {
   display: flex;
   justify-content: center;
@@ -268,6 +283,24 @@
 
 .action-btn.delete:hover {
   color: #EF4444;
+}
+
+.action-btn.approve {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.action-btn.approve:hover {
+  background: #dcfce7;
+}
+
+.action-btn.reject {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.action-btn.reject:hover {
+  background: #fee2e2;
 }
 
 .form-container {

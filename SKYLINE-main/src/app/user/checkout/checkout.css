@@ -3,6 +3,21 @@
     padding: 18px 12px 28px;
 }
 
+.payment-toast {
+    position: fixed;
+    right: 16px;
+    top: 84px;
+    z-index: 1200;
+    max-width: 340px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #17324d;
+    color: #ffffff;
+    box-shadow: 0 10px 24px rgba(8, 30, 52, 0.25);
+    font-size: 14px;
+    line-height: 1.4;
+}
+
 .checkout-container {
     max-width: 1100px;
     margin: 0 auto;

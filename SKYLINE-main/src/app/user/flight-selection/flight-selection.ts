@@ -1,11 +1,13 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
+import { map } from 'rxjs';
 import { HeaderComponent } from '../shared/header/header';
 import { FooterComponent } from '../shared/footer/footer';
 export { FlightSelectionComponent as FlightSelection } from './flight-selection';
-import { BookingService } from '../services/booking.service';
-import { BookingApiService } from '../services/booking-api.service';
+import { TicketService } from '../services/ticket.service';
+import { TicketApiService } from '../services/ticket-api.service';
 
 type Cabin = 'Economy' | 'Premium Economy' | 'Business';
 
@@ -23,7 +25,14 @@ export interface Flight {
   currency: 'VND' | 'USD';
   seatsLeft: number;
   cabin: Cabin;
+  economyPrice?: number;
+  businessPrice?: number;
   details?: any;
+}
+
+interface ApiAirlineLogo {
+  airlineCode?: string;
+  img?: string;
 }
 
 @Component({
@@ -36,8 +45,11 @@ export interface Flight {
 export class FlightSelectionComponent {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private bookingService = inject(BookingService);
-  private bookingApiService = inject(BookingApiService);
+  private http = inject(HttpClient);
+  private ticketService = inject(TicketService);
+  private ticketApiService = inject(TicketApiService);
+  private readonly apiBaseUrl = 'http://localhost:5000/api';
+  private airlineLogoByCode = signal<Record<string, string>>({});
 
   isLoading = signal(true);
   loadError = signal<string | null>(null);
@@ -48,14 +60,42 @@ export class FlightSelectionComponent {
   constructor() {
     console.log('Flight chọn:', this.flight());
     const id = this.route.snapshot.paramMap.get('id')!;
-    this.bookingApiService.getFlightById(id).subscribe({
+    this.loadAirlineLogos();
+    this.ticketApiService.getFlightById(id).subscribe({
       next: (flight) => {
         this.flight.set(flight as Flight);
-        this.bookingService.setData('flight', flight);
+        this.ticketService.setData('flight', flight);
         this.isLoading.set(false);
         if (!flight) this.loadError.set('Không tìm thấy chuyến bay.');
       },
       error: () => { this.isLoading.set(false); this.loadError.set('Lỗi tải dữ liệu.'); }
+    });
+  }
+
+  private loadAirlineLogos(): void {
+    this.http.get<ApiAirlineLogo[]>(`${this.apiBaseUrl}/airlines`).pipe(
+      map((airlines) => {
+        const lookup: Record<string, string> = {};
+
+        (Array.isArray(airlines) ? airlines : []).forEach((airline) => {
+          const code = String(airline?.airlineCode || '').trim().toUpperCase();
+          const img = String(airline?.img || '').trim();
+
+          if (code && img) {
+            lookup[code] = img;
+          }
+        });
+
+        return lookup;
+      })
+    ).subscribe({
+      next: (lookup) => {
+        this.airlineLogoByCode.set(lookup);
+      },
+      error: (err) => {
+        console.warn('Khong tai duoc logo airline tu API:', err);
+        this.airlineLogoByCode.set({});
+      }
     });
   }
 
@@ -196,19 +236,13 @@ export class FlightSelectionComponent {
     return this.flight()?.details?.stops || 'Bay thẳng';
   }
 
-  private readonly logoByCode: Record<string, string> = {
-    VN: 'https://upload.wikimedia.org/wikipedia/vi/b/bc/Vietnam_Airlines_logo.svg',
-    VJ: 'https://upload.wikimedia.org/wikipedia/commons/1/19/VietJet_Air_logo.svg',
-    QH: 'https://upload.wikimedia.org/wikipedia/commons/7/78/Bamboo_Airways_Logo.svg',
-    BL: 'https://upload.wikimedia.org/wikipedia/commons/5/5d/Logo_h%C3%A3ng_Pacific_Airlines.svg',
-    VU: 'https://upload.wikimedia.org/wikipedia/commons/e/ee/Vietravel_Airlines_Logo.png',
-  };
-
   logoOf(f: any): string | null {
     if ((f as any)?._logoError) return null;
     const byData = f?.details?.logo?.trim?.();
     if (byData) return byData;
     const code = (f?.details?.airline_code || f?.airline_code || '').toUpperCase();
-    return this.logoByCode[code] ?? null;
+    return this.airlineLogoByCode()[code] ?? null;
   }
 }
+
+

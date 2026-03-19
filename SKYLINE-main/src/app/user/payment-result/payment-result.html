@@ -1,5 +1,9 @@
 <app-header></app-header>
 
+<div class="payment-toast" *ngIf="showToast">
+  {{ toastMessage }}
+</div>
+
 <div class="result-shell">
   <div class="result-card" *ngIf="!isLoading; else loadingTpl">
     <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>

@@ -1,4 +1,7 @@
 <app-header></app-header>
+<div class="payment-toast" *ngIf="showToast">
+    {{ toastMessage }}
+</div>
 <div class="content">
     <div class="checkout-container">
         <header class="checkout-header">
@@ -123,6 +126,7 @@
                             <div class="info-banner processing" *ngIf="bookingStatus === 'processing'">
                                 <strong>Đơn đang chờ đối soát.</strong>
                                 <span>Vui lòng chờ xác nhận hoặc làm mới trạng thái.</span>
+                                <span>Tự động làm mới mỗi 10 giây. Lần kiểm tra gần nhất: {{ lastStatusCheckedAt ? (lastStatusCheckedAt | date:'HH:mm:ss':'vi') : '--' }}</span>
                             </div>
 
                             <div class="info-banner success" *ngIf="bookingStatus === 'paid' || bookingStatus === 'issued'">

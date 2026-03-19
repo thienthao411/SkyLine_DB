@@ -4,7 +4,7 @@
     <div class="seat-map-column">
 
         <header>
-            <img src="/assets/media/Logo.png" alt="Logo" class="logo">
+            <img src="/assets/media/Logo.png" alt="Biểu tượng Skyline" class="logo">
         </header>
 
         <div class="seat-legend">
@@ -100,6 +100,10 @@
                         Phổ thông
                         <span *ngIf="selectedSeatType === 'economy'" class="selected-badge blue">Đã chọn</span>
                     </h2>
+                    <div class="gia-ve-noi-bat gia-pho-thong">
+                        <span class="nhan-gia">Giá vé</span>
+                        <strong>{{ economyPriceText() }}</strong>
+                    </div>
                     <div>Vé hạng phổ thông cung cấp dịch vụ cơ bản với chi phí tiết kiệm, bao gồm:</div>
                     <ul>
                         <li class="item-blue">Chỗ ngồi tiêu chuẩn trên khoang máy bay.</li>
@@ -116,6 +120,10 @@
                         Thương gia
                         <span *ngIf="selectedSeatType === 'business'" class="selected-badge green">Đã chọn</span>
                     </h2>
+                    <div class="gia-ve-noi-bat gia-thuong-gia">
+                        <span class="nhan-gia">Giá vé</span>
+                        <strong>{{ businessPriceText() }}</strong>
+                    </div>
                     <div>Hạng thương gia là hạng vé lý tưởng dành cho những hành khách muốn có trải nghiệm bay thoải
                         mái, riêng tư với nhiều đặc quyền.</div>
                     <ul>
@@ -151,8 +159,7 @@
 
             <div class="footer-button-group">
                 <button class="btn-secondary" (click)="quayLai()">Quay lại</button>
-                <button class="btn-primary" [disabled]="!selectedSeat" [class.disabled]="!selectedSeat"
-                    (click)="tiepTuc()">
+                <button class="btn-primary" (click)="tiepTuc()">
                     Tiếp tục
                 </button>
             </div>

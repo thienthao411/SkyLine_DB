@@ -3,6 +3,7 @@ const router = express.Router();
 const flightController = require('../controllers/flightController');
 
 router.get('/search', flightController.searchFlights);
+router.get('/:id/seats', flightController.getOccupiedSeatsByFlightId);
 router.get('/:id', flightController.getFlightById);
 router.get('/', flightController.getFlights);
 router.post('/', flightController.createFlight);

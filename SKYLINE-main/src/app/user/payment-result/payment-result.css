@@ -6,6 +6,21 @@
   padding: 30px 12px 44px;
 }
 
+.payment-toast {
+  position: fixed;
+  right: 18px;
+  top: 84px;
+  z-index: 1200;
+  max-width: 360px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #17324d;
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(8, 30, 52, 0.24);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
 .result-card {
   max-width: 980px;
   margin: 0 auto;

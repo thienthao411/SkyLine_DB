@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
-import { BookingApiService, BookingRecord } from '../services/booking-api.service';
+import { TicketApiService, BookingRecord } from '../services/ticket-api.service';
 
 interface Ticket {
   code: string;
@@ -46,7 +46,7 @@ export class CheckTicket2 implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private bookingApiService: BookingApiService
+    private ticketApiService: TicketApiService
   ) { }
 
   ngOnInit(): void {
@@ -57,7 +57,7 @@ export class CheckTicket2 implements OnInit {
         return;
       }
 
-      this.bookingApiService.getTicket(code).subscribe({
+      this.ticketApiService.getTicket(code).subscribe({
         next: (record) => {
           this.ticketDetail = this.toTicketDetail(record);
         },
@@ -199,3 +199,5 @@ export class CheckTicket2 implements OnInit {
     this.showInfoPopup = false;
   }
 }
+
+

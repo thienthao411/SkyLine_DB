@@ -1,81 +1,70 @@
-import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminSidebarComponent } from '../shared/sidebar/sidebar';
 import { AdminHeader } from '../shared/header/admin-header/admin-header';
+import { Airline, AirlineService, AirlineStatus } from '../services/airline';
 
-interface Airline {
-  airlineCode: string;
-  airlineName: string;
-  country: string;
-  hotline: string;
-  commissionRate: number;
-  status: string;
-  notes?: string;
-  id?: number;
-}
+type AirlineTab = 'list' | 'form';
+type AirlineFilter = 'all' | AirlineStatus;
 
 @Component({
   selector: 'app-airline-management',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    AdminSidebarComponent,
-    AdminHeader
-  ],
+  imports: [CommonModule, FormsModule, AdminSidebarComponent, AdminHeader],
   templateUrl: './airline-management.html',
   styleUrls: ['./airline-management.css']
 })
-export class AirlineManagement implements OnInit {
-  activeTab: string = 'list';
+export class AirlineManagement implements OnInit, OnDestroy {
+  activeTab: AirlineTab = 'list';
+  formMode: 'create' | 'edit' = 'create';
   showDeleteConfirm = false;
   airlineToDeleteId: string | null = null;
   showViewModal = false;
   airlineToView: Airline | null = null;
-  searchTerm: string = '';
-  selectedAirline: string = 'all';
+  logoPreviewUrl = '';
+  selectedLogoName = '';
+  selectedLogoFile: File | null = null;
+  searchTerm = '';
+  selectedAirline: AirlineFilter = 'all';
   airlines: Airline[] = [];
-  currentPage: number = 1;
-  itemsPerPage: number = 10;
+  currentPage = 1;
+  itemsPerPage = 10;
+  private localLogoPreviewUrl: string | null = null;
 
-  emptyFormAirline: Airline = {
-    airlineCode: '',
-    airlineName: '',
-    country: '',
-    hotline: '',
-    commissionRate: 0,
-    status: 'Đang hợp tác'
-  };
+  formAirline: Airline = this.createEmptyAirline();
 
-  constructor(private http: HttpClient) { }
+  constructor(private airlineService: AirlineService) {}
 
   ngOnInit(): void {
     this.loadAirlinesData();
   }
 
-  loadAirlinesData(): void {
-    this.http.get<Airline[]>('assets/data/airlines.json').subscribe((data) => {
-      this.airlines = data;
-    });
+  ngOnDestroy(): void {
+    this.clearLocalLogoPreview();
   }
 
   get filteredAirlines(): Airline[] {
     const term = this.searchTerm.trim().toLowerCase();
+
     return this.airlines
-      .filter(f => this.selectedAirline === 'all' || f.status === this.selectedAirline)
-      .filter(f => {
-        if (!term) return true;
-        const combined = `${f.airlineCode} ${f.airlineName} ${f.country}`.toLowerCase();
+      .filter((airline) => this.selectedAirline === 'all' || airline.status === this.selectedAirline)
+      .filter((airline) => {
+        if (!term) {
+          return true;
+        }
+
+        const combined =
+          `${airline.airlineCode} ${airline.airlineName} ${airline.country} ${airline.hotline}`.toLowerCase();
         return combined.includes(term);
       });
   }
 
-  get paginatedFlights(): Airline[] {
+  get paginatedAirlines(): Airline[] {
     if (this.filteredAirlines.length === 0) {
       return [];
     }
+
     const start = (this.currentPage - 1) * this.itemsPerPage;
     const end = start + this.itemsPerPage;
     return this.filteredAirlines.slice(start, end);
@@ -86,8 +75,30 @@ export class AirlineManagement implements OnInit {
   }
 
   get isFormInvalid(): boolean {
-    const f = this.emptyFormAirline;
-    return !f.airlineCode.trim() || !f.airlineName.trim() || !f.country.trim() || !f.hotline.trim();
+    const airline = this.formAirline;
+    return (
+      !airline.airlineCode.trim() ||
+      !airline.airlineName.trim() ||
+      !airline.country.trim() ||
+      !airline.hotline.trim()
+    );
+  }
+
+  get isEditMode(): boolean {
+    return this.formMode === 'edit' && !!this.formAirline.id;
+  }
+
+  loadAirlinesData(): void {
+    this.airlineService.getAirlines().subscribe({
+      next: (data) => {
+        this.airlines = data;
+        this.ensureValidCurrentPage();
+      },
+      error: () => {
+        alert('Không thể tải danh sách hãng bay từ máy chủ.');
+        this.airlines = [];
+      }
+    });
   }
 
   onSearchChange(newValue: string): void {
@@ -95,90 +106,205 @@ export class AirlineManagement implements OnInit {
     this.currentPage = 1;
   }
 
-  onAirlineChange(event: Event): void {
-    const selectElement = event.target as HTMLSelectElement;
-    if (selectElement) {
-      this.selectedAirline = selectElement.value;
-      this.currentPage = 1;
-    }
+  onAirlineChange(_event?: Event): void {
+    this.currentPage = 1;
   }
 
-  nextPage() {
+  onLogoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    const file = input?.files?.[0] || null;
+    this.selectedLogoFile = file;
+    this.selectedLogoName = file?.name || '';
+
+    if (file) {
+      this.setLocalLogoPreview(file);
+      return;
+    }
+
+    this.clearLocalLogoPreview();
+    this.logoPreviewUrl = this.formAirline.img || '';
+  }
+
+  nextPage(): void {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
     }
   }
 
-  prevPage() {
+  prevPage(): void {
     if (this.currentPage > 1) {
       this.currentPage--;
     }
   }
 
-  viewAirline(airline: Airline) {
-    this.airlineToView = JSON.parse(JSON.stringify(airline));
+  viewAirline(airline: Airline): void {
+    this.airlineToView = this.cloneAirline(airline);
     this.showViewModal = true;
   }
 
-  editAirline(airline: Airline) {
+  editAirline(airline: Airline): void {
     this.airlineToView = null;
-    this.emptyFormAirline = JSON.parse(JSON.stringify(airline));
+    this.formAirline = this.cloneAirline(airline);
+    this.clearLocalLogoPreview();
+    this.logoPreviewUrl = this.formAirline.img || '';
+    this.selectedLogoName = '';
+    this.selectedLogoFile = null;
+    this.formMode = 'edit';
     this.activeTab = 'form';
   }
 
-  promptDelete(airlineCode: string) {
-    this.airlineToDeleteId = airlineCode;
+  promptDelete(airline: Airline): void {
+    if (!airline.id) {
+      alert('Không tìm thấy mã hãng bay để xóa.');
+      return;
+    }
+
+    this.airlineToDeleteId = airline.id;
     this.showDeleteConfirm = true;
   }
 
-  confirmDelete() {
-    if (this.airlineToDeleteId !== null) {
-      this.airlines = this.airlines.filter(a => a.airlineCode !== this.airlineToDeleteId);
+  confirmDelete(): void {
+    if (!this.airlineToDeleteId) {
+      this.cancelDelete();
+      return;
     }
-    this.cancelDelete();
+
+    this.airlineService.softDeleteAirline(this.airlineToDeleteId).subscribe({
+      next: () => {
+        this.cancelDelete();
+        this.loadAirlinesData();
+      },
+      error: () => {
+        alert('Xóa hãng bay thất bại. Vui lòng thử lại.');
+      }
+    });
   }
 
-  cancelDelete() {
+  cancelDelete(): void {
     this.airlineToDeleteId = null;
     this.showDeleteConfirm = false;
   }
 
-  closeViewModal() {
+  closeViewModal(): void {
     this.showViewModal = false;
     this.airlineToView = null;
   }
 
-  cancelForm() {
-    this.emptyFormAirline = { ...this.emptyFormAirline };
+  cancelForm(): void {
+    this.resetForm();
     this.activeTab = 'list';
   }
 
-  addAirline() {
-    this.emptyFormAirline.airlineCode = this.emptyFormAirline.airlineCode.toUpperCase();
-    this.airlines.push({ ...this.emptyFormAirline });
-    this.airlines.sort((a, b) => a.airlineCode.localeCompare(b.airlineCode));
-    this.cancelForm();
+  addAirline(): void {
+    const payload = this.prepareFormPayload(this.formAirline);
+    this.airlineService.createAirline(payload, this.selectedLogoFile).subscribe({
+      next: () => {
+        this.loadAirlinesData();
+        this.cancelForm();
+        this.currentPage = 1;
+      },
+      error: () => {
+        alert('Thêm hãng bay thất bại. Vui lòng kiểm tra dữ liệu và thử lại.');
+      }
+    });
   }
 
-  updateAirline() {
-    const index = this.airlines.findIndex(a => a.airlineCode === this.emptyFormAirline.airlineCode);
-    if (index !== -1) {
-      this.airlines[index] = { ...this.emptyFormAirline };
-      this.cancelForm();
-    } else {
+  updateAirline(): void {
+    if (!this.formAirline.id) {
       alert('Lỗi: Không tìm thấy hãng bay để cập nhật.');
+      return;
+    }
+
+    const payload = this.prepareFormPayload(this.formAirline);
+    this.airlineService.updateAirline(this.formAirline.id, payload, this.selectedLogoFile).subscribe({
+      next: () => {
+        this.loadAirlinesData();
+        this.cancelForm();
+      },
+      error: () => {
+        alert('Cập nhật hãng bay thất bại. Vui lòng thử lại.');
+      }
+    });
+  }
+
+  navigateToAddForm(): void {
+    this.switchTab('form');
+  }
+
+  switchTab(tab: AirlineTab): void {
+    this.activeTab = tab;
+
+    if (tab === 'form') {
+      this.formMode = 'create';
+      this.resetForm();
     }
   }
 
-  navigateToAddForm() {
-    this.emptyFormAirline = { ...this.emptyFormAirline };
-    this.activeTab = 'form';
+  formatStatus(status: AirlineStatus): string {
+    if (status === 'inactive') {
+      return 'Ngừng hợp tác';
+    }
+
+    if (status === 'deleted') {
+      return 'Đã xóa';
+    }
+
+    return 'Đang hoạt động';
   }
 
-  switchTab(tab: string) {
-    this.activeTab = tab;
-    if (tab === 'form') {
-      this.emptyFormAirline = { ...this.emptyFormAirline };
+  private createEmptyAirline(): Airline {
+    return {
+      id: '',
+      airlineCode: '',
+      airlineName: '',
+      img: '',
+      country: '',
+      hotline: '',
+      commissionRate: 0,
+      status: 'active'
+    };
+  }
+
+  private resetForm(): void {
+    this.formAirline = this.createEmptyAirline();
+    this.clearLocalLogoPreview();
+    this.logoPreviewUrl = '';
+    this.selectedLogoName = '';
+    this.selectedLogoFile = null;
+  }
+
+  private cloneAirline(airline: Airline): Airline {
+    return { ...airline };
+  }
+
+  private clearLocalLogoPreview(): void {
+    if (this.localLogoPreviewUrl) {
+      URL.revokeObjectURL(this.localLogoPreviewUrl);
+      this.localLogoPreviewUrl = null;
+    }
+  }
+
+  private setLocalLogoPreview(file: File): void {
+    this.clearLocalLogoPreview();
+    this.localLogoPreviewUrl = URL.createObjectURL(file);
+    this.logoPreviewUrl = this.localLogoPreviewUrl;
+  }
+
+  private prepareFormPayload(airline: Airline): Airline {
+    return {
+      ...airline,
+      airlineCode: (airline.airlineCode || '').trim().toUpperCase(),
+      airlineName: (airline.airlineName || '').trim(),
+      country: (airline.country || '').trim(),
+      hotline: (airline.hotline || '').trim(),
+      commissionRate: Number(airline.commissionRate || 0),
+      status: airline.status === 'inactive' ? 'inactive' : 'active'
+    };
+  }
+
+  private ensureValidCurrentPage(): void {
+    if (this.currentPage > this.totalPages) {
+      this.currentPage = Math.max(this.totalPages, 1);
     }
   }
 }

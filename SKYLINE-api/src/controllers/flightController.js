@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Flight = require("../models/Flight");
+const Ticket = require("../models/Ticket");
 
 function normalizeDateTime(date, value) {
   const raw = String(value || "").trim();
@@ -15,6 +16,25 @@ function normalizeDateTime(date, value) {
   }
 
   return raw;
+}
+
+function normalizeSeatCode(value) {
+  const compact = String(value || "").trim().toUpperCase().replace(/\s+/g, "");
+  if (!compact) return "";
+
+  const letterFirst = compact.match(/^([A-Z])(\d{1,2})$/);
+  if (letterFirst) {
+    const [, column, row] = letterFirst;
+    return `${column}${row.padStart(2, "0")}`;
+  }
+
+  const rowFirst = compact.match(/^(\d{1,2})([A-Z])$/);
+  if (rowFirst) {
+    const [, row, column] = rowFirst;
+    return `${column}${row.padStart(2, "0")}`;
+  }
+
+  return compact;
 }
 
 function pickCabin(raw, requestedCabin) {
@@ -125,6 +145,10 @@ function mapFlightForClient(doc, requestedCabin = "") {
     arriveTime,
     durationMin: Number(raw?.durationMin ?? 0),
     price: pickPrice(raw, cabin),
+    priceEconomy: Number(raw?.priceEconomy ?? 0),
+    priceBusiness: Number(raw?.priceBusiness ?? 0),
+    economyPrice: Number(raw?.priceEconomy ?? 0),
+    businessPrice: Number(raw?.priceBusiness ?? 0),
     currency: String(raw?.currency || "VND"),
     seatsLeft: pickSeatsLeft(raw, cabin),
     cabin,
@@ -192,6 +216,59 @@ exports.getFlightById = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.getOccupiedSeatsByFlightId = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    let flight = null;
+
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      flight = await Flight.findById(id);
+    }
+
+    if (!flight) {
+      flight = await Flight.findOne({ flightId: id });
+    }
+
+    if (!flight) {
+      return res.status(404).json({
+        success: false,
+        message: "Flight not found",
+        occupiedSeats: [],
+      });
+    }
+
+    const cancelledStatuses = new Set(["cancelled", "canceled", "huy", "hủy"]);
+
+    const tickets = await Ticket.find({ flightId: flight._id }, { seat: 1, status: 1 });
+
+    const seatsFromTickets = tickets
+      .filter((ticket) => {
+        const status = String(ticket?.status || "").trim().toLowerCase();
+        return !status || !cancelledStatuses.has(status);
+      })
+      .map((ticket) => normalizeSeatCode(ticket?.seat))
+      .filter(Boolean);
+
+    const seatsFromFlight = Array.isArray(flight?.details?.bookedSeats)
+      ? flight.details.bookedSeats.map((seat) => normalizeSeatCode(seat)).filter(Boolean)
+      : [];
+
+    const occupiedSeats = Array.from(new Set([...seatsFromFlight, ...seatsFromTickets]));
+
+    return res.json({
+      success: true,
+      occupiedSeats,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+      occupiedSeats: [],
+    });
   }
 };
 

@@ -24,6 +24,7 @@ const flightSchema = new mongoose.Schema({
   seatsBookedEconomy: Number,
   seatsBookedTotal: Number,
   revenueTotal: Number,
+  details: mongoose.Schema.Types.Mixed,
   stops: Number,
   stopsLabel: String,
   createdAt: {

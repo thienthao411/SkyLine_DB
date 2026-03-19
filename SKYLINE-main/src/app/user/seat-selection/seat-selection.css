@@ -234,6 +234,50 @@
 .ticket-type div {
     margin-bottom: 8px;
     color: #51687f;
+    font-size: clamp(15.25px, 1.06vw, 17.25px);
+}
+
+.gia-ve-noi-bat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-radius: 14px;
+    padding: 8px 10px;
+    margin: 10px 0 12px;
+    border: 1px solid transparent;
+}
+
+.gia-ve-noi-bat .nhan-gia {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+.gia-ve-noi-bat strong {
+    font-size: clamp(16px, 1.08vw, 20px);
+    line-height: 1.1;
+}
+
+.gia-pho-thong {
+    background: linear-gradient(135deg, #edf0ff 0%, #e1e7ff 100%);
+    border-color: rgba(93, 106, 226, 0.34);
+}
+
+.gia-pho-thong .nhan-gia,
+.gia-pho-thong strong {
+    color: #3242c9;
+}
+
+.gia-thuong-gia {
+    background: linear-gradient(135deg, #e9fbf6 0%, #d7f6ee 100%);
+    border-color: rgba(28, 171, 146, 0.34);
+}
+
+.gia-thuong-gia .nhan-gia,
+.gia-thuong-gia strong {
+    color: #13806d;
 }
 
 .ticket-type ul {
@@ -243,10 +287,11 @@
 }
 
 .ticket-type li {
-    margin-bottom: 8px;
+    margin-bottom: 7px;
     position: relative;
     padding-left: 22px;
     color: #2d445e;
+    font-size: clamp(15.25px, 1.06vw, 17.25px);
 }
 
 .ticket-type li.item-blue::before {

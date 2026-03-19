@@ -2,8 +2,8 @@ import { Component, ViewChild, ElementRef, inject, signal, computed } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
-import { BookingService } from '../services/booking.service';
-import { BookingApiService, BookingRecord, Flight } from '../services/booking-api.service';
+import { TicketService } from '../services/ticket.service';
+import { TicketApiService, BookingRecord, Flight, BaggageOption } from '../services/ticket-api.service';
 
 const TAX_RATE = 0.1;
 
@@ -15,8 +15,8 @@ const TAX_RATE = 0.1;
   styleUrls: ['./confirmation.css'],
 })
 export class Confirmation {
-  private bookingService = inject(BookingService);
-  private bookingApiService = inject(BookingApiService);
+  private ticketService = inject(TicketService);
+  private ticketApiService = inject(TicketApiService);
   private router = inject(Router);
 
   isLoading = signal(true);
@@ -48,20 +48,22 @@ export class Confirmation {
   totalPrice = computed(() => this.basePrice() + this.taxesAndFees() + this.baggageFee());
 
   constructor() {
-    const data = this.bookingService.getAllData();
+    const storedFlight = this.ticketService.getData<Flight>('flight') || this.ticketService.getData<Flight>('selectedFlight');
+    const storedSeat = this.ticketService.getData<string>('selectedSeat') || this.ticketService.getData<string>('seat');
+    const storedSeatType = this.ticketService.getData<string>('selectedSeatType') || 'Standard';
 
-    if (!data.flight || !data.seat) {
+    if (!storedFlight || !storedSeat) {
       this.router.navigate(['/chon-chuyen-bay']);
       this.isLoading.set(false);
     } else {
-      this.flight.set({ ...data.flight });
-      this.seat.set(data.selectedSeat);
-      this.seatType.set(data.selectedSeatType ?? 'Standard');
-      const baggagePrice = this.bookingService.getData('baggagePrice') ?? 0;
+      this.flight.set({ ...storedFlight });
+      this.seat.set(storedSeat);
+      this.seatType.set(storedSeatType);
+      const baggagePrice = Number(this.ticketService.getData<number>('baggagePrice') ?? 0);
       this.baggageFee.set(baggagePrice);
 
-      this.selectedFlight.set({ ...data.flight } as Flight);
-      this.selectedSeat = data.selectedSeat;
+      this.selectedFlight.set({ ...storedFlight });
+      this.selectedSeat = storedSeat;
       this.isLoading.set(false);
     }
   }
@@ -86,8 +88,9 @@ export class Confirmation {
       return;
     }
 
-    const passengerInfo = this.bookingService.getData('passengerInfo');
-    if (!this.flight() || !this.seat() || !passengerInfo) {
+    const passengerInfo = this.ticketService.getData<Record<string, unknown>>('passengerInfo');
+    const selectedFlight = this.flight() as Flight | null;
+    if (!selectedFlight || !this.seat() || !passengerInfo) {
       this.paymentAlertMessage.set('Thiếu dữ liệu đặt vé. Vui lòng quay lại bước trước.');
       this.showPaymentAlert.set(true);
       return;
@@ -101,23 +104,23 @@ export class Confirmation {
     const bookingDate = new Date().toISOString();
     this.isSubmitting.set(true);
 
-    this.bookingApiService.createBooking({
-      flightId: this.flight()!.id,
-      flight: this.flight()!,
+    this.ticketApiService.createBooking({
+      flightId: selectedFlight.id,
+      flight: selectedFlight,
       passengerInfo,
       seat: this.seat(),
       seatType: this.seatType(),
-      baggageOption: this.bookingService.getData('baggageOption'),
+      baggageOption: this.ticketService.getData<BaggageOption | null>('baggageOption'),
       payment,
       totalAmount: this.totalPrice(),
       bookingDate
     }).subscribe({
       next: (booking: BookingRecord) => {
-        this.bookingService.setData('payment', payment);
-        this.bookingService.setData('totalAmount', booking.totalAmount);
-        this.bookingService.setData('bookingDate', booking.bookingDate);
-        this.bookingService.setData('ticketCode', booking.ticketCode);
-        this.bookingService.setData('bookingSnapshot', booking);
+        this.ticketService.setData('payment', payment);
+        this.ticketService.setData('totalAmount', booking.totalAmount);
+        this.ticketService.setData('bookingDate', booking.bookingDate);
+        this.ticketService.setData('ticketCode', booking.ticketCode);
+        this.ticketService.setData('bookingSnapshot', booking);
         this.isSubmitting.set(false);
         this.router.navigate(['/checkout']);
       },
@@ -203,3 +206,4 @@ export class Confirmation {
     } catch { return ''; }
   }
 }
+

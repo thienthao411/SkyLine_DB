@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
-import { BookingApiService, BookingRecord } from '../services/booking-api.service';
+import { TicketApiService, BookingRecord } from '../services/ticket-api.service';
 
 interface Ticket {
   code: string;
@@ -27,7 +27,7 @@ export class CheckTicket implements OnInit {
   filteredTickets: Ticket[] = [];
   currentUser: string | null = null;
 
-  constructor(private router: Router, private bookingApiService: BookingApiService) { }
+  constructor(private router: Router, private ticketApiService: TicketApiService) { }
 
   ngOnInit(): void {
     const savedUser = localStorage.getItem('currentUser');
@@ -46,7 +46,7 @@ export class CheckTicket implements OnInit {
 
     if (!this.currentUser) return;
 
-    this.bookingApiService.getTickets(this.currentUser).subscribe({
+    this.ticketApiService.getTickets(this.currentUser).subscribe({
       next: (records) => {
         this.tickets = records.map(record => this.toTicket(record));
         this.filteredTickets = [...this.tickets];
@@ -94,3 +94,5 @@ export class CheckTicket implements OnInit {
     this.router.navigate(['/']);
   }
 }
+
+
