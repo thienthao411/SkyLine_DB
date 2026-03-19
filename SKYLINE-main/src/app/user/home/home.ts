@@ -95,7 +95,7 @@ export class Home implements OnInit {
       id: item._id ?? `${item.airlineCode ?? 'airline'}-${index}`,
       name: item.airlineName?.trim() || item.airlineCode?.trim() || 'Hang hang khong',
       hotline: item.hotline?.trim() || 'Dang cap nhat',
-      logo: item.logo?.trim() || 'assets/images/VietnamAirlines.jpg'
+      logo: item.img?.trim() || item.logo?.trim() || 'assets/images/VietnamAirlines.jpg'
     };
   }
 

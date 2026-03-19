@@ -16,6 +16,18 @@ function normalizeAirlinePayload(payload = {}, { allowDeleted = false } = {}) {
     normalized.img = normalized.img.trim();
   }
 
+  if (typeof normalized.logo === "string") {
+    normalized.logo = normalized.logo.trim();
+  }
+
+  if (!normalized.img && normalized.logo) {
+    normalized.img = normalized.logo;
+  }
+
+  if (!normalized.logo && normalized.img) {
+    normalized.logo = normalized.img;
+  }
+
   if (typeof normalized.commissionRate === "string") {
     const parsedCommissionRate = Number(normalized.commissionRate);
     normalized.commissionRate = Number.isFinite(parsedCommissionRate) ? parsedCommissionRate : 0;
@@ -51,7 +63,8 @@ async function appendUploadedImage(payload, file) {
 
   return {
     ...payload,
-    img: uploadedImage?.secure_url || uploadedImage?.url || payload.img || ""
+    img: uploadedImage?.secure_url || uploadedImage?.url || payload.img || payload.logo || "",
+    logo: uploadedImage?.secure_url || uploadedImage?.url || payload.logo || payload.img || ""
   };
 }
 

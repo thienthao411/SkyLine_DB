@@ -10,6 +10,7 @@ export interface AirlineApiModel {
   hotline?: string;
   commissionRate?: number;
   status?: string;
+  img?: string;
   logo?: string;
 }
 
