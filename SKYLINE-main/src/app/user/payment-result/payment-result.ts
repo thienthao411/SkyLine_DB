@@ -3,7 +3,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HeaderComponent } from '../shared/header/header';
 import { FooterComponent } from '../shared/footer/footer';
-import { BookingApiService, BookingRecord } from '../services/booking-api.service';
+import { TicketApiService, BookingRecord } from '../services/ticket-api.service';
 import { AccountProvisionResult, AuthService } from '../services/auth.service';
 
 interface AccountState {
@@ -35,7 +35,7 @@ export class PaymentResult implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private bookingApiService: BookingApiService,
+    private ticketApiService: TicketApiService,
     private authService: AuthService,
   ) {}
 
@@ -58,7 +58,7 @@ export class PaymentResult implements OnInit, OnDestroy {
 
   fetchBooking(): void {
     this.isLoading = true;
-    this.bookingApiService.getBooking(this.ticketCode).subscribe({
+    this.ticketApiService.getBooking(this.ticketCode).subscribe({
       next: (booking) => {
         this.booking = booking;
         this.setupAutoRefresh();
@@ -312,3 +312,5 @@ export class PaymentResult implements OnInit, OnDestroy {
     }
   }
 }
+
+

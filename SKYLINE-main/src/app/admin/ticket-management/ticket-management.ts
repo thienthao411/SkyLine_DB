@@ -278,4 +278,35 @@ export class TicketManagement implements OnInit {
     this.isModalOpen = true;
     this.isEditMode = true;
   }
+
+  getStatusStyle(status: string): Record<string, string> {
+    const normalized = (status || '').toLowerCase();
+    const base = {
+      display: 'inline-block',
+      padding: '4px 10px',
+      borderRadius: '999px',
+      fontSize: '12px',
+      fontWeight: '700',
+      whiteSpace: 'nowrap',
+      border: '1px solid transparent'
+    };
+
+    if (normalized === 'hoàn thành') {
+      return { ...base, background: '#dcfce7', color: '#166534', borderColor: '#86efac' };
+    }
+
+    if (normalized === 'đã thanh toán') {
+      return { ...base, background: '#dbeafe', color: '#1d4ed8', borderColor: '#93c5fd' };
+    }
+
+    if (normalized === 'chờ thanh toán') {
+      return { ...base, background: '#fef3c7', color: '#92400e', borderColor: '#fcd34d' };
+    }
+
+    if (normalized === 'hủy') {
+      return { ...base, background: '#fee2e2', color: '#991b1b', borderColor: '#fca5a5' };
+    }
+
+    return { ...base, background: '#f3f4f6', color: '#374151' };
+  }
 }

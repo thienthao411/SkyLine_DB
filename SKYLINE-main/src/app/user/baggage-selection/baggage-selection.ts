@@ -3,9 +3,9 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService, UserWithoutPassword } from '../services/auth.service';
-import { BookingService } from '../services/booking.service';
-import { forkJoin } from 'rxjs';
-import { BaggageOption, BookingApiService, Flight } from '../services/booking-api.service';
+import { TicketService } from '../services/ticket.service';
+import { catchError, forkJoin, of } from 'rxjs';
+import { BaggageOption, TicketApiService, Flight } from '../services/ticket-api.service';
 
 @Component({
   selector: 'app-baggage-selection',
@@ -38,8 +38,8 @@ export class BaggageSelection implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private authService: AuthService,
-    private bookingService: BookingService,
-    private bookingApiService: BookingApiService
+    private ticketService: TicketService,
+    private ticketApiService: TicketApiService
   ) {
 
     this.passengerForm = this.fb.group({
@@ -54,20 +54,33 @@ export class BaggageSelection implements OnInit {
   }
 
   ngOnInit(): void {
-    const savedFlightId = this.bookingService.getData('flight')?.flightId || this.bookingService.getData('selectedFlight')?.flightId;
-    const savedSeat = this.bookingService.getData('selectedSeat');
-    const savedSeatType = this.bookingService.getData('selectedSeatType');
-    const savedPassengerInfo = this.bookingService.getData('passengerInfo');
-    const savedBaggageCode = this.bookingService.getData('baggageOption')?.code;
+    const savedFlight = this.ticketService.getData<{ id?: string; flightId?: string }>('flight');
+    const savedSelectedFlight = this.ticketService.getData<{ id?: string; flightId?: string }>('selectedFlight');
+    const flightFallback = (savedFlight || savedSelectedFlight || null) as Flight | null;
+    const savedFlightId = savedFlight?.flightId || savedFlight?.id || savedSelectedFlight?.flightId || savedSelectedFlight?.id;
+    const savedSeat = this.ticketService.getData<string>('selectedSeat') || this.ticketService.getData<string>('seat');
+    const savedSeatType = this.ticketService.getData<string>('selectedSeatType');
+    const savedPassengerInfo = this.ticketService.getData<Record<string, unknown>>('passengerInfo');
+    const savedBaggageCode = this.ticketService.getData<{ code?: string }>('baggageOption')?.code;
 
-    this.selectedFlightId = this.route.snapshot.queryParams['flightId'];
-    this.selectedSeat = this.route.snapshot.queryParams['seat'];
-    this.selectedSeatType = this.route.snapshot.queryParams['type'];
+    this.selectedFlightId =
+      this.route.snapshot.queryParamMap.get('flightId') ||
+      this.route.snapshot.paramMap.get('id') ||
+      savedFlightId ||
+      null;
+    this.selectedSeat =
+      this.route.snapshot.queryParamMap.get('seat') ||
+      savedSeat ||
+      null;
+    this.selectedSeatType =
+      this.route.snapshot.queryParamMap.get('type') ||
+      savedSeatType ||
+      null;
     this.currentUser = this.authService.getCurrentUser();
 
-    this.selectedFlightId = this.selectedFlightId || savedFlightId || null;
-    this.selectedSeat = this.selectedSeat || savedSeat || null;
-    this.selectedSeatType = this.selectedSeatType || savedSeatType || null;
+    if (flightFallback) {
+      this.selectedFlight.set(flightFallback);
+    }
 
     if (!this.selectedFlightId || !this.selectedSeat) {
       alert('Thiếu dữ liệu đặt chỗ. Vui lòng chọn ghế lại từ đầu.');
@@ -78,7 +91,11 @@ export class BaggageSelection implements OnInit {
     let fullUserData: any = null;
     const fullUserRaw = localStorage.getItem('fullUserData');
     if (fullUserRaw) {
-      fullUserData = JSON.parse(fullUserRaw);
+      try {
+        fullUserData = JSON.parse(fullUserRaw);
+      } catch {
+        fullUserData = null;
+      }
     }
 
     if (this.currentUser) {
@@ -103,17 +120,31 @@ export class BaggageSelection implements OnInit {
     }
 
     forkJoin({
-      flight: this.bookingApiService.getFlightById(this.selectedFlightId),
-      options: this.bookingApiService.getBaggageOptions()
+      flight: this.ticketApiService.getFlightById(this.selectedFlightId).pipe(
+        catchError((error) => {
+          console.error('Lỗi tải chi tiết chuyến bay:', error);
+          return of(flightFallback);
+        })
+      ),
+      options: this.ticketApiService.getBaggageOptions().pipe(
+        catchError((error) => {
+          console.error('Lỗi tải danh sách hành lý:', error);
+          return of([]);
+        })
+      )
     }).subscribe({
       next: ({ flight, options }) => {
-        this.selectedFlight.set(flight);
-        this.baggageOptions = options;
+        this.selectedFlight.set(flight ?? flightFallback);
+
+        this.baggageOptions = this.normalizeBaggageOptions(options);
+
         if (savedBaggageCode) {
-          const matchedOption = options.find((option) => option.code === savedBaggageCode) || null;
+          const matchedOption = this.baggageOptions.find((option) => option.code === savedBaggageCode) || null;
           this.selectedBaggage.set(matchedOption);
         }
-        this.bookingService.setData('flight', flight);
+        if (flight) {
+          this.ticketService.setData('flight', flight);
+        }
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -155,12 +186,12 @@ export class BaggageSelection implements OnInit {
       const selectedBaggagePrice = selectedBaggage ? selectedBaggage.price : 0;
       console.log('Giá hành lý đã chọn:', selectedBaggagePrice);
 
-      this.bookingService.setData('passengerInfo', this.passengerForm.value);
-      this.bookingService.setData('baggagePrice', selectedBaggagePrice);
-      this.bookingService.setData('baggageOption', selectedBaggage);
-      this.bookingService.setData('selectedFlight', this.selectedFlight());
-      this.bookingService.setData('selectedSeat', this.selectedSeat);
-      this.bookingService.setData('selectedSeatType', this.selectedSeatType);
+      this.ticketService.setData('passengerInfo', this.passengerForm.value);
+      this.ticketService.setData('baggagePrice', selectedBaggagePrice);
+      this.ticketService.setData('baggageOption', selectedBaggage);
+      this.ticketService.setData('selectedFlight', this.selectedFlight());
+      this.ticketService.setData('selectedSeat', this.selectedSeat);
+      this.ticketService.setData('selectedSeatType', this.selectedSeatType);
 
       this.router.navigate(['/confirmation']);
 
@@ -187,10 +218,24 @@ export class BaggageSelection implements OnInit {
     if (!iso) return '';
     try {
       const d = new Date(iso);
-      const wd = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy'][d.getDay()];
       const dd = String(d.getDate()).padStart(2, '0');
       const mm = String(d.getMonth() + 1).padStart(2, '0');
-      return `${wd}, ${dd}/${mm}/${d.getFullYear()}`;
+      return `${dd} Thg ${mm}`;
     } catch { return ''; }
   }
+
+  private normalizeBaggageOptions(options: BaggageOption[]): BaggageOption[] {
+    const source = Array.isArray(options) ? options : [];
+    return source
+      .filter((option) => !!option)
+      .map((option) => {
+        const safePrice = Number.isFinite(Number(option.price)) ? Number(option.price) : 0;
+        return {
+          ...option,
+          price: safePrice,
+          priceDisplay: option.priceDisplay || `${safePrice.toLocaleString('vi-VN')}đ`,
+        };
+      });
+  }
 }
+

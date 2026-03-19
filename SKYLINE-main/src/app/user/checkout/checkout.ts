@@ -7,8 +7,8 @@ import { HeaderComponent } from '../shared/header/header';
 import { FooterComponent } from '../shared/footer/footer';
 import localeVi from '@angular/common/locales/vi';
 
-import { BookingService } from '../services/booking.service';
-import { BookingApiService, BookingRecord } from '../services/booking-api.service';
+import { TicketService } from '../services/ticket.service';
+import { TicketApiService, BookingRecord } from '../services/ticket-api.service';
 
 registerLocaleData(localeVi, 'vi');
 
@@ -37,8 +37,10 @@ export class Checkout implements OnInit, OnDestroy {
 
   ticketCode: string = '';
   bookingStatus: string = 'pending';
+  lastStatusCheckedAt: Date | null = null;
   countdownText: string = '';
   private countdownTimer: ReturnType<typeof setInterval> | null = null;
+  private statusRefreshTimer: ReturnType<typeof setInterval> | null = null;
   transactionRef: string = '';
   payerName: string = '';
   hasConfirmedTransfer: boolean = false;
@@ -59,8 +61,8 @@ export class Checkout implements OnInit, OnDestroy {
   feeAmount: number = 0;
 
   constructor(
-    private bookingService: BookingService,
-    private bookingApiService: BookingApiService,
+    private ticketService: TicketService,
+    private ticketApiService: TicketApiService,
     private router: Router
   ) {
 
@@ -72,13 +74,14 @@ export class Checkout implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.clearCountdown();
+    this.clearStatusAutoRefresh();
   }
 
   fetchTicketData(): void {
     this.isLoading = true;
     this.loadError = '';
 
-    const code = this.bookingService.getData('ticketCode');
+    const code = this.ticketService.getData<string>('ticketCode');
     if (!code) {
       console.error('Không tìm thấy mã đặt vé để tải checkout từ backend.');
       this.loadError = 'Không tìm thấy mã thanh toán. Vui lòng quay lại bước xác nhận đặt chỗ.';
@@ -88,15 +91,15 @@ export class Checkout implements OnInit, OnDestroy {
 
     this.ticketCode = code;
 
-    this.bookingApiService.getBooking(code).subscribe({
+    this.ticketApiService.getBooking(code).subscribe({
       next: (booking: BookingRecord) => {
         this.populateTicketData(booking);
-        this.bookingService.setData('bookingSnapshot', booking);
+        this.ticketService.setData('bookingSnapshot', booking);
         this.isLoading = false;
       },
       error: (error) => {
         console.error('Không thể tải booking từ backend:', error);
-        const fallbackBooking = this.bookingService.getData('bookingSnapshot');
+        const fallbackBooking = this.ticketService.getData<BookingRecord>('bookingSnapshot');
         if (fallbackBooking) {
           this.populateTicketData(fallbackBooking);
         } else {
@@ -139,9 +142,11 @@ export class Checkout implements OnInit, OnDestroy {
     const payment = booking.payment ?? {};
     this.payerName = typeof payment['payerName'] === 'string' ? payment['payerName'] : this.payerName;
     this.transactionRef = typeof payment['transactionRef'] === 'string' ? payment['transactionRef'] : this.transactionRef;
+    this.lastStatusCheckedAt = new Date();
 
     this.startCountdown();
     this.autoExpireIfNeeded();
+    this.setupStatusAutoRefresh();
   }
 
   get statusText(): string {
@@ -196,10 +201,10 @@ export class Checkout implements OnInit, OnDestroy {
     if (!this.ticketCode) return;
     this.isLoading = true;
 
-    this.bookingApiService.getBooking(this.ticketCode).subscribe({
+    this.ticketApiService.getBooking(this.ticketCode).subscribe({
       next: (booking: BookingRecord) => {
         this.populateTicketData(booking);
-        this.bookingService.setData('bookingSnapshot', booking);
+        this.ticketService.setData('bookingSnapshot', booking);
         this.isLoading = false;
       },
       error: (error) => {
@@ -207,6 +212,40 @@ export class Checkout implements OnInit, OnDestroy {
         this.isLoading = false;
       }
     });
+  }
+
+  private setupStatusAutoRefresh(): void {
+    if (this.bookingStatus !== 'pending' && this.bookingStatus !== 'processing') {
+      this.clearStatusAutoRefresh();
+      return;
+    }
+
+    if (this.statusRefreshTimer || !this.ticketCode) {
+      return;
+    }
+
+    this.statusRefreshTimer = setInterval(() => {
+      if (this.isUpdatingStatus || !this.ticketCode) {
+        return;
+      }
+
+      this.ticketApiService.getBooking(this.ticketCode).subscribe({
+        next: (booking: BookingRecord) => {
+          this.populateTicketData(booking);
+          this.ticketService.setData('bookingSnapshot', booking);
+        },
+        error: () => {
+          // Ignore transient polling errors and keep current UI state.
+        }
+      });
+    }, 10000);
+  }
+
+  private clearStatusAutoRefresh(): void {
+    if (this.statusRefreshTimer) {
+      clearInterval(this.statusRefreshTimer);
+      this.statusRefreshTimer = null;
+    }
   }
 
   private updateStatus(
@@ -218,14 +257,14 @@ export class Checkout implements OnInit, OnDestroy {
     if (!this.ticketCode) return;
     this.isUpdatingStatus = true;
 
-    const snapshot = this.bookingService.getData('bookingSnapshot');
+    const snapshot = this.ticketService.getData<BookingRecord>('bookingSnapshot');
     const currentPayment = snapshot?.payment && typeof snapshot.payment === 'object' ? snapshot.payment : {};
     const mergedPayment = {
       ...currentPayment,
       ...paymentExtras,
     };
 
-    this.bookingApiService.updateBookingStatus(this.ticketCode, nextStatus, mergedPayment).subscribe({
+    this.ticketApiService.updateBookingStatus(this.ticketCode, nextStatus, mergedPayment).subscribe({
       next: (booking: BookingRecord) => {
         const bookingPayment: any = booking.payment ?? {};
         const mergedBooking = {
@@ -237,7 +276,7 @@ export class Checkout implements OnInit, OnDestroy {
         };
 
         this.populateTicketData(mergedBooking);
-        this.bookingService.setData('bookingSnapshot', mergedBooking);
+        this.ticketService.setData('bookingSnapshot', mergedBooking);
         this.statusMessage = bookingPayment.emailSent === true
           ? `${successMessage} Email thông báo đã được gửi tới ${this.ticketInfo.email}.`
           : `${successMessage} Hệ thống mail chưa được cấu hình nên chưa thể gửi email tự động.`;
@@ -352,3 +391,4 @@ export class Checkout implements OnInit, OnDestroy {
     } catch { return ''; }
   }
 }
+

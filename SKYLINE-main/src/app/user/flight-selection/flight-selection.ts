@@ -6,8 +6,8 @@ import { map } from 'rxjs';
 import { HeaderComponent } from '../shared/header/header';
 import { FooterComponent } from '../shared/footer/footer';
 export { FlightSelectionComponent as FlightSelection } from './flight-selection';
-import { BookingService } from '../services/booking.service';
-import { BookingApiService } from '../services/booking-api.service';
+import { TicketService } from '../services/ticket.service';
+import { TicketApiService } from '../services/ticket-api.service';
 
 type Cabin = 'Economy' | 'Premium Economy' | 'Business';
 
@@ -25,6 +25,8 @@ export interface Flight {
   currency: 'VND' | 'USD';
   seatsLeft: number;
   cabin: Cabin;
+  economyPrice?: number;
+  businessPrice?: number;
   details?: any;
 }
 
@@ -44,8 +46,8 @@ export class FlightSelectionComponent {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private http = inject(HttpClient);
-  private bookingService = inject(BookingService);
-  private bookingApiService = inject(BookingApiService);
+  private ticketService = inject(TicketService);
+  private ticketApiService = inject(TicketApiService);
   private readonly apiBaseUrl = 'http://localhost:5000/api';
   private airlineLogoByCode = signal<Record<string, string>>({});
 
@@ -59,10 +61,10 @@ export class FlightSelectionComponent {
     console.log('Flight chọn:', this.flight());
     const id = this.route.snapshot.paramMap.get('id')!;
     this.loadAirlineLogos();
-    this.bookingApiService.getFlightById(id).subscribe({
+    this.ticketApiService.getFlightById(id).subscribe({
       next: (flight) => {
         this.flight.set(flight as Flight);
-        this.bookingService.setData('flight', flight);
+        this.ticketService.setData('flight', flight);
         this.isLoading.set(false);
         if (!flight) this.loadError.set('Không tìm thấy chuyến bay.');
       },
@@ -242,3 +244,5 @@ export class FlightSelectionComponent {
     return this.airlineLogoByCode()[code] ?? null;
   }
 }
+
+

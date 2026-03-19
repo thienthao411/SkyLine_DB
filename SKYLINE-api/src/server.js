@@ -9,7 +9,9 @@ const userRoutes = require("./routes/userRoutes");
 const airlineRoutes = require("./routes/airlineRoutes");
 const flightRoutes = require("./routes/flightRoutes");
 const promotionRoutes = require("./routes/promotionRoutes");
+const baggageOptionRoutes = require("./routes/baggageOptionRoutes");
 const ticketRoutes = require("./routes/ticketRoutes");
+const bookingRoutes = require("./routes/bookingRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const app = express();
@@ -26,7 +28,10 @@ app.use("/api/users", userRoutes);
 app.use("/api/airlines", airlineRoutes);
 app.use("/api/flights", flightRoutes);
 app.use("/api/promotions", promotionRoutes);
+app.use("/api/baggage-options", baggageOptionRoutes);
+app.use("/api/baggageoptions", baggageOptionRoutes);
 app.use("/api/tickets", ticketRoutes);
+app.use("/api/bookings", bookingRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
 app.get("/", (req, res) => {

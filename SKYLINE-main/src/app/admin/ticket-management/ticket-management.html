@@ -114,13 +114,7 @@
                 <td>{{ t.booking_date }}</td>
                 <td>{{ t.price | number }}</td>
                 <td>
-                  <span
-                    class="status"
-                    [class.status-completed]="t.status.toLowerCase() === 'hoàn thành'"
-                    [class.status-paid]="t.status.toLowerCase() === 'đã thanh toán'"
-                    [class.status-pending]="t.status.toLowerCase() === 'chờ thanh toán'"
-                    [class.status-cancelled]="t.status.toLowerCase() === 'hủy'"
-                  >{{ t.status }}</span>
+                  <span [ngStyle]="getStatusStyle(t.status)">{{ t.status }}</span>
                 </td>
                 <td class="actions">
                   <button title="Xem" class="action-btn view" (click)="onView(t)">
@@ -166,15 +160,7 @@
                 <td>{{ tx.booking_date }}</td>
                 <td>{{ tx.payment_method || 'Chưa có' }}</td>
                 <td>
-                  <span
-                    class="status"
-                    [class.status-completed]="tx.status.toLowerCase() === 'hoàn thành'"
-                    [class.status-paid]="tx.status.toLowerCase() === 'đã thanh toán'"
-                    [class.status-pending]="tx.status.toLowerCase() === 'chờ thanh toán'"
-                    [class.status-cancelled]="tx.status.toLowerCase() === 'hủy'"
-                  >
-                    {{ tx.status }}
-                  </span>
+                  <span [ngStyle]="getStatusStyle(tx.status)">{{ tx.status }}</span>
                 </td>
                 <td>
                   <span [class.complaint]="true" [class.ok]="tx.complaint === 'Không'"
