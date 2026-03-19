@@ -1,6 +1,7 @@
 // filepath: d:\Năm 3\Học kỳ 1\PT WEB\Angular_Ex\SKYLINE\SKYLINE-api\src\server.js
 require("dotenv").config();
 
+const http = require("http");
 const express = require("express");
 const cors = require("cors");
 
@@ -13,8 +14,13 @@ const baggageOptionRoutes = require("./routes/baggageOptionRoutes");
 const ticketRoutes = require("./routes/ticketRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const bookingRoutes = require("./routes/bookingRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
+const notificationUserRoutes = require("./routes/notificationUserRoutes");
+const { initSocket } = require("./socket");
 
 const app = express();
+const server = http.createServer(app);
 
 console.log("SERVER FILE:", __filename);
 console.log("Loading routes...");
@@ -33,6 +39,9 @@ app.use("/api/baggageoptions", baggageOptionRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/notifications-user", notificationUserRoutes);
 
 app.get("/", (req, res) => {
   res.send("Skyline API running");
@@ -45,7 +54,9 @@ app.use((req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+initSocket(server);
+
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 

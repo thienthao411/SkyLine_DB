@@ -30,10 +30,13 @@
           <div class="filter-wrap">
             <select [(ngModel)]="statusFilter" (change)="applyStatusFilter()">
               <option value="all">Tất cả</option>
-              <option value="hoàn thành">Hoàn thành</option>
-              <option value="đã thanh toán">Đã thanh toán</option>
-              <option value="chờ thanh toán">Chờ thanh toán</option>
-              <option value="hủy">Hủy</option>
+              <option value="needs_verification">Cần xác nhận</option>
+              <option value="processing">Đang chờ đối soát</option>
+              <option value="failed">Thất bại</option>
+              <option value="completed">Hoàn thành</option>
+              <option value="paid">Đã thanh toán</option>
+              <option value="pending">Chờ thanh toán</option>
+              <option value="cancelled">Hủy</option>
             </select>
           </div>
 
@@ -154,13 +157,26 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let tx of pagedTransactions">
+              <tr
+                *ngFor="let tx of pagedTransactions"
+                [attr.id]="'tx-' + tx.ticket_code"
+                [class.highlight-row]="highlightedBookingId === tx.ticket_code">
                 <td>{{ tx.transaction_id }}</td>
                 <td>{{ tx.ticket_code }}</td>
                 <td>{{ tx.booking_date }}</td>
                 <td>{{ tx.payment_method || 'Chưa có' }}</td>
                 <td>
-                  <span [ngStyle]="getStatusStyle(tx.status)">{{ tx.status }}</span>
+                  <span
+                    class="status"
+                    [class.status-completed]="tx.payment_status.toLowerCase() === 'hoàn thành'"
+                    [class.status-paid]="tx.payment_status.toLowerCase() === 'đã thanh toán'"
+                    [class.status-pending]="tx.payment_status.toLowerCase() === 'chờ thanh toán'"
+                    [class.status-processing]="tx.payment_status.toLowerCase() === 'đang chờ đối soát'"
+                    [class.status-failed]="tx.payment_status.toLowerCase() === 'thất bại'"
+                    [class.status-cancelled]="tx.payment_status.toLowerCase() === 'hủy'"
+                  >
+                    {{ tx.payment_status }}
+                  </span>
                 </td>
                 <td>
                   <span [class.complaint]="true" [class.ok]="tx.complaint === 'Không'"
@@ -180,6 +196,20 @@
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-width="1.5"></path>
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.5"></path>
                     </svg>
+                  </button>
+                  <button
+                    title="Xác nhận thanh toán"
+                    class="action-btn approve"
+                    *ngIf="canReviewPayment(tx)"
+                    (click)="approvePayment(tx)">
+                    ✓
+                  </button>
+                  <button
+                    title="Từ chối thanh toán"
+                    class="action-btn reject"
+                    *ngIf="canReviewPayment(tx)"
+                    (click)="rejectPayment(tx)">
+                    ✕
                   </button>
                 </td>
               </tr>

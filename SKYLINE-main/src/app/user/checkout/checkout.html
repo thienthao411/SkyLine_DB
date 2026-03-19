@@ -1,4 +1,7 @@
 <app-header></app-header>
+<div class="payment-toast" *ngIf="showToast">
+    {{ toastMessage }}
+</div>
 <div class="content">
     <div class="checkout-container">
         <header class="checkout-header">

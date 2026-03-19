@@ -16,6 +16,7 @@ export interface TicketFull {
   transaction_id: string;
   payment_method: string;
   complaint: string;
+  payment_status: string;
 }
 
 interface ApiTicket {
@@ -30,6 +31,7 @@ interface ApiTicket {
   totalPrice?: number;
   paymentMethod?: string;
   transactionId?: string;
+  paymentStatus?: string;
   bookingDate?: string;
   complaint?: boolean;
 }
@@ -95,6 +97,15 @@ export class TicketService {
       .pipe(map((updated) => this.toTicketFull(updated)));
   }
 
+  updatePaymentStatus(ticketCode: string, paymentStatus: 'paid' | 'failed'): Observable<TicketFull> {
+    return this.http
+      .patch<{ success: boolean; booking: ApiTicket }>(
+        `http://localhost:5000/api/bookings/${encodeURIComponent(ticketCode)}/payment-status`,
+        { paymentStatus }
+      )
+      .pipe(map((res) => this.toTicketFull(res.booking)));
+  }
+
   deleteTicket(id: string): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`${this.apiUrl}/${encodeURIComponent(id)}`);
   }
@@ -129,7 +140,8 @@ export class TicketService {
       status: this.normalizeStatusToVietnamese(api.status),
       transaction_id: (api.transactionId || '').trim(),
       payment_method: (api.paymentMethod || '').trim(),
-      complaint: api.complaint ? 'Có' : 'Không'
+      complaint: api.complaint ? 'Có' : 'Không',
+      payment_status: this.normalizeStatusToVietnamese(api.paymentStatus || api.status)
     };
   }
 
@@ -177,6 +189,15 @@ export class TicketService {
     }
 
     if (
+      normalized === 'đang chờ đối soát' ||
+      normalized === 'dang cho doi soat' ||
+      normalized === 'processing' ||
+      normalized === 'verifying'
+    ) {
+      return 'Đang chờ đối soát';
+    }
+
+    if (
       normalized === 'chờ thanh toán' ||
       normalized === 'cho thanh toan' ||
       normalized === 'pending' ||
@@ -185,6 +206,16 @@ export class TicketService {
       normalized === 'waiting_payment'
     ) {
       return 'Chờ thanh toán';
+    }
+
+    if (
+      normalized === 'thất bại' ||
+      normalized === 'that bai' ||
+      normalized === 'failed' ||
+      normalized === 'payment_failed' ||
+      normalized === 'payment failed'
+    ) {
+      return 'Thất bại';
     }
 
     if (

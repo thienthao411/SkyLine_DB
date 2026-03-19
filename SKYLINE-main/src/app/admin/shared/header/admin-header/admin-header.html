@@ -4,7 +4,43 @@
         ☰
     </button>
     <div class="header-actions">
-        <button class="icon-btn"><img src="/assets/icons/notification.png" alt="Notification Icon"></button>
+        <div class="notification-wrap" (click)="$event.stopPropagation()">
+            <button class="icon-btn" (click)="toggleNotificationDropdown($event)">
+                <img src="/assets/icons/notification.png" alt="Notification Icon">
+                <span class="notification-badge" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+            </button>
+
+            <div class="notification-dropdown" *ngIf="showNotificationDropdown">
+                <div class="dropdown-header">
+                    <strong>Thông báo</strong>
+                    <button class="mark-read-all" (click)="markAllNotificationsAsRead($event)" *ngIf="unreadCount > 0">
+                        Đánh dấu đã đọc
+                    </button>
+                </div>
+
+                <div class="dropdown-body" *ngIf="!isLoadingNotifications; else loadingTpl">
+                    <button
+                        type="button"
+                        class="notification-item"
+                        [class.unread]="!item.isRead"
+                        *ngFor="let item of notifications"
+                        (click)="openNotification(item, $event)">
+                        <p class="item-title">{{ item.title }}</p>
+                        <p class="item-message">{{ item.message }}</p>
+                        <div class="item-meta">
+                            <span>{{ relativeTime(item.createdAt) }}</span>
+                            <span class="unread-pill" *ngIf="!item.isRead">Chưa đọc</span>
+                        </div>
+                    </button>
+
+                    <p class="notification-empty" *ngIf="notifications.length === 0">Không có thông báo mới.</p>
+                </div>
+
+                <ng-template #loadingTpl>
+                    <div class="notification-empty">Đang tải thông báo...</div>
+                </ng-template>
+            </div>
+        </div>
         <button class="icon-btn logout-icon-btn" (click)="logout()" title="Đăng xuất">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

@@ -5,6 +5,8 @@ import { HeaderComponent } from '../shared/header/header';
 import { FooterComponent } from '../shared/footer/footer';
 import { TicketApiService, BookingRecord } from '../services/ticket-api.service';
 import { AccountProvisionResult, AuthService } from '../services/auth.service';
+import { RealtimeService } from '../../services/realtime.service';
+import { UserNotificationApiService, UserNotificationItem } from '../services/user-notification-api.service';
 
 interface AccountState {
   mode: 'idle' | 'checking' | 'existing' | 'created' | 'unavailable';
@@ -28,8 +30,13 @@ export class PaymentResult implements OnInit, OnDestroy {
   accountState: AccountState = this.createIdleAccountState();
   isPreparingAccount = false;
   passwordCopied = false;
+  showToast = false;
+  toastMessage = '';
   private refreshTimer: ReturnType<typeof setInterval> | null = null;
   private passwordCopiedTimer: ReturnType<typeof setTimeout> | null = null;
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+  private removeBookingRealtimeListener: (() => void) | null = null;
+  private removeUserNotificationListener: (() => void) | null = null;
   private accountFlowPrepared = false;
 
   constructor(
@@ -37,6 +44,8 @@ export class PaymentResult implements OnInit, OnDestroy {
     private router: Router,
     private ticketApiService: TicketApiService,
     private authService: AuthService,
+    private realtimeService: RealtimeService,
+    private userNotificationApiService: UserNotificationApiService,
   ) {}
 
   ngOnInit(): void {
@@ -48,12 +57,17 @@ export class PaymentResult implements OnInit, OnDestroy {
     }
 
     this.ticketCode = code;
+    this.realtimeService.joinBookingRoom(this.ticketCode);
+    this.initRealtimeListeners();
     this.fetchBooking();
   }
 
   ngOnDestroy(): void {
     this.clearRefreshTimer();
     this.clearPasswordCopiedTimer();
+    this.clearToastTimer();
+    if (this.removeBookingRealtimeListener) this.removeBookingRealtimeListener();
+    if (this.removeUserNotificationListener) this.removeUserNotificationListener();
   }
 
   fetchBooking(): void {
@@ -61,6 +75,11 @@ export class PaymentResult implements OnInit, OnDestroy {
     this.ticketApiService.getBooking(this.ticketCode).subscribe({
       next: (booking) => {
         this.booking = booking;
+        const userEmail = String(booking.passengerInfo?.['email'] || '').trim().toLowerCase();
+        if (userEmail) {
+          this.realtimeService.joinUserRoom(userEmail);
+          this.loadUnreadUserNotifications(userEmail);
+        }
         this.setupAutoRefresh();
         if (booking.status === 'paid' || booking.status === 'issued') {
           this.prepareAccountExperience();
@@ -203,6 +222,69 @@ export class PaymentResult implements OnInit, OnDestroy {
       clearTimeout(this.passwordCopiedTimer);
       this.passwordCopiedTimer = null;
     }
+  }
+
+  private clearToastTimer(): void {
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
+      this.toastTimer = null;
+    }
+  }
+
+  private showToastMessage(message: string): void {
+    this.toastMessage = message;
+    this.showToast = true;
+    this.clearToastTimer();
+
+    this.toastTimer = setTimeout(() => {
+      this.showToast = false;
+      this.toastMessage = '';
+    }, 3600);
+  }
+
+  private initRealtimeListeners(): void {
+    if (!this.removeBookingRealtimeListener) {
+      this.removeBookingRealtimeListener = this.realtimeService.on<{
+        ticketCode: string;
+        paymentStatus: string;
+        message?: string;
+      }>('booking_payment_updated', (payload) => {
+        if (!payload || payload.ticketCode !== this.ticketCode) {
+          return;
+        }
+
+        if (payload.message) {
+          this.showToastMessage(payload.message);
+        }
+
+        this.fetchBooking();
+      });
+    }
+
+    if (!this.removeUserNotificationListener) {
+      this.removeUserNotificationListener = this.realtimeService.on<UserNotificationItem>('user_notification_created', (payload) => {
+        if (!payload || payload.bookingId !== this.ticketCode) {
+          return;
+        }
+
+        this.showToastMessage(payload.message || payload.title);
+        if (payload._id) {
+          this.userNotificationApiService.markAsRead(payload._id).subscribe();
+        }
+      });
+    }
+  }
+
+  private loadUnreadUserNotifications(email: string): void {
+    this.userNotificationApiService.getNotifications(email).subscribe({
+      next: (res) => {
+        const firstUnread = res.notifications.find((item) => !item.isRead && item.bookingId === this.ticketCode);
+        if (firstUnread) {
+          this.showToastMessage(firstUnread.message || firstUnread.title);
+          this.userNotificationApiService.markAsRead(firstUnread._id).subscribe();
+        }
+      }
+    });
   }
 
   private createIdleAccountState(): AccountState {

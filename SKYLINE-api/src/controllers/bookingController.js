@@ -1,9 +1,22 @@
 const mongoose = require("mongoose");
 const Ticket = require("../models/Ticket");
 const Flight = require("../models/Flight");
+const Notification = require("../models/Notification");
+const NotificationUser = require("../models/NotificationUser");
+const { getIO } = require("../socket");
 
 const INACTIVE_STATUSES = new Set(["cancelled", "canceled", "huy", "hủy", "failed", "expired"]);
-const ALLOWED_STATUSES = new Set(["pending", "processing", "paid", "issued", "failed", "expired", "cancelled", "booked", "completed"]);
+const ALLOWED_STATUSES = new Set([
+  "pending",
+  "processing",
+  "paid",
+  "issued",
+  "failed",
+  "expired",
+  "cancelled",
+  "booked",
+  "completed",
+]);
 
 function normalizeSeatCode(value) {
   const compact = String(value || "").trim().toUpperCase().replace(/\s+/g, "");
@@ -22,6 +35,11 @@ function normalizeSeatCode(value) {
   }
 
   return compact;
+}
+
+function normalizeStatus(value) {
+  const status = String(value || "").trim().toLowerCase();
+  return ALLOWED_STATUSES.has(status) ? status : "pending";
 }
 
 function resolveSeatType(seat, seatType) {
@@ -97,7 +115,9 @@ async function generateTicketCode() {
   const prefix = `${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, "0")}${String(now.getUTCDate()).padStart(2, "0")}`;
 
   for (let i = 0; i < 5; i += 1) {
-    const suffix = Math.floor(Math.random() * 1000000).toString().padStart(6, "0");
+    const suffix = Math.floor(Math.random() * 1000000)
+      .toString()
+      .padStart(6, "0");
     const ticketCode = `TCK${prefix}${suffix}`;
     const exists = await Ticket.exists({ ticketCode });
     if (!exists) return ticketCode;
@@ -140,6 +160,8 @@ async function saveSeatToFlight(flightDoc, normalizedSeat) {
 }
 
 function toBookingResponse(ticketDoc) {
+  const payment = ticketDoc.payment && typeof ticketDoc.payment === "object" ? ticketDoc.payment : {};
+
   return {
     ticketCode: ticketDoc.ticketCode,
     flightId: String(ticketDoc.flightId || ""),
@@ -147,12 +169,84 @@ function toBookingResponse(ticketDoc) {
     passengerInfo: ticketDoc.passengerInfo || {},
     seat: ticketDoc.seat,
     seatType: ticketDoc.seatType || "",
-    baggageOption: ticketDoc.baggageOption || null,
+    baggageOption: ticketDoc.baggageOption || payment.baggageOption || null,
     totalAmount: Number(ticketDoc.totalAmount || ticketDoc.totalPrice || 0),
-    payment: ticketDoc.payment || {},
+    payment,
     bookingDate: ticketDoc.bookingDate || new Date(ticketDoc.createdAt || Date.now()).toISOString(),
-    status: ticketDoc.status || "pending",
+    status: normalizeStatus(ticketDoc.paymentStatus || ticketDoc.status),
   };
+}
+
+async function createVerificationNotification(ticket, payerName) {
+  const exists = await Notification.findOne({
+    bookingId: ticket.ticketCode,
+    type: "payment_verification",
+    isRead: false,
+  });
+
+  if (exists) {
+    return null;
+  }
+
+  const customerName = String(payerName || "").trim() || String(ticket.passengerInfo?.fullName || "").trim() || "Khach hang";
+
+  return Notification.create({
+    title: "Giao dịch cần xác nhận",
+    message: `Khách hàng ${customerName} đã gửi yêu cầu xác nhận thanh toán`,
+    bookingId: ticket.ticketCode,
+    type: "payment_verification",
+    isRead: false,
+    createdAt: new Date(),
+  });
+}
+
+async function createUserPaymentNotification(ticket, paymentStatus) {
+  const userEmail = String(ticket.email || ticket.passengerInfo?.email || "")
+    .trim()
+    .toLowerCase();
+  if (!userEmail) {
+    return null;
+  }
+
+  const normalizedPaymentStatus = normalizeStatus(paymentStatus);
+  const statusText = normalizedPaymentStatus === "paid" ? "đã được xác nhận" : "bị từ chối";
+  const title = normalizedPaymentStatus === "paid" ? "Thanh toán đã được xác nhận" : "Thanh toán bị từ chối";
+  const message = `Yêu cầu thanh toán cho đơn ${ticket.ticketCode} ${statusText}.`;
+
+  const duplicate = await NotificationUser.findOne({
+    userEmail,
+    bookingId: ticket.ticketCode,
+    type: "payment_status",
+    paymentStatus: normalizedPaymentStatus,
+    isRead: false,
+  });
+
+  if (duplicate) {
+    return duplicate;
+  }
+
+  return NotificationUser.create({
+    userEmail,
+    title,
+    message,
+    bookingId: ticket.ticketCode,
+    type: "payment_status",
+    paymentStatus: normalizedPaymentStatus,
+    isRead: false,
+    createdAt: new Date(),
+  });
+}
+
+function emitRealtime(event, payload, options = {}) {
+  const io = getIO();
+  if (!io) return;
+
+  if (options.room) {
+    io.to(options.room).emit(event, payload);
+    return;
+  }
+
+  io.emit(event, payload);
 }
 
 exports.createBooking = async (req, res) => {
@@ -200,15 +294,21 @@ exports.createBooking = async (req, res) => {
       seat: normalizedSeat,
       seatType,
       baggageOption,
-      payment,
+      payment: {
+        ...payment,
+        baggageOption,
+      },
       totalAmount,
       status: "pending",
+      paymentStatus: "pending",
       bookingDate: payload.bookingDate || new Date().toISOString(),
       departure: String(payload?.flight?.from || flight?.from || ""),
       arrival: String(payload?.flight?.to || flight?.to || ""),
-      phone: String(passengerInfo?.phoneNumber || ""),
-      email: String(passengerInfo?.email || "").trim().toLowerCase(),
-      price: Number(payload?.flight?.price || 0),
+      phone: String(passengerInfo?.phoneNumber || passengerInfo?.phone || ""),
+      email: String(passengerInfo?.email || "")
+        .trim()
+        .toLowerCase(),
+      price: Number(payload?.flight?.price || totalAmount || 0),
       fare: {
         type: seatType,
         price: Number(payload?.flight?.price || 0),
@@ -222,6 +322,8 @@ exports.createBooking = async (req, res) => {
         : null,
       totalPrice: totalAmount,
       complaint: false,
+      paymentMethod: String(payment.method || "").trim(),
+      transactionId: String(payment.transactionRef || "").trim(),
     });
 
     const savedTicket = await ticket.save();
@@ -257,37 +359,154 @@ exports.getBooking = async (req, res) => {
   }
 };
 
-exports.updateBookingStatus = async (req, res) => {
+exports.getTicketsForUser = async (req, res) => {
   try {
-    const { ticketCode } = req.params;
-    const nextStatusRaw = String(req.body?.status || "").trim().toLowerCase();
+    const email = String(req.query.email || "")
+      .trim()
+      .toLowerCase();
 
-    if (!ALLOWED_STATUSES.has(nextStatusRaw)) {
-      return res.status(400).json({ success: false, message: "Trạng thái không hợp lệ." });
+    const query = email
+      ? {
+          $or: [
+            { email: new RegExp(`^${email}$`, "i") },
+            { "passengerInfo.email": new RegExp(`^${email}$`, "i") },
+          ],
+        }
+      : {};
+
+    const tickets = await Ticket.find(query).sort({ createdAt: -1 });
+    return res.json({ success: true, tickets: tickets.map(toBookingResponse) });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.getTicketForUser = async (req, res) => {
+  try {
+    const ticket = await Ticket.findOne({ ticketCode: String(req.params.ticketCode || "").trim() });
+
+    if (!ticket) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy vé." });
     }
 
-    const ticket = await Ticket.findOne({ ticketCode: String(ticketCode || "").trim() });
+    return res.json({ success: true, ticket: toBookingResponse(ticket) });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.updateBookingStatus = async (req, res) => {
+  try {
+    const ticketCode = String(req.params.ticketCode || "").trim();
+    const nextStatus = normalizeStatus(req.body?.status);
+    const paymentData = req.body?.paymentData && typeof req.body.paymentData === "object" ? req.body.paymentData : {};
+
+    const ticket = await Ticket.findOne({ ticketCode });
     if (!ticket) {
       return res.status(404).json({ success: false, message: "Không tìm thấy booking." });
     }
 
     const currentPayment = ticket.payment && typeof ticket.payment === "object" ? ticket.payment : {};
-    const extraPayment = req.body?.paymentData && typeof req.body.paymentData === "object" ? req.body.paymentData : {};
+    const mergedPayment = { ...currentPayment, ...paymentData };
 
-    const mergedPayment = {
-      ...currentPayment,
-      ...extraPayment,
-    };
-
-    if (nextStatusRaw === "paid" || nextStatusRaw === "issued") {
-      if (!mergedPayment.paidAt) {
-        mergedPayment.paidAt = new Date().toISOString();
+    if (nextStatus === "processing") {
+      const adminNotification = await createVerificationNotification(ticket, mergedPayment.payerName);
+      if (adminNotification) {
+        emitRealtime("admin_notification_created", adminNotification.toObject(), { room: "admins" });
       }
     }
 
-    ticket.status = nextStatusRaw;
+    if (nextStatus === "paid" || nextStatus === "issued") {
+      mergedPayment.paidAt = mergedPayment.paidAt || new Date().toISOString();
+      delete mergedPayment.failedAt;
+    }
+
+    if (nextStatus === "failed") {
+      mergedPayment.failedAt = new Date().toISOString();
+    }
+
+    ticket.status = nextStatus;
+    ticket.paymentStatus = nextStatus;
     ticket.payment = mergedPayment;
+    ticket.transactionId = String(mergedPayment.transactionRef || ticket.transactionId || "").trim();
+    ticket.paymentMethod = String(mergedPayment.method || ticket.paymentMethod || "").trim();
+
     await ticket.save();
+
+    emitRealtime(
+      "booking_payment_updated",
+      {
+        ticketCode: ticket.ticketCode,
+        paymentStatus: ticket.paymentStatus,
+        status: ticket.status,
+        updatedAt: new Date().toISOString(),
+      },
+      { room: `booking:${ticket.ticketCode}` }
+    );
+
+    return res.json({ success: true, booking: toBookingResponse(ticket) });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.updatePaymentStatusByAdmin = async (req, res) => {
+  try {
+    const ticketCode = String(req.params.ticketCode || "").trim();
+    const status = normalizeStatus(req.body?.paymentStatus);
+
+    if (status !== "paid" && status !== "failed") {
+      return res.status(400).json({ success: false, message: "paymentStatus must be paid or failed" });
+    }
+
+    const ticket = await Ticket.findOne({ ticketCode });
+    if (!ticket) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy booking." });
+    }
+
+    const currentPayment = ticket.payment && typeof ticket.payment === "object" ? ticket.payment : {};
+    const payment = { ...currentPayment };
+
+    if (status === "paid") {
+      payment.paidAt = new Date().toISOString();
+      delete payment.failedAt;
+    }
+
+    if (status === "failed") {
+      payment.failedAt = new Date().toISOString();
+    }
+
+    ticket.status = status;
+    ticket.paymentStatus = status;
+    ticket.payment = payment;
+
+    await ticket.save();
+
+    await Notification.updateMany(
+      { bookingId: ticket.ticketCode, type: "payment_verification", isRead: false },
+      { isRead: true }
+    );
+
+    const userNotification = await createUserPaymentNotification(ticket, status);
+    const userEmail = String(ticket.email || ticket.passengerInfo?.email || "")
+      .trim()
+      .toLowerCase();
+
+    emitRealtime(
+      "booking_payment_updated",
+      {
+        ticketCode: ticket.ticketCode,
+        paymentStatus: status,
+        status,
+        message: status === "paid" ? "Thanh toán thành công" : "Thanh toán thất bại",
+        updatedAt: new Date().toISOString(),
+      },
+      { room: `booking:${ticket.ticketCode}` }
+    );
+
+    if (userNotification && userEmail) {
+      emitRealtime("user_notification_created", userNotification.toObject(), { room: `user:${userEmail}` });
+    }
 
     return res.json({ success: true, booking: toBookingResponse(ticket) });
   } catch (error) {
@@ -297,8 +516,8 @@ exports.updateBookingStatus = async (req, res) => {
 
 exports.sendAccountEmail = async (req, res) => {
   try {
-    const { ticketCode } = req.params;
-    const ticket = await Ticket.findOne({ ticketCode: String(ticketCode || "").trim() });
+    const ticketCode = String(req.params.ticketCode || "").trim();
+    const ticket = await Ticket.findOne({ ticketCode });
 
     if (!ticket) {
       return res.status(404).json({ success: false, message: "Không tìm thấy booking." });
@@ -310,6 +529,8 @@ exports.sendAccountEmail = async (req, res) => {
     ticket.payment = {
       ...currentPayment,
       emailSent: false,
+      accountEmailRequest: payload,
+      accountEmailUpdatedAt: new Date().toISOString(),
       emailPayload: {
         accountStatus: payload.accountStatus || "unknown",
         notificationCreated: Boolean(payload.notificationCreated),

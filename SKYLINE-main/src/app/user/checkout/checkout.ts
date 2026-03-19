@@ -9,6 +9,8 @@ import localeVi from '@angular/common/locales/vi';
 
 import { TicketService } from '../services/ticket.service';
 import { TicketApiService, BookingRecord } from '../services/ticket-api.service';
+import { RealtimeService } from '../../services/realtime.service';
+import { UserNotificationApiService, UserNotificationItem } from '../services/user-notification-api.service';
 
 registerLocaleData(localeVi, 'vi');
 
@@ -41,10 +43,15 @@ export class Checkout implements OnInit, OnDestroy {
   countdownText: string = '';
   private countdownTimer: ReturnType<typeof setInterval> | null = null;
   private statusRefreshTimer: ReturnType<typeof setInterval> | null = null;
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+  private removeBookingRealtimeListener: (() => void) | null = null;
+  private removeUserNotificationListener: (() => void) | null = null;
   transactionRef: string = '';
   payerName: string = '';
   hasConfirmedTransfer: boolean = false;
   copiedField: 'amount' | 'content' | '' = '';
+  toastMessage: string = '';
+  showToast: boolean = false;
 
   readonly bankInfo = {
     bankName: 'Vietcombank',
@@ -63,10 +70,10 @@ export class Checkout implements OnInit, OnDestroy {
   constructor(
     private ticketService: TicketService,
     private ticketApiService: TicketApiService,
-    private router: Router
-  ) {
-
-  }
+    private router: Router,
+    private realtimeService: RealtimeService,
+    private userNotificationApiService: UserNotificationApiService
+  ) {}
 
   ngOnInit(): void {
     this.fetchTicketData();
@@ -75,6 +82,9 @@ export class Checkout implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.clearCountdown();
     this.clearStatusAutoRefresh();
+    this.clearToast();
+    if (this.removeBookingRealtimeListener) this.removeBookingRealtimeListener();
+    if (this.removeUserNotificationListener) this.removeUserNotificationListener();
   }
 
   fetchTicketData(): void {
@@ -83,13 +93,13 @@ export class Checkout implements OnInit, OnDestroy {
 
     const code = this.ticketService.getData<string>('ticketCode');
     if (!code) {
-      console.error('Không tìm thấy mã đặt vé để tải checkout từ backend.');
       this.loadError = 'Không tìm thấy mã thanh toán. Vui lòng quay lại bước xác nhận đặt chỗ.';
       this.isLoading = false;
       return;
     }
 
     this.ticketCode = code;
+    this.initRealtimeListeners();
 
     this.ticketApiService.getBooking(code).subscribe({
       next: (booking: BookingRecord) => {
@@ -97,7 +107,7 @@ export class Checkout implements OnInit, OnDestroy {
         this.ticketService.setData('bookingSnapshot', booking);
         this.isLoading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Không thể tải booking từ backend:', error);
         const fallbackBooking = this.ticketService.getData<BookingRecord>('bookingSnapshot');
         if (fallbackBooking) {
@@ -127,6 +137,8 @@ export class Checkout implements OnInit, OnDestroy {
     this.seatType = booking.seatType ?? '';
     this.bookingStatus = booking.status ?? 'pending';
     this.ticketCode = booking.ticketCode;
+    this.realtimeService.joinBookingRoom(this.ticketCode);
+
     this.baggageInfo = booking.baggageOption
       ? {
           name: booking.baggageOption.name,
@@ -143,6 +155,12 @@ export class Checkout implements OnInit, OnDestroy {
     this.payerName = typeof payment['payerName'] === 'string' ? payment['payerName'] : this.payerName;
     this.transactionRef = typeof payment['transactionRef'] === 'string' ? payment['transactionRef'] : this.transactionRef;
     this.lastStatusCheckedAt = new Date();
+
+    const userEmail = String(booking.passengerInfo?.['email'] || '').trim().toLowerCase();
+    if (userEmail) {
+      this.realtimeService.joinUserRoom(userEmail);
+      this.loadUnreadUserNotifications(userEmail);
+    }
 
     this.startCountdown();
     this.autoExpireIfNeeded();
@@ -207,7 +225,7 @@ export class Checkout implements OnInit, OnDestroy {
         this.ticketService.setData('bookingSnapshot', booking);
         this.isLoading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Không thể làm mới trạng thái booking:', error);
         this.isLoading = false;
       }
@@ -286,11 +304,9 @@ export class Checkout implements OnInit, OnDestroy {
           this.router.navigate(['/ket-qua-thanh-toan', this.ticketCode]);
         }
       },
-      error: (error) => {
+      error: (error: any) => {
         const message = error?.error?.message ?? 'Cập nhật trạng thái thanh toán thất bại.';
 
-        // Some older backend instances may reject 'processing'.
-        // Fallback to 'paid' to keep the payment flow unblocked for users.
         if (allowLegacyFallback && nextStatus === 'processing' && /khong hop le|không hợp lệ/i.test(message)) {
           this.updateStatus('paid', successMessage, paymentExtras, false);
           return;
@@ -312,6 +328,76 @@ export class Checkout implements OnInit, OnDestroy {
     if (this.countdownTimer) {
       clearInterval(this.countdownTimer);
       this.countdownTimer = null;
+    }
+  }
+
+  private initRealtimeListeners(): void {
+    if (!this.removeBookingRealtimeListener) {
+      this.removeBookingRealtimeListener = this.realtimeService.on<{
+        ticketCode: string;
+        paymentStatus: string;
+        message?: string;
+      }>('booking_payment_updated', (payload) => {
+        if (!payload || payload.ticketCode !== this.ticketCode) {
+          return;
+        }
+
+        this.bookingStatus = payload.paymentStatus || this.bookingStatus;
+
+        if (payload.message) {
+          this.showToastMessage(payload.message);
+        }
+
+        if (payload.paymentStatus === 'paid' || payload.paymentStatus === 'failed' || payload.paymentStatus === 'issued') {
+          this.router.navigate(['/ket-qua-thanh-toan', this.ticketCode]);
+        }
+      });
+    }
+
+    if (!this.removeUserNotificationListener) {
+      this.removeUserNotificationListener = this.realtimeService.on<UserNotificationItem>('user_notification_created', (payload) => {
+        if (!payload || payload.bookingId !== this.ticketCode) {
+          return;
+        }
+
+        this.showToastMessage(payload.message || payload.title);
+        if (payload._id) {
+          this.userNotificationApiService.markAsRead(payload._id).subscribe();
+        }
+      });
+    }
+  }
+
+  private loadUnreadUserNotifications(email: string): void {
+    this.userNotificationApiService.getNotifications(email).subscribe({
+      next: (res) => {
+        const firstUnread = res.notifications.find((item) => !item.isRead && item.bookingId === this.ticketCode);
+        if (firstUnread) {
+          this.showToastMessage(firstUnread.message || firstUnread.title);
+          this.userNotificationApiService.markAsRead(firstUnread._id).subscribe();
+        }
+      }
+    });
+  }
+
+  private showToastMessage(message: string): void {
+    this.toastMessage = message;
+    this.showToast = true;
+
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
+    }
+
+    this.toastTimer = setTimeout(() => {
+      this.showToast = false;
+      this.toastMessage = '';
+    }, 3500);
+  }
+
+  private clearToast(): void {
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
+      this.toastTimer = null;
     }
   }
 
@@ -391,4 +477,3 @@ export class Checkout implements OnInit, OnDestroy {
     } catch { return ''; }
   }
 }
-
