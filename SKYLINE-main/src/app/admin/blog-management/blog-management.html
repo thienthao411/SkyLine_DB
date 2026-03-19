@@ -1,0 +1,219 @@
+<div class="admin-container">
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <main class="content">
+    <app-admin-header></app-admin-header>
+
+    <div class="header">
+      <h1>Quản lý bài viết</h1>
+      <p class="subtitle">Tạo, chỉnh sửa và xuất bản blog cho website Skyline.</p>
+    </div>
+
+    <div class="main-content-panel">
+      <div class="tab-header-row main-tabs">
+        <div class="tabs">
+          <button [class.active]="activeMainTab === 'manage'" (click)="switchMainTab('manage')">
+            Danh sách bài viết
+          </button>
+          <button [class.active]="activeMainTab === 'create'" (click)="switchMainTab('create')">
+            Tạo bài viết mới
+          </button>
+        </div>
+
+        <div *ngIf="activeMainTab === 'manage'" class="list-toolbar">
+          <div class="search-wrap">
+            <input type="text" [(ngModel)]="searchTerm" placeholder="Tìm theo tiêu đề, slug..." />
+          </div>
+        </div>
+      </div>
+
+      <div class="list-card" *ngIf="activeMainTab === 'manage'">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Tiêu đề</th>
+                <th>Slug</th>
+                <th>Chuyên mục</th>
+                <th>Trạng thái</th>
+                <th>Nổi bật</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngIf="filteredBlogs.length === 0">
+                <td colspan="6" class="empty">Chưa có bài viết nào.</td>
+              </tr>
+              <tr *ngFor="let blog of filteredBlogs; trackBy: trackByBlog">
+                <td>{{ blog.title }}</td>
+                <td>{{ blog.slug }}</td>
+                <td>{{ blog.category }}</td>
+                <td><span class="badge" [class.badge-draft]="blog.status === 'draft'">{{ blog.status }}</span></td>
+                <td>{{ blog.isFeatured ? 'Có' : 'Không' }}</td>
+                <td class="row-actions">
+                  <button title="Xem chi tiết" type="button" class="action-btn view" (click)="viewBlog(blog)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-width="1.5"></path>
+                      <circle cx="12" cy="12" r="3" stroke-width="1.5"></circle>
+                    </svg>
+                  </button>
+                  <button title="Sửa" type="button" class="action-btn edit" (click)="selectForEdit(blog)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-width="1.5"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.5"></path>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="form-card" *ngIf="activeMainTab === 'create'">
+        <h2>{{ selectedBlogId ? 'Cập nhật bài viết' : 'Tạo bài viết mới' }}</h2>
+
+        <div class="row two-col">
+          <div class="field">
+            <label>Tiêu đề</label>
+            <input type="text" [(ngModel)]="form.title" placeholder="Tiêu đề bài viết" />
+          </div>
+          <div class="field">
+            <label>Slug</label>
+            <input type="text" [(ngModel)]="form.slug" placeholder="slug-tu-dong-neu-bo-trong" />
+          </div>
+        </div>
+
+        <div class="row three-col">
+          <div class="field">
+            <label>Chuyên mục</label>
+            <input type="text" [(ngModel)]="form.category" />
+          </div>
+          <div class="field">
+            <label>Tác giả</label>
+            <input type="text" [(ngModel)]="form.author" />
+          </div>
+          <div class="field">
+            <label>Thời lượng đọc</label>
+            <input type="text" [(ngModel)]="form.readTime" />
+          </div>
+        </div>
+
+        <div class="row two-col">
+          <div class="field">
+            <label>Ảnh bìa bài viết</label>
+            <div class="cover-upload-box">
+              <img [src]="form.coverImage || fallbackCover" alt="Cover preview" class="cover-preview" />
+              <div class="cover-upload-actions">
+                <input class="upload-file-input" type="file" accept="image/*" (change)="onCoverImageSelected($event)" />
+                <button class="btn btn-secondary" type="button" (click)="removeCoverImage()">Xóa ảnh</button>
+                <small>PNG/JPG, tối đa 5MB.</small>
+              </div>
+            </div>
+          </div>
+          <div class="field checkbox-wrap">
+            <label>Trạng thái</label>
+            <select [(ngModel)]="form.status">
+              <option value="published">Published</option>
+              <option value="draft">Draft</option>
+            </select>
+            <label class="checkline"><input type="checkbox" [(ngModel)]="form.isFeatured" /> Bài nổi bật</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Tóm tắt</label>
+          <textarea [(ngModel)]="form.excerpt" rows="3"></textarea>
+        </div>
+
+        <div class="row two-col">
+          <div class="field">
+            <label>Highlights (mỗi dòng 1 ý)</label>
+            <textarea [ngModel]="formHighlightsText()" (ngModelChange)="updateHighlightsText($event)" rows="6"></textarea>
+          </div>
+          <div class="field">
+            <label>Nội dung (format: Heading, dòng dưới là đoạn; ngăn cách section bằng ---)</label>
+            <textarea [ngModel]="formSectionsText()" (ngModelChange)="updateSectionsText($event)" rows="6"></textarea>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-secondary" type="button" (click)="switchMainTab('manage')">Quay lại danh sách</button>
+          <button class="btn btn-secondary" type="button" (click)="resetForm()">Làm mới</button>
+          <button class="btn btn-primary" type="button" (click)="saveBlog()">{{ selectedBlogId ? 'Lưu cập nhật' : 'Tạo bài viết' }}</button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="showModalType === 'view' && blogToView" class="modal-overlay" (click)="closeModal()">
+      <div class="modal-content modal-view" (click)="$event.stopPropagation()">
+        <h4 class="modal-view-title">Chi tiết bài viết</h4>
+
+        <div class="view-details-grid">
+          <div class="detail-item full-width cover-wrap">
+            <img [src]="blogToView.coverImage || fallbackCover" alt="Ảnh bìa" class="detail-cover" />
+          </div>
+
+          <div class="detail-item full-width">
+            <label>Tiêu đề</label>
+            <span>{{ blogToView.title }}</span>
+          </div>
+
+          <div class="detail-item">
+            <label>Slug</label>
+            <span>{{ blogToView.slug }}</span>
+          </div>
+
+          <div class="detail-item">
+            <label>Chuyên mục</label>
+            <span>{{ blogToView.category }}</span>
+          </div>
+
+          <div class="detail-item">
+            <label>Tác giả</label>
+            <span>{{ blogToView.author }}</span>
+          </div>
+
+          <div class="detail-item">
+            <label>Thời lượng đọc</label>
+            <span>{{ blogToView.readTime }}</span>
+          </div>
+
+          <div class="detail-item">
+            <label>Trạng thái</label>
+            <span class="badge" [class.badge-draft]="blogToView.status === 'draft'">{{ blogToView.status }}</span>
+          </div>
+
+          <div class="detail-item">
+            <label>Nổi bật</label>
+            <span>{{ blogToView.isFeatured ? 'Có' : 'Không' }}</span>
+          </div>
+
+          <div class="detail-item full-width">
+            <label>Tóm tắt</label>
+            <span>{{ blogToView.excerpt || 'Chưa có tóm tắt' }}</span>
+          </div>
+
+          <div class="detail-item">
+            <label>Highlights</label>
+            <span>{{ (blogToView.highlights || []).length }} ý chính</span>
+          </div>
+
+          <div class="detail-item">
+            <label>Nội dung chi tiết</label>
+            <span>{{ getSectionPreview(blogToView) }}</span>
+          </div>
+
+          <div class="detail-item full-width" *ngIf="(blogToView.highlights || []).length > 0">
+            <label>Danh sách highlights</label>
+            <span>{{ blogToView.highlights.join(' • ') }}</span>
+          </div>
+        </div>
+
+        <div class="modal-buttons">
+          <button class="btn btn-secondary" type="button" (click)="closeModal()">Đóng</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

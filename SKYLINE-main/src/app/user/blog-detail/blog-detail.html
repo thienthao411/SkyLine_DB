@@ -1,0 +1,42 @@
+<app-header></app-header>
+
+<section class="detail-shell">
+  <div class="container">
+    <a routerLink="/blogs" class="back-link">← Quay về Blogs</a>
+
+    <div class="detail-card" *ngIf="!isLoading && blog; else loadingState">
+      <p class="category">{{ blog.category }}</p>
+      <h1>{{ blog.title }}</h1>
+      <div class="meta">
+        <span>Tác giả: {{ blog.author }}</span>
+        <span>{{ formattedDate }}</span>
+        <span>{{ blog.readTime }}</span>
+      </div>
+
+      <img *ngIf="blog.coverImage" class="cover-image" [src]="blog.coverImage" alt="Ảnh bìa bài viết" />
+
+      <p class="excerpt">{{ blog.excerpt }}</p>
+
+      <div class="highlight-box" *ngIf="blog.highlights.length">
+        <h3>Điểm chính</h3>
+        <ul>
+          <li *ngFor="let h of blog.highlights">{{ h }}</li>
+        </ul>
+      </div>
+
+      <section class="section" *ngFor="let sec of blog.sections">
+        <h2>{{ sec.heading }}</h2>
+        <p *ngFor="let p of sec.paragraphs">{{ p }}</p>
+      </section>
+    </div>
+
+    <ng-template #loadingState>
+      <div class="detail-card empty">
+        <p *ngIf="isLoading">Đang tải bài viết...</p>
+        <p *ngIf="!isLoading">Không tìm thấy bài viết.</p>
+      </div>
+    </ng-template>
+  </div>
+</section>
+
+<app-footer></app-footer>

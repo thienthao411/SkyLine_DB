@@ -1,0 +1,70 @@
+<app-header></app-header>
+
+<section class="blogs-hero">
+  <div class="container">
+    <div class="hero-panel">
+      <p class="hero-kicker">Skyline Blog</p>
+      <h1 class="hero-title">Góc chia sẻ kinh nghiệm bay</h1>
+      <p class="hero-subtitle">
+        Cập nhật mẹo đặt vé, hành trình nổi bật và hướng dẫn chi tiết để mỗi chuyến đi của bạn nhẹ nhàng hơn.
+      </p>
+      <div class="hero-chips">
+        <span class="hero-chip">120+ bài viết</span>
+        <span class="hero-chip">Mẹo đặt vé thực tế</span>
+        <span class="hero-chip">Cập nhật hằng tuần</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="blogs-content">
+  <div class="container">
+    <article class="featured-post" *ngIf="featuredPost as featured; else emptyBlogs">
+      <img *ngIf="featured.coverImage; else featuredFallback" class="featured-cover-img" [src]="featured.coverImage" alt="Ảnh bìa bài viết" />
+      <ng-template #featuredFallback>
+        <div class="featured-cover" [class]="'featured-cover tone-' + (featured.coverTone || 'ocean')"></div>
+      </ng-template>
+      <div class="featured-body">
+        <span class="post-chip">Bài viết nổi bật</span>
+        <h2>{{ featured.title }}</h2>
+        <div class="post-meta">
+          <span>{{ featured.category }}</span>
+          <span>{{ featured.publishedAt | date:'dd/MM/yyyy' }}</span>
+          <span>{{ featured.readTime }}</span>
+          <span>Tác giả: {{ featured.author }}</span>
+        </div>
+        <p>{{ featured.excerpt }}</p>
+        <a class="read-btn" [routerLink]="['/blogs', featured.slug]">Đọc bài viết</a>
+      </div>
+    </article>
+
+    <ng-template #emptyBlogs>
+      <article class="featured-post">
+        <div class="featured-body">
+          <span class="post-chip">Skyline Blog</span>
+          <h2>Chưa có bài viết nào</h2>
+          <p>Danh sách bài viết sẽ hiển thị ngay khi bạn thêm bài tại trang quản trị.</p>
+        </div>
+      </article>
+    </ng-template>
+
+    <div class="post-grid">
+      <article class="post-card" *ngFor="let post of latestPosts">
+        <img *ngIf="post.coverImage; else cardFallback" class="post-thumb-img" [src]="post.coverImage" alt="Ảnh bìa bài viết" />
+        <ng-template #cardFallback>
+          <div class="post-thumb" [class]="'post-thumb tone-' + (post.coverTone || 'ocean')"></div>
+        </ng-template>
+        <p class="post-category">{{ post.category }}</p>
+        <h3>{{ post.title }}</h3>
+        <div class="post-meta">
+          <span>{{ post.publishedAt | date:'dd/MM/yyyy' }}</span>
+          <span>{{ post.readTime }}</span>
+        </div>
+        <p class="post-excerpt">{{ post.excerpt }}</p>
+        <a class="read-link" [routerLink]="['/blogs', post.slug]">Đọc chi tiết</a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<app-footer></app-footer>
