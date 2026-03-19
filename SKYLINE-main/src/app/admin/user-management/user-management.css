@@ -415,6 +415,7 @@
 .user-form input[type="text"],
 .user-form input[type="email"],
 .user-form input[type="tel"],
+.user-form input[type="password"],
 .user-form input[type="number"],
 .user-form input[type="date"],
 .user-form select,
@@ -434,6 +435,7 @@
 .user-form input:focus,
 .user-form select:focus,
 .user-form input[type="date"]:focus,
+.user-form input[type="password"]:focus,
 .flight-form input:focus,
 .flight-form select:focus,
 .notes-field input:focus,
@@ -878,4 +880,49 @@
 .pagination span {
   font-weight: 600;
   color: #1e3a5f;
+}
+
+.user-form .read-only-field {
+    background: #f3f4f6;
+    color: #4b5563;
+    cursor: not-allowed;
+}
+
+.user-form .field-hint {
+    margin-top: 6px;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.password-field-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-field-wrap input {
+    padding-right: 42px !important;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.password-toggle-btn:hover {
+    background: #eef2f7;
+    color: #375578;
 }
