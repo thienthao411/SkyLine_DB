@@ -77,6 +77,15 @@ function isStrongPassword(password) {
   return String(password || "").length >= 6;
 }
 
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 async function sendForgotPasswordOtpEmail({ toEmail, fullName, otpCode, expireMinutes }) {
   const transporter = await getMailer();
   const from =
@@ -86,20 +95,58 @@ async function sendForgotPasswordOtpEmail({ toEmail, fullName, otpCode, expireMi
     process.env.SMTP_USER ||
     "no-reply@skyline.local";
 
+  const safeFullName = escapeHtml(fullName || "Quý khách");
+  const safeOtp = escapeHtml(otpCode);
+  const otpExpire = Number(expireMinutes) || 10;
+
   const html = `
-    <div style="font-family: Arial, sans-serif; color: #1f2937; line-height: 1.5;">
-      <h2 style="margin-bottom: 8px;">SKYLINE - Xac nhan quen mat khau</h2>
-      <p>Xin chao ${fullName || "Quy khach"},</p>
-      <p>Ma OTP de dat lai mat khau cua ban la:</p>
-      <p style="font-size: 28px; font-weight: 700; letter-spacing: 4px; margin: 12px 0;">${otpCode}</p>
-      <p>Ma co hieu luc trong ${expireMinutes} phut.</p>
-      <p>Neu ban khong yeu cau dat lai mat khau, vui long bo qua email nay.</p>
-    </div>
+    <!doctype html>
+    <html lang="vi">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SKYLINE - Mã OTP đặt lại mật khẩu</title>
+      </head>
+      <body style="margin:0;padding:18px;background:#f1f5f9;">
+        <div style="font-family:Arial,Helvetica,sans-serif;line-height:1.5;color:#0f172a;max-width:680px;margin:0 auto;padding:24px;border:1px solid #dbeafe;border-radius:14px;background:#f8fbff;">
+          <h2 style="margin:0 0 12px;color:#1d4ed8;">SKYLINE - Xác nhận quên mật khẩu</h2>
+          <p style="margin:0 0 16px;">Xin chào <strong>${safeFullName}</strong>, bạn vừa yêu cầu đặt lại mật khẩu cho tài khoản SKYLINE.</p>
+
+          <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;">
+            <tbody>
+              <tr>
+                <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;"><strong>Mã OTP</strong></td>
+                <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;"><strong style="font-size:24px;letter-spacing:4px;color:#1f3f68;">${safeOtp}</strong></td>
+              </tr>
+              <tr>
+                <td style="padding:10px 12px;"><strong>Hiệu lực</strong></td>
+                <td style="padding:10px 12px;">${otpExpire} phút</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top:14px;color:#475569;">Vui lòng không chia sẻ mã OTP với bất kỳ ai để bảo mật tài khoản.</p>
+          <p style="margin:8px 0 0;color:#9a3412;"><strong>Lưu ý:</strong> Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
+        </div>
+      </body>
+    </html>
   `;
+
+  const text = [
+    "SKYLINE - Xác nhận quên mật khẩu",
+    "",
+    `Xin chào ${fullName || "Quý khách"},`,
+    "",
+    `Mã OTP để đặt lại mật khẩu của bạn là: ${otpCode}`,
+    `Mã có hiệu lực trong ${otpExpire} phút.`,
+    "",
+    "Vui lòng không chia sẻ mã OTP với bất kỳ ai.",
+    "Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.",
+  ].join("\n");
 
   if (!transporter) {
     const error = new Error(
-      "Chua cau hinh SMTP hop le. Neu dung Gmail, can SMTP_USER va Gmail App Password (16 ky tu), khong dung mat khau dang nhap thuong."
+      "Chưa cấu hình SMTP hợp lệ. Nếu dùng Gmail, cần SMTP_USER và Gmail App Password (16 ký tự), không dùng mật khẩu đăng nhập thường."
     );
     error.statusCode = 500;
     throw error;
@@ -107,9 +154,10 @@ async function sendForgotPasswordOtpEmail({ toEmail, fullName, otpCode, expireMi
 
   try {
     await transporter.sendMail({
-      from,
+      from: `SKYLINE <${from}>`,
       to: toEmail,
-      subject: "[SKYLINE] Ma OTP dat lai mat khau",
+      subject: "[SKYLINE] Mã OTP đặt lại mật khẩu",
+      text,
       html,
     });
   } catch (mailerError) {
@@ -118,13 +166,13 @@ async function sendForgotPasswordOtpEmail({ toEmail, fullName, otpCode, expireMi
     const message = String(mailerError?.message || "");
 
     if (code === "EAUTH" || responseCode === 535) {
-      const error = new Error("Xac thuc SMTP that bai. Neu dung Gmail, hay bat 2-Step Verification va dung App Password 16 ky tu cho SMTP_PASS.");
+      const error = new Error("Xác thực SMTP thất bại. Nếu dùng Gmail, hãy bật 2-Step Verification và dùng App Password 16 ký tự cho SMTP_PASS.");
       error.statusCode = 500;
       throw error;
     }
 
     if (message.toLowerCase().includes("sender") || responseCode === 550) {
-      const error = new Error("Email gui (SMTP_FROM) chua duoc verify tren nha cung cap mail.");
+      const error = new Error("Email gửi (SMTP_FROM) chưa được verify trên nhà cung cấp mail.");
       error.statusCode = 500;
       throw error;
     }
@@ -304,12 +352,12 @@ exports.forgotPassword = async (req, res) => {
     const email = String(req.body?.email || "").trim().toLowerCase();
 
     if (!email) {
-      return res.status(400).json({ success: false, message: "Vui long nhap email." });
+      return res.status(400).json({ success: false, message: "Vui lòng nhập email." });
     }
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ success: false, message: "Email khong ton tai trong he thong." });
+      return res.status(404).json({ success: false, message: "Email không tồn tại trong hệ thống." });
     }
 
     const now = Date.now();
@@ -318,7 +366,7 @@ exports.forgotPassword = async (req, res) => {
     if (lastSentAt && diffSeconds < RESEND_COOLDOWN_SECONDS) {
       return res.status(429).json({
         success: false,
-        message: `Vui long doi ${RESEND_COOLDOWN_SECONDS - diffSeconds} giay de gui lai ma.`,
+        message: `Vui lòng đợi ${RESEND_COOLDOWN_SECONDS - diffSeconds} giây để gửi lại mã.`,
       });
     }
 
@@ -346,7 +394,7 @@ exports.forgotPassword = async (req, res) => {
 
     return res.json({
       success: true,
-      message: "Da gui ma OTP qua email. Vui long kiem tra hop thu.",
+      message: "Đã gửi mã OTP qua email. Vui lòng kiểm tra hộp thư.",
       expiresInMinutes: RESET_OTP_EXPIRE_MINUTES,
     });
   } catch (error) {
@@ -360,12 +408,12 @@ exports.verifyOtp = async (req, res) => {
     const otp = String(req.body?.otp || "").trim();
 
     if (!email || !otp) {
-      return res.status(400).json({ success: false, message: "Email va OTP la bat buoc." });
+      return res.status(400).json({ success: false, message: "Email và OTP là bắt buộc." });
     }
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ success: false, message: "Email khong ton tai trong he thong." });
+      return res.status(404).json({ success: false, message: "Email không tồn tại trong hệ thống." });
     }
 
     const otpHash = user.resetPassword?.otpHash;
@@ -375,16 +423,16 @@ exports.verifyOtp = async (req, res) => {
     if (failedAttempts >= MAX_FAILED_OTP_ATTEMPTS) {
       return res.status(429).json({
         success: false,
-        message: "Ban da nhap sai OTP qua nhieu lan. Vui long gui lai ma OTP moi.",
+        message: "Bạn đã nhập sai OTP quá nhiều lần. Vui lòng gửi lại mã OTP mới.",
       });
     }
 
     if (!otpHash || !otpExpireAt) {
-      return res.status(400).json({ success: false, message: "Khong tim thay yeu cau dat lai mat khau. Vui long gui lai OTP." });
+      return res.status(400).json({ success: false, message: "Không tìm thấy yêu cầu đặt lại mật khẩu. Vui lòng gửi lại OTP." });
     }
 
     if (Date.now() > otpExpireAt) {
-      return res.status(400).json({ success: false, message: "Ma OTP da het han. Vui long gui lai OTP moi." });
+      return res.status(400).json({ success: false, message: "Mã OTP đã hết hạn. Vui lòng gửi lại OTP mới." });
     }
 
     const providedHash = hashRaw(otp);
@@ -405,13 +453,13 @@ exports.verifyOtp = async (req, res) => {
       if (failedOtpAttempts >= MAX_FAILED_OTP_ATTEMPTS) {
         return res.status(429).json({
           success: false,
-          message: "Ban da nhap sai OTP qua 5 lan. OTP cu da bi huy, vui long gui lai ma moi.",
+          message: "Bạn đã nhập sai OTP quá 5 lần. OTP cũ đã bị hủy, vui lòng gửi lại mã mới.",
         });
       }
 
       return res.status(400).json({
         success: false,
-        message: `Ma OTP khong dung. Con ${MAX_FAILED_OTP_ATTEMPTS - failedOtpAttempts} lan thu.`,
+        message: `Mã OTP không đúng. Còn ${MAX_FAILED_OTP_ATTEMPTS - failedOtpAttempts} lần thử.`,
       });
     }
 
@@ -429,7 +477,7 @@ exports.verifyOtp = async (req, res) => {
 
     return res.json({
       success: true,
-      message: "Xac nhan OTP thanh cong.",
+      message: "Xác nhận OTP thành công.",
       resetToken: verifiedToken,
       expiresInMinutes: VERIFY_TOKEN_EXPIRE_MINUTES,
     });
@@ -446,20 +494,20 @@ exports.resetPassword = async (req, res) => {
     const confirmPassword = String(req.body?.confirmPassword || "");
 
     if (!email || !resetToken || !newPassword || !confirmPassword) {
-      return res.status(400).json({ success: false, message: "Vui long nhap day du thong tin." });
+      return res.status(400).json({ success: false, message: "Vui lòng nhập đầy đủ thông tin." });
     }
 
     if (!isStrongPassword(newPassword)) {
-      return res.status(400).json({ success: false, message: "Mat khau moi phai co it nhat 6 ky tu." });
+      return res.status(400).json({ success: false, message: "Mật khẩu mới phải có ít nhất 6 ký tự." });
     }
 
     if (newPassword !== confirmPassword) {
-      return res.status(400).json({ success: false, message: "Mat khau xac nhan khong khop." });
+      return res.status(400).json({ success: false, message: "Mật khẩu xác nhận không khớp." });
     }
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ success: false, message: "Email khong ton tai trong he thong." });
+      return res.status(404).json({ success: false, message: "Email không tồn tại trong hệ thống." });
     }
 
     const tokenHash = user.resetPassword?.verifiedTokenHash;
@@ -468,15 +516,15 @@ exports.resetPassword = async (req, res) => {
       : 0;
 
     if (!tokenHash || !tokenExpireAt) {
-      return res.status(400).json({ success: false, message: "Phien dat lai mat khau khong hop le. Vui long xac nhan OTP lai." });
+      return res.status(400).json({ success: false, message: "Phiên đặt lại mật khẩu không hợp lệ. Vui lòng xác nhận OTP lại." });
     }
 
     if (Date.now() > tokenExpireAt) {
-      return res.status(400).json({ success: false, message: "Phien dat lai mat khau da het han. Vui long thuc hien lai." });
+      return res.status(400).json({ success: false, message: "Phiên đặt lại mật khẩu đã hết hạn. Vui lòng thực hiện lại." });
     }
 
     if (hashRaw(resetToken) !== tokenHash) {
-      return res.status(400).json({ success: false, message: "Token dat lai mat khau khong hop le." });
+      return res.status(400).json({ success: false, message: "Token đặt lại mật khẩu không hợp lệ." });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -492,7 +540,7 @@ exports.resetPassword = async (req, res) => {
 
     await user.save();
 
-    return res.json({ success: true, message: "Doi mat khau thanh cong." });
+    return res.json({ success: true, message: "Đổi mật khẩu thành công." });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -501,13 +549,12 @@ exports.resetPassword = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const payload = { ...req.body };
-
-    // Avoid immutable field update errors when client sends whole object.
     delete payload._id;
 
-    if (payload.birthday === '') payload.birthday = null;
-    if (payload.passportExpiry === '') payload.passportExpiry = null;
-    if (payload.password !== undefined && String(payload.password).trim() === '') {
+    if (payload.birthday === "") payload.birthday = null;
+    if (payload.passportExpiry === "") payload.passportExpiry = null;
+
+    if (payload.password === "" || payload.password === null) {
       delete payload.password;
     }
 
@@ -516,7 +563,6 @@ exports.updateUser = async (req, res) => {
     }
 
     const updated = await User.findByIdAndUpdate(req.params.id, payload, { new: true });
-    if (!updated) return res.status(404).json({ message: 'User not found' });
     res.json(updated);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -526,8 +572,8 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
   try {
     const deleted = await User.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ message: 'User not found' });
-    res.json({ message: 'Deleted' });
+    if (!deleted) return res.status(404).json({ message: "User not found" });
+    res.json({ message: "Deleted" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

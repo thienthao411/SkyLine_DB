@@ -35,7 +35,7 @@ export class ForgotPasswordComponent {
 
     const normalizedEmail = this.email.trim().toLowerCase();
     if (!this.authService.validateEmail(normalizedEmail)) {
-      this.showMessage('Vui long nhap email hop le.', 'error');
+      this.showMessage('Vui lòng nhập email hợp lệ.', 'error');
       return;
     }
 
@@ -59,7 +59,7 @@ export class ForgotPasswordComponent {
 
     const normalizedOtp = this.otp.trim();
     if (!/^\d{6}$/.test(normalizedOtp)) {
-      this.showMessage('Ma OTP gom 6 chu so.', 'error');
+      this.showMessage('Mã OTP gồm 6 chữ số.', 'error');
       return;
     }
 
@@ -68,25 +68,25 @@ export class ForgotPasswordComponent {
     this.isSubmitting = false;
 
     if (!result.success || !result.resetToken) {
-      this.showMessage(result.message || 'Xac nhan OTP that bai.', 'error');
+      this.showMessage(result.message || 'Xác nhận OTP thất bại.', 'error');
       return;
     }
 
     this.resetToken = result.resetToken;
     this.step = 'reset';
-    this.showMessage('Xac nhan OTP thanh cong. Hay dat mat khau moi.', 'success');
+    this.showMessage('Xác nhận OTP thành công. Hãy đặt mật khẩu mới.', 'success');
   }
 
   async submitResetPassword(): Promise<void> {
     this.clearMessage();
 
     if (!this.authService.validatePassword(this.newPassword)) {
-      this.showMessage('Mat khau moi phai co it nhat 6 ky tu.', 'error');
+      this.showMessage('Mật khẩu mới phải có ít nhất 6 ký tự.', 'error');
       return;
     }
 
     if (this.newPassword !== this.confirmPassword) {
-      this.showMessage('Mat khau xac nhan khong khop.', 'error');
+      this.showMessage('Mật khẩu xác nhận không khớp.', 'error');
       return;
     }
 
@@ -105,7 +105,7 @@ export class ForgotPasswordComponent {
     }
 
     this.step = 'done';
-    this.showMessage('Doi mat khau thanh cong.', 'success');
+    this.showMessage('Đổi mật khẩu thành công.', 'success');
 
     setTimeout(() => {
       this.router.navigate(['/customer-sign-in']);
@@ -123,7 +123,7 @@ export class ForgotPasswordComponent {
       return;
     }
 
-    this.showMessage('Da gui lai ma OTP. Vui long kiem tra email.', 'success');
+    this.showMessage('Đã gửi lại mã OTP. Vui lòng kiểm tra email.', 'success');
   }
 
   private showMessage(message: string, type: 'success' | 'error'): void {
