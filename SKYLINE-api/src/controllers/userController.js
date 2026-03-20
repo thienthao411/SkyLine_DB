@@ -28,18 +28,22 @@ async function getMailer() {
     return cachedMailer;
   }
 
+  const skylineGmailUser = process.env.SKYLINE_GMAIL_USER;
+  const skylineGmailPass = process.env.SKYLINE_GMAIL_APP_PASSWORD;
   const sendGridApiKey = process.env.SENDGRID_API_KEY;
   const brevoSmtpKey = process.env.BREVO_SMTP_KEY;
   const host =
     process.env.SMTP_HOST ||
+    (skylineGmailUser && skylineGmailPass ? "smtp.gmail.com" : "") ||
     (sendGridApiKey ? "smtp.sendgrid.net" : "") ||
     (brevoSmtpKey ? "smtp-relay.brevo.com" : "");
   const user =
     process.env.SMTP_USER ||
+    skylineGmailUser ||
     (sendGridApiKey ? "apikey" : "") ||
     process.env.BREVO_SMTP_USER ||
     "";
-  const pass = process.env.SMTP_PASS || sendGridApiKey || brevoSmtpKey || "";
+  const pass = process.env.SMTP_PASS || skylineGmailPass || sendGridApiKey || brevoSmtpKey || "";
   const port = Number(process.env.SMTP_PORT || 587);
   const secure = String(process.env.SMTP_SECURE || "false").toLowerCase() === "true";
 
@@ -75,7 +79,12 @@ function isStrongPassword(password) {
 
 async function sendForgotPasswordOtpEmail({ toEmail, fullName, otpCode, expireMinutes }) {
   const transporter = await getMailer();
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER || "no-reply@skyline.local";
+  const from =
+    process.env.SMTP_FROM ||
+    process.env.MAIL_FROM ||
+    process.env.SKYLINE_GMAIL_USER ||
+    process.env.SMTP_USER ||
+    "no-reply@skyline.local";
 
   const html = `
     <div style="font-family: Arial, sans-serif; color: #1f2937; line-height: 1.5;">
