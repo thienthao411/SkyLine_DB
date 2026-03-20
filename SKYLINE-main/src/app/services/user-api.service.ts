@@ -26,6 +26,24 @@ export interface RankBenefitsConfig {
   ranks: Record<string, { name: string; benefits: string[] }>;
 }
 
+export interface ForgotPasswordResponse {
+  success: boolean;
+  message: string;
+  expiresInMinutes?: number;
+}
+
+export interface VerifyOtpResponse {
+  success: boolean;
+  message: string;
+  resetToken?: string;
+  expiresInMinutes?: number;
+}
+
+export interface ResetPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -52,6 +70,23 @@ export class UserApiService {
 
   register(userData: { fullName: string; email: string; password: string }): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/register`, userData);
+  }
+
+  forgotPassword(email: string): Observable<ForgotPasswordResponse> {
+    return this.http.post<ForgotPasswordResponse>(`${this.apiUrl}/forgot-password`, { email });
+  }
+
+  verifyOtp(email: string, otp: string): Observable<VerifyOtpResponse> {
+    return this.http.post<VerifyOtpResponse>(`${this.apiUrl}/verify-otp`, { email, otp });
+  }
+
+  resetPassword(payload: {
+    email: string;
+    resetToken: string;
+    newPassword: string;
+    confirmPassword: string;
+  }): Observable<ResetPasswordResponse> {
+    return this.http.post<ResetPasswordResponse>(`${this.apiUrl}/reset-password`, payload);
   }
 
   create(user: User): Observable<User> {

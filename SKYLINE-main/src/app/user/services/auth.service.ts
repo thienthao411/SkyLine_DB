@@ -44,6 +44,19 @@ export interface AccountProvisionResult {
   tempPassword?: string;
 }
 
+export interface ForgotPasswordResult {
+  success: boolean;
+  message: string;
+  expiresInMinutes?: number;
+}
+
+export interface VerifyOtpResult {
+  success: boolean;
+  message: string;
+  resetToken?: string;
+  expiresInMinutes?: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -176,6 +189,66 @@ export class AuthService {
 
   validatePassword(password: string): boolean {
     return password.length >= 6;
+  }
+
+  async forgotPassword(email: string): Promise<ForgotPasswordResult> {
+    try {
+      const response = await lastValueFrom(this.userApiService.forgotPassword(email));
+      return {
+        success: !!response.success,
+        message: response.message,
+        expiresInMinutes: response.expiresInMinutes,
+      };
+    } catch (error: any) {
+      if (error?.status === 0) {
+        return {
+          success: false,
+          message: 'Khong ket noi duoc backend. Vui long kiem tra API dang chay o cong 5000.',
+        };
+      }
+
+      return {
+        success: false,
+        message: error?.error?.message || 'Khong the gui yeu cau quen mat khau.',
+      };
+    }
+  }
+
+  async verifyForgotPasswordOtp(email: string, otp: string): Promise<VerifyOtpResult> {
+    try {
+      const response = await lastValueFrom(this.userApiService.verifyOtp(email, otp));
+      return {
+        success: !!response.success,
+        message: response.message,
+        resetToken: response.resetToken,
+        expiresInMinutes: response.expiresInMinutes,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error?.error?.message || 'Xac nhan OTP that bai.',
+      };
+    }
+  }
+
+  async resetForgottenPassword(payload: {
+    email: string;
+    resetToken: string;
+    newPassword: string;
+    confirmPassword: string;
+  }): Promise<ForgotPasswordResult> {
+    try {
+      const response = await lastValueFrom(this.userApiService.resetPassword(payload));
+      return {
+        success: !!response.success,
+        message: response.message,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error?.error?.message || 'Dat lai mat khau that bai.',
+      };
+    }
   }
 
   async ensurePassengerAccount(name: string, email: string): Promise<AccountProvisionResult> {

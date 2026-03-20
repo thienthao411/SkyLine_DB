@@ -29,6 +29,10 @@ export const routes: Routes = [
     path: 'customer-sign-up',
     loadComponent: () => import('./user/customer-sign-up/customer-sign-up').then(m => m.CustomerSignUpComponent)
   },
+  {
+    path: 'forgot-password',
+    loadComponent: () => import('./user/forgot-password/forgot-password').then(m => m.ForgotPasswordComponent)
+  },
 
   // Đăng nhập Admin
   {
