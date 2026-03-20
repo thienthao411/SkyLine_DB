@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
 
 export interface Airport {
   code: string;
@@ -45,23 +43,10 @@ const AUTHORITATIVE_BY_CODE = new Map(
 
 @Injectable({ providedIn: 'root' })
 export class AirportApiService {
-  private baseUrl = 'http://localhost:5000/api';
-
-  constructor(private http: HttpClient) {}
-
   searchAirports(q: string): Observable<Airport[]> {
     const keyword = String(q || '').trim();
-
-    if (!keyword) {
-      return of([...AUTHORITATIVE_AIRPORTS]);
-    }
-
-    const params = new HttpParams().set('q', keyword);
-
-    return this.http.get<Airport[]>(`${this.baseUrl}/airports/search`, { params }).pipe(
-      map((apiAirports) => this.mergeWithAuthoritativeList(apiAirports, keyword)),
-      catchError(() => of(this.filterAuthoritativeAirports(keyword)))
-    );
+    if (!keyword) return of([...AUTHORITATIVE_AIRPORTS]);
+    return of(this.filterAuthoritativeAirports(keyword));
   }
 
   getAllAirports(): Observable<Airport[]> {
@@ -71,30 +56,6 @@ export class AirportApiService {
   getAirportByCode(code: string): Airport | undefined {
     const normalizedCode = String(code || '').trim().toUpperCase();
     return AUTHORITATIVE_BY_CODE.get(normalizedCode);
-  }
-
-  private mergeWithAuthoritativeList(apiAirports: Airport[] | null | undefined, keyword: string): Airport[] {
-    const merged = new Map<string, Airport>();
-
-    (Array.isArray(apiAirports) ? apiAirports : []).forEach((airport) => {
-      const normalized = this.normalizeAirport(airport);
-      if (!normalized.code) return;
-
-      const authoritative = AUTHORITATIVE_BY_CODE.get(normalized.code);
-      merged.set(normalized.code, authoritative ? authoritative : normalized);
-    });
-
-    this.filterAuthoritativeAirports(keyword).forEach((airport) => {
-      merged.set(airport.code, airport);
-    });
-
-    return Array.from(merged.values()).sort((a, b) => {
-      const scoreA = this.getMatchScore(a, keyword);
-      const scoreB = this.getMatchScore(b, keyword);
-
-      if (scoreA !== scoreB) return scoreA - scoreB;
-      return a.code.localeCompare(b.code);
-    });
   }
 
   private filterAuthoritativeAirports(keyword: string): Airport[] {
@@ -124,26 +85,6 @@ export class AirportApiService {
       if (scoreA !== scoreB) return scoreA - scoreB;
       return a.code.localeCompare(b.code);
     });
-  }
-
-  private normalizeAirport(airport: Airport): Airport {
-    const code = String(airport?.code || '').trim().toUpperCase();
-    const icao = String(airport?.icao || '').trim().toUpperCase();
-    const name = String(airport?.name || '').trim();
-    const city = String(airport?.city || airport?.province || '').trim();
-    const province = String(airport?.province || city).trim();
-
-    return {
-      ...airport,
-      code,
-      icao: icao || undefined,
-      name,
-      city,
-      province,
-      country: airport?.country || 'Việt Nam',
-      displayName: airport?.displayName || `${code} - ${name}`,
-      isActive: airport?.isActive ?? true,
-    };
   }
 
   private normalizeText(value: string): string {
