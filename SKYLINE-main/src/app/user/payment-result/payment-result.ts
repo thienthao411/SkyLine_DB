@@ -4,16 +4,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { HeaderComponent } from '../shared/header/header';
 import { FooterComponent } from '../shared/footer/footer';
 import { TicketApiService, BookingRecord } from '../services/ticket-api.service';
-import { AccountProvisionResult, AuthService } from '../services/auth.service';
+import { AuthService } from '../services/auth.service';
 import { RealtimeService } from '../../services/realtime.service';
 import { UserNotificationApiService, UserNotificationItem } from '../services/user-notification-api.service';
-
-interface AccountState {
-  mode: 'idle' | 'checking' | 'existing' | 'created' | 'unavailable';
-  title: string;
-  message: string;
-  tempPassword: string | null;
-}
 
 @Component({
   selector: 'app-payment-result',
@@ -27,17 +20,12 @@ export class PaymentResult implements OnInit, OnDestroy {
   errorMessage = '';
   ticketCode = '';
   booking: BookingRecord | null = null;
-  accountState: AccountState = this.createIdleAccountState();
-  isPreparingAccount = false;
-  passwordCopied = false;
   showToast = false;
   toastMessage = '';
   private refreshTimer: ReturnType<typeof setInterval> | null = null;
-  private passwordCopiedTimer: ReturnType<typeof setTimeout> | null = null;
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
   private removeBookingRealtimeListener: (() => void) | null = null;
   private removeUserNotificationListener: (() => void) | null = null;
-  private accountFlowPrepared = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -64,7 +52,6 @@ export class PaymentResult implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.clearRefreshTimer();
-    this.clearPasswordCopiedTimer();
     this.clearToastTimer();
     if (this.removeBookingRealtimeListener) this.removeBookingRealtimeListener();
     if (this.removeUserNotificationListener) this.removeUserNotificationListener();
@@ -81,12 +68,6 @@ export class PaymentResult implements OnInit, OnDestroy {
           this.loadUnreadUserNotifications(userEmail);
         }
         this.setupAutoRefresh();
-        if (booking.status === 'paid' || booking.status === 'issued') {
-          this.prepareAccountExperience();
-        } else {
-          this.accountFlowPrepared = false;
-          this.accountState = this.createIdleAccountState();
-        }
         this.isLoading = false;
       },
       error: () => {
@@ -112,10 +93,7 @@ export class PaymentResult implements OnInit, OnDestroy {
       return 'Hệ thống đang đồng bộ trạng thái thanh toán, bạn có thể bấm làm mới sau ít phút.';
     }
     if (this.isSuccessStatus) {
-      if (!this.isPassengerSignedIn) {
-        return 'Vui lòng đăng nhập đúng tài khoản hành khách trước khi tra cứu vé.';
-      }
-      return 'Thanh toán đã hoàn tất. Bạn có thể tra cứu vé ngay.';
+      return 'Thanh toán thành công. Vé điện tử đã được gửi vào email của hành khách.';
     }
     return 'Đơn chưa thể tiếp tục, vui lòng kiểm tra lại thanh toán hoặc đặt chuyến mới.';
   }
@@ -168,16 +146,19 @@ export class PaymentResult implements OnInit, OnDestroy {
     return typeof payment?.paidAt === 'string' ? payment.paidAt : null;
   }
 
-  get shouldShowAccountSection(): boolean {
-    return this.isSuccessStatus;
-  }
-
   get hasTransactionDetails(): boolean {
     return !!(this.payerNameValue || this.transactionRefValue || this.submittedAtValue || this.paidAtValue);
   }
 
   get canLookupTicketNow(): boolean {
     return this.isSuccessStatus && this.isPassengerSignedIn;
+  }
+
+  get lookupButtonLabel(): string {
+    if (this.canLookupTicketNow) {
+      return 'Tra cứu vé ngay';
+    }
+    return 'Đăng nhập để tra cứu vé';
   }
 
   get shouldRequireSignInForLookup(): boolean {
@@ -214,13 +195,6 @@ export class PaymentResult implements OnInit, OnDestroy {
     if (this.refreshTimer) {
       clearInterval(this.refreshTimer);
       this.refreshTimer = null;
-    }
-  }
-
-  private clearPasswordCopiedTimer(): void {
-    if (this.passwordCopiedTimer) {
-      clearTimeout(this.passwordCopiedTimer);
-      this.passwordCopiedTimer = null;
     }
   }
 
@@ -287,75 +261,11 @@ export class PaymentResult implements OnInit, OnDestroy {
     });
   }
 
-  private createIdleAccountState(): AccountState {
-    return {
-      mode: 'idle',
-      title: 'Đang chờ xử lý tài khoản',
-      message: 'Sẽ kiểm tra tài khoản ngay khi thanh toán thành công.',
-      tempPassword: null,
-    };
-  }
-
-  private createUnavailableAccountState(message: string): AccountState {
-    return {
-      mode: 'unavailable',
-      title: 'Chưa xử lý được tài khoản',
-      message,
-      tempPassword: null,
-    };
-  }
-
-  private buildAccountState(result: AccountProvisionResult): AccountState {
-    if (result.status === 'existing') {
-      return {
-        mode: 'existing',
-        title: 'Khách đã có tài khoản',
-        message: `Đăng nhập bằng ${result.user.email} để tra cứu vé của đặt chỗ này.`,
-        tempPassword: null,
-      };
-    }
-
-    return {
-      mode: 'created',
-      title: 'Đã tạo tài khoản mới',
-      message: `Tài khoản ${result.user.email} đã được tạo. Đăng nhập rồi tiếp tục tra cứu vé.`,
-      tempPassword: result.tempPassword || null,
-    };
-  }
-
-  private prepareAccountExperience(): void {
-    if (this.accountFlowPrepared || this.isPreparingAccount) {
-      return;
-    }
-
-    if (!this.passengerEmail) {
-      this.accountFlowPrepared = true;
-      this.accountState = this.createUnavailableAccountState('Đơn đặt chỗ không có email hành khách nên không thể gửi thông tin tài khoản.');
-      return;
-    }
-
-    this.isPreparingAccount = true;
-    this.accountState = {
-      mode: 'checking',
-      title: 'Đang kiểm tra tài khoản',
-      message: 'Hệ thống đang kiểm tra email để xác định tài khoản sẵn có hoặc tạo mới.',
-      tempPassword: null,
-    };
-
-    this.authService.ensurePassengerAccount(this.passengerName || 'Khách hàng SKYLINE', this.passengerEmail)
-      .then((result) => {
-        this.accountState = this.buildAccountState(result);
-        this.accountFlowPrepared = true;
-        this.isPreparingAccount = false;
-      })
-      .catch(() => {
-        this.accountFlowPrepared = true;
-        this.accountState = this.createUnavailableAccountState('Không thể đối chiếu tài khoản hành khách từ dữ liệu hiện tại.');
-        this.isPreparingAccount = false;
-      });
-  }
-
   goToCheckTicket(): void {
+    if (!this.isSuccessStatus) {
+      return;
+    }
+
     if (!this.isPassengerSignedIn) {
       this.goToSignIn();
       return;
@@ -373,25 +283,13 @@ export class PaymentResult implements OnInit, OnDestroy {
   }
 
   goToSignIn(): void {
-    this.router.navigate(['/customer-sign-in']);
-  }
-
-  async copyTemporaryPassword(): Promise<void> {
-    const password = this.accountState.tempPassword;
-    if (!password) {
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(password);
-      this.passwordCopied = true;
-      this.clearPasswordCopiedTimer();
-      this.passwordCopiedTimer = setTimeout(() => {
-        this.passwordCopied = false;
-      }, 1800);
-    } catch {
-      this.passwordCopied = false;
-    }
+    this.router.navigate(['/customer-sign-in'], {
+      queryParams: {
+        email: this.passengerEmail || undefined,
+        redirectTo: '/checkticket2',
+        code: this.ticketCode || undefined,
+      }
+    });
   }
 }
 

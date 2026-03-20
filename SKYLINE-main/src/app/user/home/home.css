@@ -174,7 +174,7 @@ body {
     font-size: 14px;
     background: white;
     outline: none;
-    cursor: pointer;
+    cursor: text;
     color: #333;
     position: relative;
     z-index: 10;
@@ -185,20 +185,40 @@ body {
     color: #999;
 }
 
-/* Style for select dropdown */
-.search-input option {
-    background: white;
-    color: #333;
-    padding: 10px;
-    font-size: 14px;
+.airport-suggestions {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 40;
+    background: #fff;
+    border: 1px solid #e6e6e6;
+    border-radius: 10px;
+    list-style: none;
+    margin: 0;
+    padding: 6px;
+    max-height: 260px;
+    overflow-y: auto;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
 }
 
-/* Ensure select dropdown works properly */
-select.search-input {
+.airport-suggestions li {
+    padding: 8px 10px;
+    border-radius: 8px;
     cursor: pointer;
-    min-height: 24px;
-    background-color: white;
-    pointer-events: auto;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.airport-suggestions li:hover {
+    background: #f3f5ff;
+}
+
+.airport-suggestions li span {
+    color: #777;
+    font-size: 12px;
 }
 
 /* Style for date input */
@@ -712,7 +732,7 @@ select.search-input {
         padding: 18px 30px;
     }
 
-    /* Fix select dropdown on mobile */
+    /* Improve text inputs on mobile */
     .search-input {
         font-size: 16px !important;
         min-height: 44px !important;
@@ -722,20 +742,8 @@ select.search-input {
         padding: 0 !important;
     }
 
-    select.search-input {
-        background: white !important;
-        -webkit-appearance: menulist !important;
-        -moz-appearance: menulist !important;
-        appearance: menulist !important;
-        height: 44px !important;
-    }
-
-    .search-input option {
-        font-size: 16px;
-        padding: 12px;
-        background: white;
-        color: #333;
-        min-height: 44px;
+    .airport-suggestions {
+        max-height: 220px;
     }
     
     .deals-grid {

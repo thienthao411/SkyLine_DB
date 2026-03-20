@@ -914,18 +914,20 @@
 .promo-image-wrap {
     text-align: center;
     margin-bottom: 25px; 
-    padding: 10px;
+    padding: 12px;
+    background: #f8fafc;
 }
 .promo-image-detail {
     width: 100%;
     max-width: 620px;
-    aspect-ratio: 16 / 9;
+    max-height: min(58vh, 460px);
     height: auto;
-    object-fit: cover; 
+    object-fit: contain;
     object-position: center;
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     border: 1px solid #eee;
+    background: #ffffff;
 }
 
 .view-details-grid {

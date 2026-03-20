@@ -15,34 +15,54 @@
                         <label>
                             <img src="assets/icons/department.png" alt="From" width="16" height="16">
                         </label>
-                        <select 
-                            class="search-input" 
-                            [(ngModel)]="departureCity" 
+                        <input
+                            type="text"
+                            class="search-input"
+                            [(ngModel)]="departureQuery"
                             name="departureCity"
-                            (change)="onDepartureChange()"
+                            (input)="onDepartureInput(departureQuery)"
+                            (focus)="onDepartureFocus()"
+                            (blur)="onDepartureBlur()"
+                            placeholder="Nhập mã hoặc tên sân bay"
+                            autocomplete="off"
                             required>
-                            <option value="" disabled selected>Chọn điểm đi...</option>
-                            @for (city of getAvailableDepartureCities(); track city.code) {
-                                <option [value]="city.code">{{ city.name }}</option>
-                            }
-                        </select>
+                        @if (showDepartureSuggestions && departureSuggestions.length > 0) {
+                            <ul class="airport-suggestions">
+                                @for (airport of departureSuggestions; track airport.code) {
+                                    <li (mousedown)="selectDepartureAirport(airport); $event.preventDefault()">
+                                        <strong>{{ airport.code }}</strong> - {{ airport.name }}
+                                        <span>{{ airport.city }}</span>
+                                    </li>
+                                }
+                            </ul>
+                        }
                     </div>
                     
                     <div class="form-group">
                         <label>
                             <img src="assets/icons/union.png" alt="To" width="16" height="16">
                         </label>
-                        <select 
-                            class="search-input" 
-                            [(ngModel)]="arrivalCity" 
+                        <input
+                            type="text"
+                            class="search-input"
+                            [(ngModel)]="arrivalQuery"
                             name="arrivalCity"
-                            (change)="onArrivalChange()"
+                            (input)="onArrivalInput(arrivalQuery)"
+                            (focus)="onArrivalFocus()"
+                            (blur)="onArrivalBlur()"
+                            placeholder="Nhập mã hoặc tên sân bay"
+                            autocomplete="off"
                             required>
-                            <option value="" disabled selected>Chọn điểm đến...</option>
-                            @for (city of getAvailableArrivalCities(); track city.code) {
-                                <option [value]="city.code">{{ city.name }}</option>
-                            }
-                        </select>
+                        @if (showArrivalSuggestions && arrivalSuggestions.length > 0) {
+                            <ul class="airport-suggestions">
+                                @for (airport of arrivalSuggestions; track airport.code) {
+                                    <li (mousedown)="selectArrivalAirport(airport); $event.preventDefault()">
+                                        <strong>{{ airport.code }}</strong> - {{ airport.name }}
+                                        <span>{{ airport.city }}</span>
+                                    </li>
+                                }
+                            </ul>
+                        }
                     </div>
                     
                     <div class="form-group">

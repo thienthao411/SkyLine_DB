@@ -87,6 +87,21 @@ export const routes: Routes = [
     loadComponent: () => import('./user/promotion/promotion').then(m => m.Promotion)
   },
 
+  {
+    path: 'blogs/:slug',
+    loadComponent: () => import('./user/blog-detail/blog-detail').then(m => m.BlogDetailComponent)
+  },
+
+  {
+    path: 'blogs',
+    loadComponent: () => import('./user/blogs/blogs').then(m => m.BlogsComponent)
+  },
+
+  {
+    path: 'admin/blog-management',
+    loadComponent: () => import('./admin/blog-management/blog-management').then(m => m.BlogManagementComponent)
+  },
+
   // Các trang trong layout chính
   {
     path: '',

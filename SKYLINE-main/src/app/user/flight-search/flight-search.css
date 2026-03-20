@@ -154,6 +154,7 @@
 }
 
 .fs-tile .form-select,
+.fs-tile .form-control,
 .fs-tile input[type='date'] {
   border: 0;
   background: transparent;
@@ -163,9 +164,18 @@
 }
 
 .fs-tile .form-select:focus,
+.fs-tile .form-control:focus,
 .fs-tile input[type='date']:focus {
   outline: none;
   box-shadow: none;
+}
+
+.fs-tile .form-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: none;
+  cursor: pointer;
 }
 
 .plane-down {
@@ -263,6 +273,76 @@ aside {
   padding: 10px 14px;
   font-weight: bold;
   text-align: center;
+}
+
+.suggestion-list {
+  position: absolute;
+  z-index: 30;
+  width: calc(100% - 34px);
+  margin: 0;
+  margin-top: 6px;
+  list-style: none;
+  padding: 0;
+  border: 1px solid #dce4ff;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.2);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.suggestion-list li {
+  padding: 8px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f2ff;
+}
+
+.suggestion-list li:last-child {
+  border-bottom: none;
+}
+
+.suggestion-list li:hover {
+  background: #f1f5ff;
+}
+
+.fs-dropdown-btn {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border: 0;
+  border-radius: 50%;
+  background: #eef3ff;
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  padding: 0;
+  margin-left: auto;
+  line-height: 1;
+  transition: transform 0.18s ease, background-color 0.18s ease;
+}
+
+.fs-dropdown-btn:hover {
+  background: #dfe8ff;
+  transform: translateY(-1px);
+}
+
+.fs-dropdown-btn-static {
+  cursor: default;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.fs-readonly-input {
+  font-weight: bold;
+  color: var(--ink);
+  cursor: default;
+}
+
+.fs-readonly-input:focus {
+  box-shadow: none;
+  outline: none;
 }
 
 .filter-reset {
@@ -390,22 +470,22 @@ aside {
 .rc2-logo img {
   max-width: 100%;
   height: auto;
+}
 
-  .rc2-logo img:not([src]) {
-    background-color: #f0f0f0;
-    padding: 10px;
-    font-size: 1.2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-  }
+.rc2-logo img:not([src]) {
+  background-color: #f0f0f0;
+  padding: 10px;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
 
-  .rc2-logo img:not([src])::after {
-    content: attr(data-airline-code);
-    color: #4a4a4a;
-    font-weight: bold;
-  }
+.rc2-logo img:not([src])::after {
+  content: attr(data-airline-code);
+  color: #4a4a4a;
+  font-weight: bold;
 }
 
 .logo-text {
@@ -418,12 +498,6 @@ aside {
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.d-flex {
-  display: flex;
-  align-items: center;
-  padding: 10px;
 }
 
 .rc2-time-row {

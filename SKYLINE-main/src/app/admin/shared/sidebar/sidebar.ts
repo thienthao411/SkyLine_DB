@@ -48,6 +48,12 @@ export class AdminSidebarComponent {
       icon: '/assets/icons/customer.png', 
       label: 'Khách hàng',
       active: false 
+    },
+    {
+      route: '/admin/blog-management',
+      icon: '/assets/icons/promotion.png',
+      label: 'Quản lý bài viết',
+      active: false
     }
   ];
 

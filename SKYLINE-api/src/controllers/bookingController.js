@@ -1,9 +1,15 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 const Ticket = require("../models/Ticket");
 const Flight = require("../models/Flight");
+const User = require("../models/User");
 const Notification = require("../models/Notification");
 const NotificationUser = require("../models/NotificationUser");
 const { getIO } = require("../socket");
+const {
+  sendBookingIssuedEmail,
+  sendAccountCredentialsEmail,
+} = require("../services/bookingEmailService");
 
 const INACTIVE_STATUSES = new Set(["cancelled", "canceled", "huy", "hủy", "failed", "expired"]);
 const ALLOWED_STATUSES = new Set([
@@ -249,6 +255,109 @@ function emitRealtime(event, payload, options = {}) {
   io.emit(event, payload);
 }
 
+function normalizeEmail(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase();
+}
+
+function escapeRegex(value) {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function generateTemporaryPassword() {
+  return `Sky${Math.random().toString(36).slice(2, 8)}!`;
+}
+
+async function ensurePassengerAccountForTicket(ticket) {
+  const email = normalizeEmail(ticket?.email || ticket?.passengerInfo?.email);
+  if (!email) {
+    return { status: "missing-email", email: "" };
+  }
+
+  const existingUser = await User.findOne({ email: new RegExp(`^${escapeRegex(email)}$`, "i") });
+  if (existingUser) {
+    return { status: "existing", email: normalizeEmail(existingUser.email) };
+  }
+
+  const tempPassword = generateTemporaryPassword();
+  const hashedPassword = await bcrypt.hash(tempPassword, 10);
+  const fullName = String(ticket?.passengerInfo?.fullName || "").trim() || "Khach hang SKYLINE";
+
+  const createdUser = await User.create({
+    fullName,
+    email,
+    password: hashedPassword,
+    avatar: "assets/img/AVT1.jpg",
+    currentRank: "Đồng",
+    points: 0,
+    nextRank: "Bạc",
+    nextThreshold: 500,
+    country: "Việt Nam",
+    status: "active",
+    phone: String(ticket?.passengerInfo?.phoneNumber || ticket?.passengerInfo?.phone || "").trim(),
+    birthday: null,
+    gender: "",
+    passport: String(ticket?.passengerInfo?.idNumber || "").trim(),
+    passportExpiry: null,
+    address: String(ticket?.passengerInfo?.address || "").trim(),
+  });
+
+  return {
+    status: "created",
+    email: normalizeEmail(createdUser.email),
+    tempPassword,
+  };
+}
+
+async function sendTicketEmailForSuccessfulPayment(ticket) {
+  const currentPayment = ticket.payment && typeof ticket.payment === "object" ? ticket.payment : {};
+  if (currentPayment.emailSent === true && currentPayment.accountEmailSent !== false) {
+    return { sent: true, skipped: true, reason: "already-sent" };
+  }
+
+  const accountResult = await ensurePassengerAccountForTicket(ticket);
+  let accountMailResult = { sent: false, reason: "not-required" };
+  if (accountResult.status === "created") {
+    accountMailResult = await sendAccountCredentialsEmail({
+      recipient: accountResult.email,
+      fullName: String(ticket?.passengerInfo?.fullName || "").trim(),
+      tempPassword: accountResult.tempPassword,
+    });
+  }
+
+  const ticketMailResult = await sendBookingIssuedEmail({ ticket });
+
+  const nextPayment = {
+    ...currentPayment,
+    emailSent: Boolean(ticketMailResult.sent),
+    emailSentAt: ticketMailResult.sent ? new Date().toISOString() : currentPayment.emailSentAt,
+    emailMessageId: ticketMailResult.messageId || currentPayment.emailMessageId || "",
+    emailRecipient: ticketMailResult.recipient || normalizeEmail(ticket?.email),
+    emailError: ticketMailResult.sent ? "" : String(ticketMailResult.reason || "send-failed"),
+    accountEmailSent: accountResult.status === "created" ? Boolean(accountMailResult.sent) : true,
+    accountEmailSentAt: accountMailResult.sent ? new Date().toISOString() : currentPayment.accountEmailSentAt,
+    accountEmailMessageId: accountMailResult.messageId || currentPayment.accountEmailMessageId || "",
+    accountEmailError:
+      accountResult.status === "created" && !accountMailResult.sent
+        ? String(accountMailResult.reason || "send-account-email-failed")
+        : "",
+    accountStatus: accountResult.status,
+    accountEmail: accountResult.email,
+    accountCreatedByBookingFlow: accountResult.status === "created",
+  };
+
+  ticket.payment = nextPayment;
+  await ticket.save();
+
+  return {
+    sent: Boolean(ticketMailResult.sent),
+    ticketMailResult,
+    accountMailResult,
+    accountResult,
+  };
+}
+
 exports.createBooking = async (req, res) => {
   try {
     const payload = req.body || {};
@@ -444,6 +553,21 @@ exports.updateBookingStatus = async (req, res) => {
       { room: `booking:${ticket.ticketCode}` }
     );
 
+    if (nextStatus === "paid" || nextStatus === "issued") {
+      try {
+        await sendTicketEmailForSuccessfulPayment(ticket);
+      } catch (emailError) {
+        const safePayment = ticket.payment && typeof ticket.payment === "object" ? ticket.payment : {};
+        ticket.payment = {
+          ...safePayment,
+          emailSent: false,
+          emailError: emailError.message,
+          emailSentAt: safePayment.emailSentAt,
+        };
+        await ticket.save();
+      }
+    }
+
     return res.json({ success: true, booking: toBookingResponse(ticket) });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
@@ -506,6 +630,21 @@ exports.updatePaymentStatusByAdmin = async (req, res) => {
 
     if (userNotification && userEmail) {
       emitRealtime("user_notification_created", userNotification.toObject(), { room: `user:${userEmail}` });
+    }
+
+    if (status === "paid") {
+      try {
+        await sendTicketEmailForSuccessfulPayment(ticket);
+      } catch (emailError) {
+        const safePayment = ticket.payment && typeof ticket.payment === "object" ? ticket.payment : {};
+        ticket.payment = {
+          ...safePayment,
+          emailSent: false,
+          emailError: emailError.message,
+          emailSentAt: safePayment.emailSentAt,
+        };
+        await ticket.save();
+      }
     }
 
     return res.json({ success: true, booking: toBookingResponse(ticket) });

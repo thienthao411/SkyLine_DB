@@ -144,6 +144,45 @@
                 [class.read-only-field]="!isAddingMode"
               />
             </div>
+            <div *ngIf="!isAddingMode">
+              <label>Mật khẩu hiện tại</label>
+              <div class="password-field-wrap">
+                <input
+                  [value]="currentPasswordDisplay"
+                  [type]="showCurrentPassword ? 'text' : 'password'"
+                  readonly
+                  class="read-only-field"
+                />
+                <button
+                  type="button"
+                  class="password-toggle-btn"
+                  (click)="toggleCurrentPasswordVisibility()"
+                  [attr.aria-label]="showCurrentPassword ? 'Ẩn mật khẩu hiện tại' : 'Hiện mật khẩu hiện tại'"
+                  [title]="showCurrentPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'"
+                >
+                  <svg *ngIf="!showCurrentPassword" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  <svg *ngIf="showCurrentPassword" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C5 20 1 12 1 12a21.82 21.82 0 0 1 5.06-6.94"></path>
+                    <path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.77 21.77 0 0 1-3.22 4.83"></path>
+                    <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div>
+              <label>{{ isAddingMode ? 'Mật khẩu' : 'Mật khẩu mới' }}</label>
+              <input
+                [(ngModel)]="formUser.password"
+                type="password"
+                [placeholder]="isAddingMode ? 'Nhập mật khẩu đăng nhập' : 'Nhập mật khẩu mới (nếu cần đổi)'"
+                [required]="isAddingMode"
+              />
+              <div class="field-hint" *ngIf="!isAddingMode">Để trống nếu không đổi mật khẩu.</div>
+            </div>
             <div>
               <label>Điện thoại</label>
               <input [(ngModel)]="formUser.phone" type="tel" placeholder="Ví dụ: 0912345678" />

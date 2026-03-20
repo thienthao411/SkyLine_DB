@@ -54,51 +54,33 @@
           </div>
         </section>
 
-        <section class="info-panel" *ngIf="shouldShowAccountSection">
-          <div class="panel-heading"><h3>Bước tiếp theo</h3></div>
-          <div class="step-box" [class.checking]="accountState.mode === 'checking'">
-            <strong class="step-title">{{ accountState.title }}</strong>
-            <p>{{ accountState.message }}</p>
+        <div class="right-stack">
+          <section class="info-panel transaction-panel" *ngIf="hasTransactionDetails">
+            <div class="panel-heading"><h3>Chi tiết giao dịch</h3></div>
+            <div class="ticket-list">
+              <div class="ticket-row" *ngIf="payerNameValue">
+                <span>Người chuyển khoản</span>
+                <strong>{{ payerNameValue }}</strong>
+              </div>
+              <div class="ticket-row" *ngIf="transactionRefValue">
+                <span>Mã tham chiếu</span>
+                <strong>{{ transactionRefValue }}</strong>
+              </div>
+              <div class="ticket-row" *ngIf="submittedAtValue">
+                <span>Thời gian gửi xác nhận</span>
+                <strong>{{ submittedAtValue | date:'HH:mm dd/MM/yyyy' }}</strong>
+              </div>
+              <div class="ticket-row" *ngIf="paidAtValue">
+                <span>Thời gian ghi nhận</span>
+                <strong>{{ paidAtValue | date:'HH:mm dd/MM/yyyy' }}</strong>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
 
-            <div class="credential-box" *ngIf="accountState.tempPassword">
-              <span>Mật khẩu tạm</span>
-              <strong class="password-value">{{ accountState.tempPassword }}</strong>
-              <button type="button" class="copy-btn" (click)="copyTemporaryPassword()">
-                {{ passwordCopied ? 'Đã sao chép' : 'Sao chép' }}
-              </button>
-            </div>
-
-            <div class="inline-actions">
-              <button class="btn-primary" *ngIf="shouldRequireSignInForLookup" (click)="goToSignIn()">Đăng nhập trước khi tra cứu vé</button>
-              <button class="btn-primary" *ngIf="canLookupTicketNow" (click)="goToCheckTicket()">Đi đến tra cứu vé</button>
-            </div>
-            <p class="signin-hint" *ngIf="shouldRequireSignInForLookup && passengerEmail">
-              Chỉ tài khoản <strong>{{ passengerEmail }}</strong> mới có thể tra cứu vé của đặt chỗ này.
-            </p>
-          </div>
-        </section>
-
-        <section class="info-panel" *ngIf="hasTransactionDetails">
-          <div class="panel-heading"><h3>Chi tiết giao dịch</h3></div>
-          <div class="ticket-list">
-            <div class="ticket-row" *ngIf="payerNameValue">
-              <span>Người chuyển khoản</span>
-              <strong>{{ payerNameValue }}</strong>
-            </div>
-            <div class="ticket-row" *ngIf="transactionRefValue">
-              <span>Mã tham chiếu</span>
-              <strong>{{ transactionRefValue }}</strong>
-            </div>
-            <div class="ticket-row" *ngIf="submittedAtValue">
-              <span>Thời gian gửi xác nhận</span>
-              <strong>{{ submittedAtValue | date:'HH:mm dd/MM/yyyy' }}</strong>
-            </div>
-            <div class="ticket-row" *ngIf="paidAtValue">
-              <span>Thời gian ghi nhận</span>
-              <strong>{{ paidAtValue | date:'HH:mm dd/MM/yyyy' }}</strong>
-            </div>
-          </div>
-        </section>
+      <div class="actions" *ngIf="isSuccessStatus">
+        <button class="btn-primary" (click)="goToCheckTicket()">{{ lookupButtonLabel }}</button>
       </div>
 
       <div class="actions" *ngIf="isPendingLike">

@@ -511,6 +511,10 @@ exports.updateUser = async (req, res) => {
       delete payload.password;
     }
 
+    if (payload.password !== undefined) {
+      payload.password = await bcrypt.hash(String(payload.password), 10);
+    }
+
     const updated = await User.findByIdAndUpdate(req.params.id, payload, { new: true });
     if (!updated) return res.status(404).json({ message: 'User not found' });
     res.json(updated);
