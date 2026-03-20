@@ -15,9 +15,11 @@ const blogRoutes = require("./routes/blogRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const ticketRoutes = require("./routes/ticketRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+
 const notificationRoutes = require("./routes/notificationRoutes");
 const notificationUserRoutes = require("./routes/notificationUserRoutes");
 const { initSocket } = require("./socket");
+const airportRoutes = require("./routes/airportRoutes");
 
 const app = express();
 const server = http.createServer(app);
@@ -32,6 +34,7 @@ app.use(express.json({ limit: "50mb" }));
 app.use("/api/users", userRoutes);
 app.use("/api/airlines", airlineRoutes);
 app.use("/api/flights", flightRoutes);
+app.use("/api/airports", airportRoutes);
 app.use("/api/promotions", promotionRoutes);
 app.use("/api/baggageoptions", baggageOptionRoutes);
 app.use("/api/baggage-options", baggageOptionRoutes);

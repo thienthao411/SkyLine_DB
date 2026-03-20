@@ -3,12 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { forkJoin, map, Observable } from 'rxjs';
+import { forkJoin, map, Observable, Subject, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 import { HeaderComponent } from '../shared/header/header';
 import { FooterComponent } from '../shared/footer/footer';
+import { AirportApiService, Airport } from '../services/airport-api.service';
 
 export interface Flight {
   id: string;
+  airlineId?: string;
   airline: string;
   flightNo: string;
   from: string;
@@ -25,7 +28,10 @@ export interface Flight {
 }
 
 interface ApiAirlineLogo {
+  _id?: string;
+  id?: string;
   airlineCode?: string;
+  airlineName?: string;
   img?: string;
 }
 
@@ -87,9 +93,42 @@ function normalizeFlights(data: RawJson): Flight[] {
 export class FlightSearchComponent {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private airportApi = inject(AirportApiService);
   private readonly apiBaseUrl = 'http://localhost:5000/api';
-  private airlineLogoByCode = signal<Record<string, string>>({});
+  private airlineLogoById = signal<Record<string, string>>({});
+  private airlineNameById = signal<Record<string, string>>({});
+  private airlineIdByCode = signal<Record<string, string>>({});
+  private airlineIdByName = signal<Record<string, string>>({});
   private legacyFlights = signal<Flight[]>([]);
+
+  private fromSearch$ = new Subject<string>();
+  private toSearch$ = new Subject<string>();
+
+  fromInput = signal('');
+  toInput = signal('');
+  fromAirportSuggestions = signal<Airport[]>([]);
+  toAirportSuggestions = signal<Airport[]>([]);
+  selectedFromAirport = signal<Airport | null>(null);
+  selectedToAirport = signal<Airport | null>(null);
+  allAirports = signal<Airport[]>([]);
+  airports = computed(() => {
+    const byCode = new Map<string, Airport>();
+
+    [
+      ...this.allAirports(),
+      this.selectedFromAirport(),
+      this.selectedToAirport(),
+      ...this.fromAirportSuggestions(),
+      ...this.toAirportSuggestions()
+    ].forEach((airport) => {
+      if (!airport?.code) return;
+      byCode.set(String(airport.code).toUpperCase(), airport);
+    });
+
+    return Array.from(byCode.values()).sort((a, b) =>
+      String(a.code || '').localeCompare(String(b.code || ''))
+    );
+  });
 
   constructor(private http: HttpClient) {
     const st = (history.state as any)?.search;
@@ -102,11 +141,44 @@ export class FlightSearchComponent {
     const qpDate = p.get('date') ?? '';
 
     if (qpTrip) this.tripType.set(qpTrip);
-    if (qpFrom) this.from.set(qpFrom);
-    if (qpTo) this.to.set(qpTo);
+    if (qpFrom) {
+      this.from.set(qpFrom);
+      this.fromInput.set(qpFrom);
+      this.selectedFromAirport.set(this.airportApi.getAirportByCode(qpFrom) ?? null);
+    }
+    if (qpTo) {
+      this.to.set(qpTo);
+      this.toInput.set(qpTo);
+      this.selectedToAirport.set(this.airportApi.getAirportByCode(qpTo) ?? null);
+    }
     if (qpDate) this.departDate.set(qpDate);
 
+    this.fromSearch$.pipe(
+      debounceTime(250),
+      distinctUntilChanged(),
+      switchMap((q) => {
+        const text = String(q || '').trim();
+        if (!text) return of([]);
+        return this.airportApi.searchAirports(text).pipe(catchError(() => of([])));
+      })
+    ).subscribe((items) => {
+      this.fromAirportSuggestions.set(items || []);
+    });
+
+    this.toSearch$.pipe(
+      debounceTime(250),
+      distinctUntilChanged(),
+      switchMap((q) => {
+        const text = String(q || '').trim();
+        if (!text) return of([]);
+        return this.airportApi.searchAirports(text).pipe(catchError(() => of([])));
+      })
+    ).subscribe((items) => {
+      this.toAirportSuggestions.set(items || []);
+    });
+
     this.loadAirlineLogos();
+    this.loadAllAirports();
     this.fetchData(true);
   }
 
@@ -127,6 +199,135 @@ export class FlightSearchComponent {
   setCabinOut(c: Flight['cabin']) { this.cabinOut.set(c); this.showCabinOut.set(false); }
   setCabinBack(c: Flight['cabin']) { this.cabinBack.set(c); this.showCabinBack.set(false); }
 
+  private airportDisplay(airport: Airport | null, code: string, fallback = ''): string {
+    if (airport?.code && airport?.name) {
+      return `${airport.code} - ${airport.name}`;
+    }
+
+    if (fallback && fallback.includes(' - ')) {
+      return fallback;
+    }
+
+    return String(code || fallback || '').trim().toUpperCase();
+  }
+
+  returnFromDisplay() {
+    const airport = this.airportApi.getAirportByCode(this.rtFrom() || this.to()) ?? this.selectedToAirport();
+    return this.airportDisplay(airport, this.rtFrom() || this.to(), this.toInput());
+  }
+
+  returnToDisplay() {
+    const airport = this.airportApi.getAirportByCode(this.rtTo() || this.from()) ?? this.selectedFromAirport();
+    return this.airportDisplay(airport, this.rtTo() || this.from(), this.fromInput());
+  }
+
+  private loadAllAirports() {
+    this.airportApi.getAllAirports().pipe(catchError(() => of([]))).subscribe((items) => {
+      const airports = items || [];
+      this.allAirports.set(airports);
+
+      if (this.from() && !this.selectedFromAirport()) {
+        this.selectedFromAirport.set(this.airportApi.getAirportByCode(this.from()) ?? null);
+      }
+
+      if (this.to() && !this.selectedToAirport()) {
+        this.selectedToAirport.set(this.airportApi.getAirportByCode(this.to()) ?? null);
+      }
+    });
+  }
+
+  onFromSearchInput(text: string) {
+    this.fromInput.set(text);
+    this.selectedFromAirport.set(null);
+    this.from.set('');
+    if (text.trim().length === 0) {
+      this.showAllFromAirports();
+      return;
+    }
+    this.fromSearch$.next(text.trim());
+  }
+
+  onToSearchInput(text: string) {
+    this.toInput.set(text);
+    this.selectedToAirport.set(null);
+    this.to.set('');
+    if (text.trim().length === 0) {
+      this.showAllToAirports();
+      return;
+    }
+    this.toSearch$.next(text.trim());
+  }
+
+  showAllFromAirports() {
+    this.airportApi.getAllAirports().pipe(catchError(() => of([]))).subscribe((items) => {
+      this.fromAirportSuggestions.set(items || []);
+    });
+  }
+
+  showAllToAirports() {
+    this.airportApi.getAllAirports().pipe(catchError(() => of([]))).subscribe((items) => {
+      this.toAirportSuggestions.set(items || []);
+    });
+  }
+
+  toggleFromAirportDropdown() {
+    if (this.fromAirportSuggestions().length > 0) {
+      this.fromAirportSuggestions.set([]);
+      return;
+    }
+
+    if (this.fromInput().trim()) {
+      this.fromSearch$.next(this.fromInput().trim());
+      return;
+    }
+
+    this.showAllFromAirports();
+  }
+
+  toggleToAirportDropdown() {
+    if (this.toAirportSuggestions().length > 0) {
+      this.toAirportSuggestions.set([]);
+      return;
+    }
+
+    if (this.toInput().trim()) {
+      this.toSearch$.next(this.toInput().trim());
+      return;
+    }
+
+    this.showAllToAirports();
+  }
+
+  selectFromAirport(airport: Airport) {
+    this.selectedFromAirport.set(airport);
+    this.from.set((airport.code || '').toUpperCase());
+    this.fromInput.set(`${airport.code} - ${airport.name}`);
+    this.fromAirportSuggestions.set([]);
+
+    if (this.to().toUpperCase() === airport.code.toUpperCase()) {
+      this.to.set('');
+      this.selectedToAirport.set(null);
+      this.toInput.set('');
+    }
+  }
+
+  selectToAirport(airport: Airport) {
+    this.selectedToAirport.set(airport);
+    this.to.set((airport.code || '').toUpperCase());
+    this.toInput.set(`${airport.code} - ${airport.name}`);
+    this.toAirportSuggestions.set([]);
+
+    if (this.from().toUpperCase() === airport.code.toUpperCase()) {
+      this.from.set('');
+      this.selectedFromAirport.set(null);
+      this.fromInput.set('');
+    }
+  }
+
+  isFromToValid() {
+    return this.from().trim() && this.to().trim() && this.from().trim().toUpperCase() !== this.to().trim().toUpperCase();
+  }
+
   showPax = signal(false);
   adults = signal(1); children = signal(0); infants = signal(0);
   paxTotal = computed(() => this.adults() + this.children() + this.infants());
@@ -144,15 +345,7 @@ export class FlightSearchComponent {
     if (v <= 0) return; m[k].set(v - 1);
   }
 
-  airports = [
-    { code: 'SGN', name: 'TP Hồ Chí Minh, Việt Nam' },
-    { code: 'HAN', name: 'Hà Nội, Việt Nam' },
-    { code: 'DAD', name: 'Đà Nẵng, Việt Nam' },
-    { code: 'CXR', name: 'Nha Trang, Việt Nam' },
-    { code: 'PQC', name: 'Phú Quốc, Việt Nam' },
-  ];
-
-  airlines = ['Vietnam Airlines', 'Vietjet', 'Bamboo Airways', 'Pacific Airlines', 'Vietravel Airlines'];
+  airlines = ['Vietnam Airlines', 'Vietjet', 'Bamboo Airways', 'VASCO Airlines', 'Vietravel Airlines'];
   airlineSel = signal<string[]>([]);
   priceSel = signal<string[]>([]);
   timeSel = signal<string[]>([]);
@@ -196,13 +389,52 @@ export class FlightSearchComponent {
     this.listLimitBack.set(3);
 
     if (t === 'round') {
-      if (this.from() && this.to()) { this.rtFrom.set(this.to()); this.rtTo.set(this.from()); }
+      if (this.from() && this.to()) {
+        this.rtFrom.set(this.to());
+        this.rtTo.set(this.from());
+      }
     } else {
       this.returnDate.set(''); this.rtFrom.set(''); this.rtTo.set('');
     }
   }
-  swap() { const f = this.from(); this.from.set(this.to()); this.to.set(f); }
+  swap() {
+    const fromCode = this.from();
+    const toCode = this.to();
+    const fromInput = this.fromInput();
+    const toInput = this.toInput();
+    const fromAirport = this.selectedFromAirport();
+    const toAirport = this.selectedToAirport();
+
+    this.from.set(toCode);
+    this.to.set(fromCode);
+    this.fromInput.set(toInput);
+    this.toInput.set(fromInput);
+    this.selectedFromAirport.set(toAirport);
+    this.selectedToAirport.set(fromAirport);
+    this.fromAirportSuggestions.set([]);
+    this.toAirportSuggestions.set([]);
+  }
   swapReturn() { const f = this.rtFrom(); this.rtFrom.set(this.rtTo()); this.rtTo.set(f); }
+
+  resetSearchForm() {
+    this.from.set('');
+    this.to.set('');
+    this.fromInput.set('');
+    this.toInput.set('');
+    this.selectedFromAirport.set(null);
+    this.selectedToAirport.set(null);
+    this.fromAirportSuggestions.set([]);
+    this.toAirportSuggestions.set([]);
+    this.departDate.set('');
+    this.returnDate.set('');
+    this.rtFrom.set('');
+    this.rtTo.set('');
+    this.cabinOut.set('');
+    this.cabinBack.set('');
+    this.hasSearched.set(false);
+    this.autoDateMsg.set(null);
+    this.clearFilters();
+  }
 
   sortOrder = signal<'price_desc' | 'price_asc'>('price_asc');
   setSort(order: 'price_desc' | 'price_asc') { this.sortOrder.set(order); }
@@ -214,6 +446,11 @@ export class FlightSearchComponent {
 
   search(updateUrl = true) {
     this.autoDateMsg.set(null);
+    if (!this.isFromToValid()) {
+      alert('Vui lòng chọn điểm đi và điểm đến khác nhau và hợp lệ.');
+      return;
+    }
+
     if (this.tripType() === 'round' && this.returnDate() < this.departDate()) {
       alert('Ngày khứ hồi phải ≥ Ngày khởi hành.'); return;
     }
@@ -300,47 +537,85 @@ export class FlightSearchComponent {
     date: string,
     requestedCabin: Flight['cabin'] | ''
   ): Observable<Flight[]> {
-    return this.http.get<any[]>(`${this.apiBaseUrl}/flights/search`, {
-      params: {
-        from: String(from || '').trim().toUpperCase(),
-        to: String(to || '').trim().toUpperCase(),
-        date: String(date || '').trim()
-      }
+    return forkJoin({
+      rows: this.http.get<any[]>(`${this.apiBaseUrl}/flights/search`, {
+        params: {
+          from: String(from || '').trim().toUpperCase(),
+          to: String(to || '').trim().toUpperCase(),
+          date: String(date || '').trim()
+        }
+      }),
+      airlines: this.http.get<ApiAirlineLogo[]>(`${this.apiBaseUrl}/airlines`).pipe(
+        catchError(() => of([] as ApiAirlineLogo[]))
+      )
     }).pipe(
-      map((rows) => (Array.isArray(rows) ? rows : []).map((row) => this.mapApiFlight(row, requestedCabin)))
+      map(({ rows, airlines }) => {
+        const { logoLookup, nameLookup } = this.buildAirlineLookups(airlines);
+
+        this.airlineLogoById.set(logoLookup);
+        this.airlineNameById.set(nameLookup);
+
+        return (Array.isArray(rows) ? rows : []).map((row) => this.mapApiFlight(row, requestedCabin));
+      })
     );
   }
 
   private loadAirlineLogos(): void {
     this.http.get<ApiAirlineLogo[]>(`${this.apiBaseUrl}/airlines`).pipe(
-      map((airlines) => {
-        const lookup: Record<string, string> = {};
-
-        (Array.isArray(airlines) ? airlines : []).forEach((airline) => {
-          const code = String(airline?.airlineCode || '').trim().toUpperCase();
-          const img = String(airline?.img || '').trim();
-
-          if (code && img) {
-            lookup[code] = img;
-          }
-        });
-
-        return lookup;
-      })
+      map((airlines) => this.buildAirlineLookups(airlines))
     ).subscribe({
-      next: (lookup) => {
-        this.airlineLogoByCode.set(lookup);
+      next: ({ logoLookup, nameLookup }) => {
+        this.airlineLogoById.set(logoLookup);
+        this.airlineNameById.set(nameLookup);
+        this.airlineIdByCode.set(this.buildAirlineCodeToIdLookup());
+        this.airlineIdByName.set(this.buildAirlineNameToIdLookup());
       },
       error: (err) => {
         console.warn('Khong tai duoc logo airline tu API:', err);
-        this.airlineLogoByCode.set({});
+        this.airlineLogoById.set({});
+        this.airlineNameById.set({});
+        this.airlineIdByCode.set({});
+        this.airlineIdByName.set({});
       }
     });
+  }
+
+  private buildAirlineLookups(airlines: ApiAirlineLogo[] | null | undefined) {
+    const logoLookup: Record<string, string> = {};
+    const nameLookup: Record<string, string> = {};
+    const idByCode: Record<string, string> = {};
+    const idByName: Record<string, string> = {};
+
+    (Array.isArray(airlines) ? airlines : []).forEach((airline) => {
+      const id = String(airline?._id || airline?.id || '').trim();
+      const code = String(airline?.airlineCode || '').trim().toUpperCase();
+      const name = String(airline?.airlineName || '').trim();
+      const img = String(airline?.img || '').trim();
+
+      if (id && name) {
+        nameLookup[id] = name;
+        idByName[this.normalizeAirlineKey(name)] = id;
+      }
+
+      if (id && img) {
+        logoLookup[id] = img;
+      }
+
+      if (id && code) {
+        idByCode[code] = id;
+      }
+    });
+
+    this.airlineIdByCode.set(idByCode);
+    this.airlineIdByName.set(idByName);
+
+    return { logoLookup, nameLookup };
   }
 
   private mapApiFlight(raw: any, requestedCabin: Flight['cabin'] | ''): Flight {
     const legacy = this.findLegacyFlight(raw, requestedCabin);
     const cabin = legacy?.cabin ?? this.pickCabin(raw, requestedCabin);
+    const airlineId = this.resolveAirlineId(raw, legacy);
     const airlineCode = String(raw?.airlineCode || legacy?.details?.airline_code || this.getInitials(raw?.airline || '')).toUpperCase();
     const from = String(raw?.from || '').trim().toUpperCase();
     const to = String(raw?.to || '').trim().toUpperCase();
@@ -351,6 +626,7 @@ export class FlightSearchComponent {
     const price = this.pickPrice(raw, cabin, legacy?.price);
     const seatsLeft = this.pickSeatsLeft(raw, cabin, legacy?.seatsLeft);
     const details = this.mapFlightDetails(raw, legacy, {
+      airlineId,
       airlineCode,
       from,
       to,
@@ -362,7 +638,8 @@ export class FlightSearchComponent {
 
     return {
       id: legacy?.id ?? String(raw?._id || this.buildLegacyCompatibleId(airlineCode, flightNo, from, to, date, cabin)),
-      airline: String(raw?.airline || legacy?.airline || 'Unknown'),
+      airlineId,
+      airline: this.resolveAirlineName(raw, legacy),
       flightNo,
       from,
       to,
@@ -382,6 +659,7 @@ export class FlightSearchComponent {
     raw: any,
     legacy: Flight | null,
     ctx: {
+      airlineId: string;
       airlineCode: string;
       from: string;
       to: string;
@@ -427,6 +705,7 @@ export class FlightSearchComponent {
 
     return {
       ...legacyDetails,
+      airline_id: ctx.airlineId,
       airline_code: ctx.airlineCode,
       itinerary: { segments },
       perks: Array.isArray(rawDetails?.perks) ? rawDetails.perks : (legacyDetails?.perks ?? []),
@@ -443,12 +722,16 @@ export class FlightSearchComponent {
     const from = String(raw?.from || '').trim().toUpperCase();
     const to = String(raw?.to || '').trim().toUpperCase();
     const date = String(raw?.date || '').trim();
+    const airlineId = this.resolveAirlineId(raw, null);
     const airlineCode = String(raw?.airlineCode || '').trim().toUpperCase();
 
     const matches = this.legacyFlights().filter((flight) => {
+      const legacyAirlineId = String(flight?.airlineId || flight?.details?.airline_id || '').trim();
       const legacyCode = String(flight?.details?.airline_code || '').trim().toUpperCase();
+      const sameAirlineId = !airlineId || !legacyAirlineId || legacyAirlineId === airlineId;
       const sameCode = !airlineCode || !legacyCode || legacyCode === airlineCode;
-      return sameCode
+      return sameAirlineId
+        && sameCode
         && flight.flightNo === flightNo
         && flight.from === from
         && flight.to === to
@@ -536,6 +819,95 @@ export class FlightSearchComponent {
     return `${code} Fare`;
   }
 
+  private resolveAirlineId(raw: any, legacy: Flight | null): string {
+    const explicitId = String(
+      raw?.airlineId
+      || raw?.airlineID
+      || raw?.airline_id
+      || raw?.airline?._id
+      || raw?.airline?.id
+      || raw?.details?.airline_id
+      || legacy?.airlineId
+      || legacy?.details?.airline_id
+      || ''
+    ).trim();
+
+    if (explicitId) {
+      return explicitId;
+    }
+
+    const explicitCode = String(
+      raw?.airlineCode
+      || raw?.details?.airline_code
+      || legacy?.details?.airline_code
+      || ''
+    ).trim().toUpperCase();
+
+    if (explicitCode && this.airlineIdByCode()[explicitCode]) {
+      return this.airlineIdByCode()[explicitCode];
+    }
+
+    const flightNoPrefix = String(raw?.flightNo || legacy?.flightNo || '').trim().toUpperCase().slice(0, 2);
+    if (flightNoPrefix && this.airlineIdByCode()[flightNoPrefix]) {
+      return this.airlineIdByCode()[flightNoPrefix];
+    }
+
+    const rawAirlineName = String(raw?.airline || legacy?.airline || '').trim();
+    const normalizedName = this.normalizeAirlineKey(rawAirlineName);
+    if (normalizedName && this.airlineIdByName()[normalizedName]) {
+      return this.airlineIdByName()[normalizedName];
+    }
+
+    return '';
+  }
+
+  private resolveAirlineName(raw: any, legacy: Flight | null): string {
+    const airlineId = this.resolveAirlineId(raw, legacy);
+    const fromLookup = airlineId ? this.airlineNameById()[airlineId] : '';
+
+    if (fromLookup) {
+      return fromLookup;
+    }
+
+    return String(raw?.airline || legacy?.airline || 'Unknown').trim() || 'Unknown';
+  }
+
+  private resolveAirlineIdFromFlight(flight: any): string {
+    const directId = String(flight?.airlineId || flight?.details?.airline_id || '').trim();
+    if (directId) {
+      return directId;
+    }
+
+    const explicitCode = String(flight?.airlineCode || flight?.details?.airline_code || '').trim().toUpperCase();
+    if (explicitCode && this.airlineIdByCode()[explicitCode]) {
+      return this.airlineIdByCode()[explicitCode];
+    }
+
+    const flightNoPrefix = String(flight?.flightNo || '').trim().toUpperCase().slice(0, 2);
+    if (flightNoPrefix && this.airlineIdByCode()[flightNoPrefix]) {
+      return this.airlineIdByCode()[flightNoPrefix];
+    }
+
+    const rawName = this.normalizeAirlineKey(String(flight?.airline || '').trim());
+    if (rawName && this.airlineIdByName()[rawName]) {
+      return this.airlineIdByName()[rawName];
+    }
+
+    return '';
+  }
+
+  private normalizeAirlineKey(value: string): string {
+    return String(value || '').trim().toLowerCase();
+  }
+
+  private buildAirlineCodeToIdLookup(): Record<string, string> {
+    return { ...this.airlineIdByCode() };
+  }
+
+  private buildAirlineNameToIdLookup(): Record<string, string> {
+    return { ...this.airlineIdByName() };
+  }
+
   private applyFiltersAndSort(arr: Flight[]) {
     const inPrice = (v: number) => {
       const s = new Set(this.priceSel()); if (!s.size) return true; const m = v / 1_000_000;
@@ -587,7 +959,17 @@ export class FlightSearchComponent {
   }
   cabinLabelOrPlaceholder(v: Flight['cabin'] | '') { return v ? this.cabinLabel(v as Flight['cabin']) : 'Chọn hạng (tuỳ chọn)'; }
   getInitials(name: string) { return (name || '').split(/\s+/).map(w => w[0]).join('').slice(0, 3).toUpperCase() || '??'; }
-  getCarrierCode(f: Flight) { return (f as any)?.details?.airline_code?.toUpperCase?.() ?? this.getInitials(f.airline); }
+  displayAirlineName(f: Flight) {
+    const airlineId = this.resolveAirlineIdFromFlight(f);
+    return airlineId ? (this.airlineNameById()[airlineId] || f.airline || 'Unknown') : (f.airline || 'Unknown');
+  }
+  getCarrierCode(f: Flight) {
+    const directCode = String((f as any)?.airlineCode || (f as any)?.details?.airline_code || '').trim().toUpperCase();
+    if (directCode) return directCode;
+    const fromFlightNo = String(f?.flightNo || '').trim().toUpperCase().slice(0, 2);
+    if (fromFlightNo) return fromFlightNo;
+    return this.getInitials(this.displayAirlineName(f));
+  }
 
   priceStr(v: number, cur = 'VND', style: 'symbol' | 'code' = 'code') {
     try {
@@ -675,7 +1057,7 @@ export class FlightSearchComponent {
     if ((f as any)?._logoError) return null;
     const byData = f?.details?.logo?.trim?.();
     if (byData) return byData;
-    const code = (f?.details?.airline_code || f?.airline_code || '').toUpperCase();
-    return this.airlineLogoByCode()[code] ?? null;
+    const airlineId = this.resolveAirlineIdFromFlight(f);
+    return airlineId ? (this.airlineLogoById()[airlineId] ?? null) : null;
   }
 }
