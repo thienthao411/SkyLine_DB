@@ -58,6 +58,10 @@ export const routes: Routes = [
     loadComponent: () => import('./admin/airline-management/airline-management').then(m => m.AirlineManagement)
   },
   {
+    path: 'admin/airport-management',
+    loadComponent: () => import('./admin/airport-management/airport-management').then(m => m.AirportManagement)
+  },
+  {
     path: 'admin/promotion-management',
     loadComponent: () => import('./admin/promotion-management/promotion-management').then(m => m.PromotionManagement)
   },

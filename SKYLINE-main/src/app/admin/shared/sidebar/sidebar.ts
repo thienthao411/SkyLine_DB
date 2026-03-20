@@ -37,6 +37,12 @@ export class AdminSidebarComponent {
       label: 'Quản lý hãng bay',
       active: false 
     },
+    {
+      route: '/admin/airport-management',
+      icon: '/assets/icons/department.png',
+      label: 'Quản lý sân bay',
+      active: false
+    },
     { 
       route: '/admin/promotion-management', 
       icon: '/assets/icons/promotion.png', 

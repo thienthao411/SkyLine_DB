@@ -73,7 +73,9 @@
                 <td>{{ airline.country }}</td>
                 <td>{{ airline.hotline }}</td>
                 <td>{{ airline.commissionRate }}</td>
-                <td>{{ formatStatus(airline.status) }}</td>
+                <td>
+                  <span [ngClass]="statusClass(airline.status)">{{ formatStatus(airline.status) }}</span>
+                </td>
                 <td class="actions">
                   <button title="Xem" class="action-btn view" (click)="viewAirline(airline)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -210,7 +212,7 @@
             <span>{{ airlineToView.commissionRate }}</span>
           </div>
           <div class="detail-item full-width"><label>Trạng thái</label>
-            <span>{{ formatStatus(airlineToView.status) }}</span>
+            <span [ngClass]="statusClass(airlineToView.status)">{{ formatStatus(airlineToView.status) }}</span>
           </div>
         </div>
         <div class="modal-buttons">

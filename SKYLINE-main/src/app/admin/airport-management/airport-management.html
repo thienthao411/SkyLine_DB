@@ -1,0 +1,185 @@
+<div class="admin-container">
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <main class="content">
+    <app-admin-header></app-admin-header>
+
+    <div class="header">
+      <h1>Quản lý sân bay</h1>
+      <p class="subtitle">Chào Tường Vy, mừng bạn đến với trang quản lý sân bay!</p>
+    </div>
+
+    <div class="main-content-panel">
+      <div class="tab-header-row">
+        <div class="tabs">
+          <button [class.active]="activeTab === 'list'" (click)="switchTab('list')">Quản lý sân bay</button>
+          <button [class.active]="activeTab === 'form'" (click)="switchTab('form')">Cập nhật thông tin</button>
+        </div>
+
+        <div class="list-toolbar" *ngIf="activeTab === 'list'">
+          <div class="search-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999">
+              <circle cx="11" cy="11" r="8" stroke-width="2"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65" stroke-width="2"></line>
+            </svg>
+            <input
+              type="text"
+              placeholder="Nhập mã, tên sân bay..."
+              [ngModel]="searchTerm"
+              (ngModelChange)="onSearchChange($event)"
+            />
+          </div>
+
+          <div class="filter-wrap">
+            <select [(ngModel)]="selectedStatus" (ngModelChange)="onStatusChange()">
+              <option value="all">Tất cả trạng thái</option>
+              <option value="active">Đang hoạt động</option>
+              <option value="inactive">Ngừng hoạt động</option>
+            </select>
+          </div>
+
+          <button class="btn btn-add-new" (click)="switchTab('form')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Thêm</span>
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="activeTab === 'list'" class="list-container">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Mã sân bay</th>
+                <th>ICAO</th>
+                <th>Tên sân bay</th>
+                <th>Tỉnh/TP</th>
+                <th>Quốc gia</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngIf="paginatedAirports.length === 0">
+                <td colspan="7" class="no-data">Không tìm thấy thông tin sân bay nào.</td>
+              </tr>
+              <tr *ngFor="let airport of paginatedAirports">
+                <td>{{ airport.code }}</td>
+                <td>{{ airport.icao }}</td>
+                <td>{{ airport.name }}</td>
+                <td>{{ airport.province }}</td>
+                <td>{{ airport.country }}</td>
+                <td><span [ngClass]="statusClass(airport.status)">{{ formatStatus(airport.status) }}</span></td>
+                <td class="actions">
+                  <button title="Xem" class="action-btn view" (click)="viewAirport(airport)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-width="1.5"></path>
+                      <circle cx="12" cy="12" r="3" stroke-width="1.5"></circle>
+                    </svg>
+                  </button>
+                  <button title="Sửa" class="action-btn edit" (click)="editAirport(airport)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke-width="1.5"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-width="1.5"></path>
+                    </svg>
+                  </button>
+                  <button title="Ngừng hoạt động" class="action-btn delete" (click)="promptDelete(airport)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <polyline points="3 6 5 6 21 6" stroke-width="1.5"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke-width="1.5"></path>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination-controls" *ngIf="totalPages > 1">
+          <button class="btn btn-page" (click)="prevPage()" [disabled]="currentPage === 1">&lt;&lt;</button>
+          <span class="page-info">Trang {{ currentPage }} / {{ totalPages }}</span>
+          <button class="btn btn-page" (click)="nextPage()" [disabled]="currentPage === totalPages">&gt;&gt;</button>
+        </div>
+      </div>
+
+      <div *ngIf="activeTab === 'form'" class="form-container">
+        <div class="flight-form">
+          <div class="form-column">
+            <div>
+              <label>Mã sân bay</label>
+              <input [(ngModel)]="formAirport.code" type="text" placeholder="Ví dụ: SGN" />
+            </div>
+            <div>
+              <label>ICAO</label>
+              <input [(ngModel)]="formAirport.icao" type="text" placeholder="Ví dụ: VVTS" />
+            </div>
+            <div>
+              <label>Tên sân bay</label>
+              <input [(ngModel)]="formAirport.name" type="text" placeholder="Ví dụ: Sân bay Quốc tế Tân Sơn Nhất" />
+            </div>
+            <div>
+              <label>Display name</label>
+              <input [(ngModel)]="formAirport.displayName" type="text" placeholder="Ví dụ: SGN - Sân bay Quốc tế Tân Sơn Nhất" />
+            </div>
+          </div>
+
+          <div class="form-column">
+            <div>
+              <label>Tỉnh/TP</label>
+              <input [(ngModel)]="formAirport.province" type="text" placeholder="Ví dụ: TP. Hồ Chí Minh" />
+            </div>
+            <div>
+              <label>Quốc gia</label>
+              <input [(ngModel)]="formAirport.country" type="text" placeholder="Ví dụ: Việt Nam" />
+            </div>
+            <div>
+              <label>Trạng thái</label>
+              <select [(ngModel)]="formAirport.status">
+                <option value="active">Đang hoạt động</option>
+                <option value="inactive">Ngừng hoạt động</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-buttons">
+          <button class="btn form-btn-cancel" (click)="cancelForm()">Hủy</button>
+          <button *ngIf="!isEditMode" class="btn form-btn-save" (click)="addAirport()" [disabled]="isFormInvalid">Lưu</button>
+          <button *ngIf="isEditMode" class="btn form-btn-edit" (click)="updateAirport()" [disabled]="isFormInvalid">Chỉnh sửa</button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="showDeleteConfirm" class="modal-overlay">
+      <div class="modal-content">
+        <h4>Xác nhận cập nhật</h4>
+        <p>Bạn có chắc chắn muốn chuyển sân bay này sang trạng thái ngừng hoạt động không?</p>
+        <div class="modal-buttons">
+          <button class="btn btn-modal-cancel" (click)="cancelDelete()">Hủy</button>
+          <button class="btn btn-modal-delete" (click)="confirmDelete()">Xác nhận</button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="showViewModal && airportToView" class="modal-overlay">
+      <div class="modal-content modal-view">
+        <h4>Chi tiết sân bay #{{ airportToView.code }}</h4>
+        <div class="view-details-grid">
+          <div class="detail-item"><label>Mã sân bay</label><span>{{ airportToView.code }}</span></div>
+          <div class="detail-item"><label>ICAO</label><span>{{ airportToView.icao }}</span></div>
+          <div class="detail-item full-width"><label>Tên sân bay</label><span>{{ airportToView.name }}</span></div>
+          <div class="detail-item"><label>Tỉnh/TP</label><span>{{ airportToView.province }}</span></div>
+          <div class="detail-item"><label>Quốc gia</label><span>{{ airportToView.country }}</span></div>
+          <div class="detail-item full-width"><label>Display name</label><span>{{ airportToView.displayName }}</span></div>
+          <div class="detail-item full-width"><label>Trạng thái</label><span [ngClass]="statusClass(airportToView.status)">{{ formatStatus(airportToView.status) }}</span></div>
+        </div>
+        <div class="modal-buttons">
+          <button class="btn btn-modal-close" (click)="closeViewModal()">Đóng</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

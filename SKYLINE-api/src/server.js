@@ -7,6 +7,7 @@ const cors = require("cors");
 
 const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
+const airportRoutes = require("./routes/airportRoutes");
 const airlineRoutes = require("./routes/airlineRoutes");
 const flightRoutes = require("./routes/flightRoutes");
 const baggageOptionRoutes = require("./routes/baggageOptionRoutes");
@@ -31,6 +32,7 @@ app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 
 app.use("/api/users", userRoutes);
+app.use("/api/airports", airportRoutes);
 app.use("/api/airlines", airlineRoutes);
 app.use("/api/flights", flightRoutes);
 app.use("/api/promotions", promotionRoutes);

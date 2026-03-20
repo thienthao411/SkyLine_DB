@@ -57,7 +57,10 @@ export class AirlineManagement implements OnInit, OnDestroy {
         const combined =
           `${airline.airlineCode} ${airline.airlineName} ${airline.country} ${airline.hotline}`.toLowerCase();
         return combined.includes(term);
-      });
+      })
+      .sort((left, right) =>
+        (left.airlineName || '').localeCompare(right.airlineName || '', 'vi', { sensitivity: 'base' })
+      );
   }
 
   get paginatedAirlines(): Airline[] {
@@ -250,6 +253,14 @@ export class AirlineManagement implements OnInit, OnDestroy {
     }
 
     return 'Đang hoạt động';
+  }
+
+  statusClass(status: AirlineStatus): string {
+    if (status === 'inactive' || status === 'deleted') {
+      return 'status-pill status-pill--inactive';
+    }
+
+    return 'status-pill status-pill--active';
   }
 
   private createEmptyAirline(): Airline {

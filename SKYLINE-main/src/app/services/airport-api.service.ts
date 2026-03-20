@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError, map, shareReplay, tap } from 'rxjs/operators';
 
 export interface Airport {
   code: string;
@@ -12,79 +14,112 @@ export interface Airport {
   isActive?: boolean;
 }
 
-const AUTHORITATIVE_AIRPORTS: Airport[] = [
-  { icao: 'VVCT', code: 'VCA', name: 'Sân bay Quốc tế Cần Thơ', city: 'Cần Thơ', province: 'Cần Thơ', country: 'Việt Nam', displayName: 'VCA - Sân bay Quốc tế Cần Thơ', isActive: true },
-  { icao: 'VVDN', code: 'DAD', name: 'Sân bay Quốc tế Đà Nẵng', city: 'Đà Nẵng', province: 'Đà Nẵng', country: 'Việt Nam', displayName: 'DAD - Sân bay Quốc tế Đà Nẵng', isActive: true },
-  { icao: 'VVCI', code: 'HPH', name: 'Sân bay Quốc tế Cát Bi', city: 'Hải Phòng', province: 'Hải Phòng', country: 'Việt Nam', displayName: 'HPH - Sân bay Quốc tế Cát Bi', isActive: true },
-  { icao: 'VVNB', code: 'HAN', name: 'Sân bay Quốc tế Nội Bài', city: 'Hà Nội', province: 'Hà Nội', country: 'Việt Nam', displayName: 'HAN - Sân bay Quốc tế Nội Bài', isActive: true },
-  { icao: 'VVTS', code: 'SGN', name: 'Sân bay Quốc tế Tân Sơn Nhất', city: 'TP. Hồ Chí Minh', province: 'TP. Hồ Chí Minh', country: 'Việt Nam', displayName: 'SGN - Sân bay Quốc tế Tân Sơn Nhất', isActive: true },
-  { icao: 'VVCR', code: 'CXR', name: 'Sân bay Quốc tế Cam Ranh', city: 'Khánh Hòa', province: 'Khánh Hòa', country: 'Việt Nam', displayName: 'CXR - Sân bay Quốc tế Cam Ranh', isActive: true },
-  { icao: 'VVPQ', code: 'PQC', name: 'Sân bay Quốc tế Phú Quốc', city: 'Kiên Giang', province: 'Kiên Giang', country: 'Việt Nam', displayName: 'PQC - Sân bay Quốc tế Phú Quốc', isActive: true },
-  { icao: 'VVDL', code: 'DLI', name: 'Sân bay Quốc tế Liên Khương', city: 'Lâm Đồng', province: 'Lâm Đồng', country: 'Việt Nam', displayName: 'DLI - Sân bay Quốc tế Liên Khương', isActive: true },
-  { icao: 'VVVH', code: 'VII', name: 'Sân bay Quốc tế Vinh', city: 'Nghệ An', province: 'Nghệ An', country: 'Việt Nam', displayName: 'VII - Sân bay Quốc tế Vinh', isActive: true },
-  { icao: 'VVPB', code: 'HUI', name: 'Sân bay Quốc tế Phú Bài', city: 'Huế', province: 'Thừa Thiên Huế', country: 'Việt Nam', displayName: 'HUI - Sân bay Quốc tế Phú Bài', isActive: true },
-  { icao: 'VVVD', code: 'VDO', name: 'Sân bay Quốc tế Vân Đồn', city: 'Quảng Ninh', province: 'Quảng Ninh', country: 'Việt Nam', displayName: 'VDO - Sân bay Quốc tế Vân Đồn', isActive: true },
-  { icao: 'VVDB', code: 'DIN', name: 'Sân bay Điện Biên', city: 'Điện Biên', province: 'Điện Biên', country: 'Việt Nam', displayName: 'DIN - Sân bay Điện Biên', isActive: true },
-  { icao: 'VVDH', code: 'VDH', name: 'Sân bay Đồng Hới', city: 'Quảng Bình', province: 'Quảng Bình', country: 'Việt Nam', displayName: 'VDH - Sân bay Đồng Hới', isActive: true },
-  { icao: 'VVTX', code: 'THD', name: 'Sân bay Thọ Xuân', city: 'Thanh Hóa', province: 'Thanh Hóa', country: 'Việt Nam', displayName: 'THD - Sân bay Thọ Xuân', isActive: true },
-  { icao: 'VVCL', code: 'VCL', name: 'Sân bay Chu Lai', city: 'Quảng Nam', province: 'Quảng Nam', country: 'Việt Nam', displayName: 'VCL - Sân bay Chu Lai', isActive: true },
-  { icao: 'VVTH', code: 'TBB', name: 'Sân bay Tuy Hòa', city: 'Phú Yên', province: 'Phú Yên', country: 'Việt Nam', displayName: 'TBB - Sân bay Tuy Hòa', isActive: true },
-  { icao: 'VVRG', code: 'VKG', name: 'Sân bay Rạch Giá', city: 'Kiên Giang', province: 'Kiên Giang', country: 'Việt Nam', displayName: 'VKG - Sân bay Rạch Giá', isActive: true },
-  { icao: 'VVPK', code: 'PXU', name: 'Sân bay Pleiku', city: 'Gia Lai', province: 'Gia Lai', country: 'Việt Nam', displayName: 'PXU - Sân bay Pleiku', isActive: true },
-  { icao: 'VVBM', code: 'BMV', name: 'Sân bay Buôn Ma Thuột', city: 'Đắk Lắk', province: 'Đắk Lắk', country: 'Việt Nam', displayName: 'BMV - Sân bay Buôn Ma Thuột', isActive: true },
-  { icao: 'VVPC', code: 'UIH', name: 'Sân bay Phù Cát', city: 'Bình Định', province: 'Bình Định', country: 'Việt Nam', displayName: 'UIH - Sân bay Phù Cát', isActive: true },
-  { icao: 'VVCM', code: 'CAH', name: 'Sân bay Cà Mau', city: 'Cà Mau', province: 'Cà Mau', country: 'Việt Nam', displayName: 'CAH - Sân bay Cà Mau', isActive: true },
-  { icao: 'VVCS', code: 'VCS', name: 'Sân bay Côn Đảo', city: 'Bà Rịa - Vũng Tàu', province: 'Bà Rịa - Vũng Tàu', country: 'Việt Nam', displayName: 'VCS - Sân bay Côn Đảo', isActive: true },
-];
-
-const AUTHORITATIVE_BY_CODE = new Map(
-  AUTHORITATIVE_AIRPORTS.map((airport) => [airport.code, airport] as const)
-);
-
 @Injectable({ providedIn: 'root' })
 export class AirportApiService {
+  private readonly apiUrl = 'http://localhost:5000/api/airports';
+  private airportsCache: Airport[] = [];
+  private airportsByCode = new Map<string, Airport>();
+  private airportsRequest$: Observable<Airport[]> | null = null;
+
+  constructor(private http: HttpClient) {
+    this.ensureAirportsLoaded().subscribe({
+      next: () => {},
+      error: () => {},
+    });
+  }
+
   searchAirports(q: string): Observable<Airport[]> {
     const keyword = String(q || '').trim();
-    if (!keyword) return of([...AUTHORITATIVE_AIRPORTS]);
-    return of(this.filterAuthoritativeAirports(keyword));
+    return this.ensureAirportsLoaded().pipe(
+      map((airports) => (keyword ? this.filterAuthoritativeAirports(airports, keyword) : [...airports]))
+    );
   }
 
   getAllAirports(): Observable<Airport[]> {
-    return of([...AUTHORITATIVE_AIRPORTS]);
+    return this.ensureAirportsLoaded().pipe(map((airports) => [...airports]));
   }
 
   getAirportByCode(code: string): Airport | undefined {
     const normalizedCode = String(code || '').trim().toUpperCase();
-    return AUTHORITATIVE_BY_CODE.get(normalizedCode);
+    return this.airportsByCode.get(normalizedCode);
   }
 
-  private filterAuthoritativeAirports(keyword: string): Airport[] {
+  private ensureAirportsLoaded(): Observable<Airport[]> {
+    if (this.airportsCache.length) {
+      return of([...this.airportsCache]);
+    }
+
+    if (!this.airportsRequest$) {
+      this.airportsRequest$ = this.http.get<Airport[]>(this.apiUrl).pipe(
+        map((items) => this.normalizeAirports(items)),
+        tap((items) => {
+          this.airportsCache = [...items];
+          this.airportsByCode = new Map(items.map((airport) => [airport.code, airport] as const));
+        }),
+        catchError((error) => {
+          this.airportsRequest$ = null;
+          return throwError(() => error);
+        }),
+        shareReplay(1)
+      );
+    }
+
+    return this.airportsRequest$;
+  }
+
+  private normalizeAirports(items: Airport[]): Airport[] {
+    return (Array.isArray(items) ? items : []).map((airport) => {
+      const code = String(airport?.code || '').trim().toUpperCase();
+      const name = String(airport?.name || '').trim();
+      const city = String(airport?.city || '').trim();
+      const province = String(airport?.province || '').trim();
+      const icao = String(airport?.icao || '').trim().toUpperCase();
+      const country = String(airport?.country || '').trim();
+      const displayName = String(airport?.displayName || '').trim() || `${code} - ${name}`;
+
+      return {
+        ...airport,
+        code,
+        name,
+        city,
+        province,
+        icao,
+        country,
+        displayName,
+        isActive: airport?.isActive !== false,
+      };
+    });
+  }
+
+  private filterAuthoritativeAirports(airports: Airport[], keyword: string): Airport[] {
     const normalizedKeyword = this.normalizeText(keyword);
 
     if (!normalizedKeyword) {
-      return [...AUTHORITATIVE_AIRPORTS];
+      return [...airports];
     }
 
-    return AUTHORITATIVE_AIRPORTS.filter((airport) => {
-      const haystacks = [
-        airport.code,
-        airport.icao,
-        airport.name,
-        airport.city,
-        airport.province,
-        airport.displayName,
-      ]
-        .filter(Boolean)
-        .map((value) => this.normalizeText(String(value)));
+    return airports
+      .filter((airport) => {
+        const haystacks = [
+          airport.code,
+          airport.icao,
+          airport.name,
+          airport.city,
+          airport.province,
+          airport.displayName,
+        ]
+          .filter(Boolean)
+          .map((value) => this.normalizeText(String(value)));
 
-      return haystacks.some((value) => value.includes(normalizedKeyword));
-    }).sort((a, b) => {
-      const scoreA = this.getMatchScore(a, keyword);
-      const scoreB = this.getMatchScore(b, keyword);
+        return haystacks.some((value) => value.includes(normalizedKeyword));
+      })
+      .sort((a, b) => {
+        const scoreA = this.getMatchScore(a, keyword);
+        const scoreB = this.getMatchScore(b, keyword);
 
-      if (scoreA !== scoreB) return scoreA - scoreB;
-      return a.code.localeCompare(b.code);
-    });
+        if (scoreA !== scoreB) return scoreA - scoreB;
+        return a.code.localeCompare(b.code);
+      });
   }
 
   private normalizeText(value: string): string {
