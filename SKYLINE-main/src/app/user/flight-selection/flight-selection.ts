@@ -32,6 +32,7 @@ export interface Flight {
 
 interface ApiAirlineLogo {
   airlineCode?: string;
+  airlineName?: string;
   img?: string;
 }
 
@@ -50,6 +51,7 @@ export class FlightSelectionComponent {
   private ticketApiService = inject(TicketApiService);
   private readonly apiBaseUrl = 'http://localhost:5000/api';
   private airlineLogoByCode = signal<Record<string, string>>({});
+  private airlineLogoByName = signal<Record<string, string>>({});
 
   isLoading = signal(true);
   loadError = signal<string | null>(null);
@@ -75,28 +77,61 @@ export class FlightSelectionComponent {
   private loadAirlineLogos(): void {
     this.http.get<ApiAirlineLogo[]>(`${this.apiBaseUrl}/airlines`).pipe(
       map((airlines) => {
-        const lookup: Record<string, string> = {};
+        const lookupByCode: Record<string, string> = {};
+        const lookupByName: Record<string, string> = {};
 
         (Array.isArray(airlines) ? airlines : []).forEach((airline) => {
           const code = String(airline?.airlineCode || '').trim().toUpperCase();
+          const name = String(airline?.airlineName || '').trim();
           const img = String(airline?.img || '').trim();
 
           if (code && img) {
-            lookup[code] = img;
+            lookupByCode[code] = img;
+          }
+
+          if (name && img) {
+            lookupByName[this.normalizeAirlineKey(name)] = img;
+
+            const canonicalName = this.canonicalAirlineName(name);
+            if (canonicalName) {
+              lookupByName[this.normalizeAirlineKey(canonicalName)] = img;
+            }
           }
         });
 
-        return lookup;
+        return { lookupByCode, lookupByName };
       })
     ).subscribe({
-      next: (lookup) => {
-        this.airlineLogoByCode.set(lookup);
+      next: ({ lookupByCode, lookupByName }) => {
+        this.airlineLogoByCode.set(lookupByCode);
+        this.airlineLogoByName.set(lookupByName);
       },
       error: (err) => {
         console.warn('Khong tai duoc logo airline tu API:', err);
         this.airlineLogoByCode.set({});
+        this.airlineLogoByName.set({});
       }
     });
+  }
+
+  private normalizeAirlineKey(value: string): string {
+    return String(value || '').trim().toLowerCase();
+  }
+
+  private canonicalAirlineName(value: string): string {
+    const normalized = this.normalizeAirlineKey(value);
+    const aliases: Record<string, string> = {
+      'vasco': 'VASCO Airlines',
+      'vasco airlines': 'VASCO Airlines',
+      'vasco airline': 'VASCO Airlines',
+      'vietnam airlines': 'Vietnam Airlines',
+      'vietjet': 'Vietjet',
+      'bamboo airways': 'Bamboo Airways',
+      'vietravel airlines': 'Vietravel Airlines',
+      'pacific airlines': 'Pacific Airlines'
+    };
+
+    return aliases[normalized] || String(value || '').trim();
   }
 
   goBack() {
@@ -241,8 +276,14 @@ export class FlightSelectionComponent {
     const byData = f?.details?.logo?.trim?.();
     if (byData) return byData;
     const code = (f?.details?.airline_code || f?.airline_code || '').toUpperCase();
-    return this.airlineLogoByCode()[code] ?? null;
+    const byCode = this.airlineLogoByCode()[code];
+    if (byCode) return byCode;
+
+    const rawName = String(f?.airline || f?.details?.airline || '').trim();
+    const normalizedName = this.normalizeAirlineKey(rawName);
+    const canonicalName = this.normalizeAirlineKey(this.canonicalAirlineName(rawName));
+
+    return this.airlineLogoByName()[normalizedName] || this.airlineLogoByName()[canonicalName] || null;
   }
 }
-
 

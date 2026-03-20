@@ -71,9 +71,21 @@
       <div class="fs-tile cursor-pointer" (click)="showCabinOut.set(!showCabinOut())">
         <div class="fs-label">Hạng ghế (chặng đi)</div>
         <div class="d-flex align-items-center gap-2">
-          <i class="bi bi-person-seat"></i>
-          <div class="fw-medium">{{ cabinLabelOrPlaceholder(cabinOut()) }}</div>
-          <i class="bi bi-caret-down-fill ms-auto"></i>
+          <svg class="fs-seat-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 4.5A1.5 1.5 0 0 1 9.5 3h1A1.5 1.5 0 0 1 12 4.5V9H8V4.5Z" />
+            <path d="M7.5 10h5A2.5 2.5 0 0 1 15 12.5V16a1 1 0 1 1-2 0v-3.25a.75.75 0 0 0-.75-.75H11v7a1 1 0 1 1-2 0v-4H8a2 2 0 0 1-2-2v-2a1 1 0 0 1 1.5-.87Z" />
+            <path d="M15 11h1.75A2.25 2.25 0 0 1 19 13.25V19a1 1 0 1 1-2 0v-5.5a.5.5 0 0 0-.5-.5H15V11Z" />
+            <path d="M5 18.5a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z" />
+          </svg>
+          <div class="fs-field-value">{{ cabinLabelOrPlaceholder(cabinOut()) }}</div>
+          <button
+            type="button"
+            class="fs-dropdown-btn"
+            (click)="$event.stopPropagation(); showCabinOut.set(!showCabinOut())"
+            aria-label="Mo danh sach hang ghe chang di"
+          >
+            <i class="bi bi-caret-down-fill"></i>
+          </button>
         </div>
       </div>
       <div class="fs-menu" *ngIf="showCabinOut()">
@@ -107,7 +119,7 @@
       <div class="fs-tile position-relative">
         <div class="fs-label">Điểm đến</div>
         <div class="d-flex align-items-center gap-2">
-          <i class="bi bi-airplane"></i>
+          <i class="bi bi-airplane plane-down"></i>
           <input type="text" class="form-control p-0 border-0 bg-transparent fs-readonly-input" [value]="returnToDisplay()" readonly>
           <button type="button" class="fs-dropdown-btn fs-dropdown-btn-static" disabled aria-label="Điểm đến chặng về">
             <i class="bi bi-caret-down-fill"></i>
@@ -120,9 +132,21 @@
       <div class="fs-tile cursor-pointer" (click)="showCabinBack.set(!showCabinBack())">
         <div class="fs-label">Hạng ghế (chặng về)</div>
         <div class="d-flex align-items-center gap-2">
-          <i class="bi bi-person-seat"></i>
-          <div class="fw-medium">{{ cabinLabelOrPlaceholder(cabinBack()) }}</div>
-          <i class="bi bi-caret-down-fill ms-auto"></i>
+          <svg class="fs-seat-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 4.5A1.5 1.5 0 0 1 9.5 3h1A1.5 1.5 0 0 1 12 4.5V9H8V4.5Z" />
+            <path d="M7.5 10h5A2.5 2.5 0 0 1 15 12.5V16a1 1 0 1 1-2 0v-3.25a.75.75 0 0 0-.75-.75H11v7a1 1 0 1 1-2 0v-4H8a2 2 0 0 1-2-2v-2a1 1 0 0 1 1.5-.87Z" />
+            <path d="M15 11h1.75A2.25 2.25 0 0 1 19 13.25V19a1 1 0 1 1-2 0v-5.5a.5.5 0 0 0-.5-.5H15V11Z" />
+            <path d="M5 18.5a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z" />
+          </svg>
+          <div class="fs-field-value">{{ cabinLabelOrPlaceholder(cabinBack()) }}</div>
+          <button
+            type="button"
+            class="fs-dropdown-btn"
+            (click)="$event.stopPropagation(); showCabinBack.set(!showCabinBack())"
+            aria-label="Mo danh sach hang ghe chang ve"
+          >
+            <i class="bi bi-caret-down-fill"></i>
+          </button>
         </div>
       </div>
       <div class="fs-menu" *ngIf="showCabinBack()">
@@ -163,46 +187,53 @@
         <div class="fs-label">Số hành khách</div>
         <div class="d-flex align-items-center gap-2">
           <i class="bi bi-people"></i>
-          <div class="fw-medium">{{ paxLabel() }}</div>
-          <i class="bi bi-caret-down-fill ms-auto"></i>
+          <div class="fs-field-value">{{ paxLabel() }}</div>
+          <button
+            type="button"
+            class="fs-dropdown-btn"
+            (click)="$event.stopPropagation(); showPax.set(!showPax())"
+            aria-label="Mo danh sach so hanh khach"
+          >
+            <i class="bi bi-caret-down-fill"></i>
+          </button>
         </div>
       </div>
-      <div class="fs-menu" *ngIf="showPax()">
-        <div class="d-flex align-items-center justify-content-between">
+      <div class="fs-menu fs-pax-menu" *ngIf="showPax()">
+        <div class="d-flex align-items-center justify-content-between fs-pax-row">
           <div>
             <div class="fw-semibold">Người lớn</div>
             <div class="text-muted small">Từ 12 tuổi</div>
           </div>
           <div class="fs-stepper">
             <button type="button" class="btn btn-outline-secondary btn-sm" (click)="dec('adults')">-</button>
-            <span class="mx-2">{{ adults() }}</span>
+            <span class="mx-2 fs-stepper-value">{{ adults() }}</span>
             <button type="button" class="btn btn-outline-secondary btn-sm" (click)="inc('adults')">+</button>
           </div>
         </div>
-        <div class="d-flex align-items-center justify-content-between mt-2">
+        <div class="d-flex align-items-center justify-content-between fs-pax-row">
           <div>
             <div class="fw-semibold">Trẻ em</div>
             <div class="text-muted small">2-11 tuổi</div>
           </div>
           <div class="fs-stepper">
             <button type="button" class="btn btn-outline-secondary btn-sm" (click)="dec('children')">-</button>
-            <span class="mx-2">{{ children() }}</span>
+            <span class="mx-2 fs-stepper-value">{{ children() }}</span>
             <button type="button" class="btn btn-outline-secondary btn-sm" (click)="inc('children')">+</button>
           </div>
         </div>
-        <div class="d-flex align-items-center justify-content-between mt-2">
+        <div class="d-flex align-items-center justify-content-between fs-pax-row">
           <div>
             <div class="fw-semibold">Em bé</div>
             <div class="text-muted small">&lt; 2 tuổi</div>
           </div>
           <div class="fs-stepper">
             <button type="button" class="btn btn-outline-secondary btn-sm" (click)="dec('infants')">-</button>
-            <span class="mx-2">{{ infants() }}</span>
+            <span class="mx-2 fs-stepper-value">{{ infants() }}</span>
             <button type="button" class="btn btn-outline-secondary btn-sm" (click)="inc('infants')">+</button>
           </div>
         </div>
-        <div class="d-flex justify-content-end mt-3">
-          <button type="button" class="btn btn-primary" (click)="showPax.set(false)">Xong</button>
+        <div class="d-flex justify-content-end fs-pax-actions">
+          <button type="button" class="btn fs-pax-done-btn" (click)="showPax.set(false)">Xong</button>
         </div>
       </div>
     </div>
@@ -219,6 +250,20 @@
 
   <div *ngIf="autoDateMsg()" class="alert alert-info mt-2">{{ autoDateMsg() }}</div>
 </form>
+
+<div *ngIf="formNotice()" class="fs-notice-modal" role="alertdialog" aria-modal="true" aria-labelledby="fs-notice-title">
+  <div class="fs-notice-backdrop" (click)="formNotice.set(null)"></div>
+  <div class="fs-notice-card">
+    <div class="fs-notice-badge">
+      <i class="bi bi-exclamation-circle"></i>
+    </div>
+    <div class="fs-notice-title" id="fs-notice-title">Thông báo</div>
+    <div class="fs-notice-message">{{ formNotice() }}</div>
+    <div class="fs-notice-actions">
+      <button type="button" class="btn fs-notice-btn" (click)="formNotice.set(null)">Đã hiểu</button>
+    </div>
+  </div>
+</div>
 
 <div class="row g-4 align-items-start">
   <aside class="col-12 col-lg-3 order-1 order-lg-1">
@@ -272,12 +317,12 @@
     </div>
   </aside>
 
-  <section class="col-12 col-lg-9 order-2 order-lg-2">
+  <section class="col-12 col-lg-9 order-2 order-lg-2 results-panel">
     <ng-container *ngIf="hasSearched()">
       <ng-container *ngIf="tripType()!=='round'; else roundTpl">
-        <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="d-flex justify-content-between align-items-center mb-2 results-toolbar">
           <div class="fw-bold" *ngIf="resultsOut().length">Tất cả các chuyến bay:</div>
-          <div class="d-flex align-items-center gap-2">
+          <div class="d-flex align-items-center gap-2 results-sort">
             <span class="text-muted small">Sắp xếp giá:</span>
             <div class="btn-group" role="group" aria-label="Sort price">
               <button type="button" class="btn btn-outline-secondary btn-sm" [class.active]="sortOrder()==='price_desc'" (click)="setSort('price_desc')">Cao → Thấp</button>
@@ -342,9 +387,11 @@
       </ng-container>
 
       <ng-template #roundTpl>
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <div class="fw-bold">Chặng đi: {{ from() }} → {{ to() }} • {{ departDate() }}</div>
-          <div class="d-flex align-items-center gap-2">
+        <div class="d-flex justify-content-between align-items-center mb-2 results-toolbar">
+          <div class="fw-bold results-leg-summary">
+            Chặng đi: {{ airportSummary(from()) }} → {{ airportSummary(to()) }} • {{ dateDMY(departDate()) }}
+          </div>
+          <div class="d-flex align-items-center gap-2 results-sort">
             <span class="text-muted small">Sắp xếp giá:</span>
             <div class="btn-group" role="group" aria-label="Sort price">
               <button type="button" class="btn btn-outline-secondary btn-sm" [class.active]="sortOrder()==='price_desc'" (click)="setSort('price_desc')">Cao → Thấp</button>
@@ -408,8 +455,10 @@
 
         <hr class="my-4">
 
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <div class="fw-bold">Chặng về: {{ rtFrom() || to() }} → {{ rtTo() || from() }} • {{ returnDate() || '-' }}</div>
+        <div class="d-flex justify-content-between align-items-center mb-2 results-toolbar">
+          <div class="fw-bold results-leg-summary">
+            Chặng về: {{ airportSummary(rtFrom() || to()) }} → {{ airportSummary(rtTo() || from()) }} • {{ returnDate() ? dateDMY(returnDate()) : '-' }}
+          </div>
         </div>
 
         <div *ngFor="let f of othersBack()" class="card rc2-card border-0 mb-3">

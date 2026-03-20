@@ -143,15 +143,14 @@ export class FlightSearchComponent {
     if (qpTrip) this.tripType.set(qpTrip);
     if (qpFrom) {
       this.from.set(qpFrom);
-      this.fromInput.set(qpFrom);
       this.selectedFromAirport.set(this.airportApi.getAirportByCode(qpFrom) ?? null);
     }
     if (qpTo) {
       this.to.set(qpTo);
-      this.toInput.set(qpTo);
       this.selectedToAirport.set(this.airportApi.getAirportByCode(qpTo) ?? null);
     }
     if (qpDate) this.departDate.set(qpDate);
+    this.syncAirportInputs();
 
     this.fromSearch$.pipe(
       debounceTime(250),
@@ -187,6 +186,7 @@ export class FlightSearchComponent {
   loadError = signal<string | null>(null);
   hasSearched = signal(false);
   autoDateMsg = signal<string | null>(null);
+  formNotice = signal<string | null>(null);
 
   tripType = signal<'oneway' | 'round'>('oneway');
   from = signal<string>(''); to = signal<string>('');
@@ -211,6 +211,11 @@ export class FlightSearchComponent {
     return String(code || fallback || '').trim().toUpperCase();
   }
 
+  private syncAirportInputs(): void {
+    this.fromInput.set(this.airportDisplay(this.selectedFromAirport(), this.from(), this.fromInput()));
+    this.toInput.set(this.airportDisplay(this.selectedToAirport(), this.to(), this.toInput()));
+  }
+
   returnFromDisplay() {
     const airport = this.airportApi.getAirportByCode(this.rtFrom() || this.to()) ?? this.selectedToAirport();
     return this.airportDisplay(airport, this.rtFrom() || this.to(), this.toInput());
@@ -233,6 +238,8 @@ export class FlightSearchComponent {
       if (this.to() && !this.selectedToAirport()) {
         this.selectedToAirport.set(this.airportApi.getAirportByCode(this.to()) ?? null);
       }
+
+      this.syncAirportInputs();
     });
   }
 
@@ -361,6 +368,7 @@ export class FlightSearchComponent {
   clearFilters() {
     this.airlineSel.set([]); this.priceSel.set([]); this.timeSel.set([]); this.durSel.set([]);
     this.autoDateMsg.set(null);
+    this.formNotice.set(null);
   }
 
   fetchData(autoSearchAfterLoad = false) {
@@ -385,6 +393,7 @@ export class FlightSearchComponent {
     this.tripType.set(t);
     this.hasSearched.set(false);
     this.autoDateMsg.set(null);
+    this.formNotice.set(null);
     this.listLimitOut.set(3);
     this.listLimitBack.set(3);
 
@@ -433,6 +442,7 @@ export class FlightSearchComponent {
     this.cabinBack.set('');
     this.hasSearched.set(false);
     this.autoDateMsg.set(null);
+    this.formNotice.set(null);
     this.clearFilters();
   }
 
@@ -446,12 +456,21 @@ export class FlightSearchComponent {
 
   search(updateUrl = true) {
     this.autoDateMsg.set(null);
+    this.formNotice.set(null);
     if (!this.isFromToValid()) {
+      this.formNotice.set('Vui lòng chọn điểm đi và điểm đến khác nhau và hợp lệ.');
+      return;
+    }
+    if (this.tripType() === 'round' && this.returnDate() < this.departDate()) {
+      this.formNotice.set('Ngày khứ hồi phải sau hoặc bằng ngày khởi hành.');
+      return;
+    }
+    if (false && !this.isFromToValid()) {
       alert('Vui lòng chọn điểm đi và điểm đến khác nhau và hợp lệ.');
       return;
     }
 
-    if (this.tripType() === 'round' && this.returnDate() < this.departDate()) {
+    if (false && this.tripType() === 'round' && this.returnDate() < this.departDate()) {
       alert('Ngày khứ hồi phải ≥ Ngày khởi hành.'); return;
     }
 
@@ -595,6 +614,11 @@ export class FlightSearchComponent {
       if (id && name) {
         nameLookup[id] = name;
         idByName[this.normalizeAirlineKey(name)] = id;
+
+        const canonicalName = this.canonicalAirlineName(name);
+        if (canonicalName) {
+          idByName[this.normalizeAirlineKey(canonicalName)] = id;
+        }
       }
 
       if (id && img) {
@@ -866,10 +890,10 @@ export class FlightSearchComponent {
     const fromLookup = airlineId ? this.airlineNameById()[airlineId] : '';
 
     if (fromLookup) {
-      return fromLookup;
+      return this.canonicalAirlineName(fromLookup);
     }
 
-    return String(raw?.airline || legacy?.airline || 'Unknown').trim() || 'Unknown';
+    return this.canonicalAirlineName(String(raw?.airline || legacy?.airline || 'Unknown').trim() || 'Unknown');
   }
 
   private resolveAirlineIdFromFlight(flight: any): string {
@@ -900,6 +924,26 @@ export class FlightSearchComponent {
     return String(value || '').trim().toLowerCase();
   }
 
+  private canonicalAirlineName(value: string): string {
+    const normalized = this.normalizeAirlineKey(value);
+    const aliases: Record<string, string> = {
+      'vietnam airlines': 'Vietnam Airlines',
+      'vietnam airline': 'Vietnam Airlines',
+      'vietjet': 'Vietjet',
+      'vietjet air': 'Vietjet',
+      'bamboo airways': 'Bamboo Airways',
+      'vasco': 'VASCO Airlines',
+      'vasco airlines': 'VASCO Airlines',
+      'vasco airline': 'VASCO Airlines',
+      'vietravel airlines': 'Vietravel Airlines',
+      'vietravel airline': 'Vietravel Airlines',
+      'pacific airlines': 'Pacific Airlines',
+      'pacific airline': 'Pacific Airlines'
+    };
+
+    return aliases[normalized] || String(value || '').trim();
+  }
+
   private buildAirlineCodeToIdLookup(): Record<string, string> {
     return { ...this.airlineIdByCode() };
   }
@@ -924,7 +968,11 @@ export class FlightSearchComponent {
       return (s.has('d_u60') && mins < 60) || (s.has('d_60_120') && mins >= 60 && mins <= 120) ||
         (s.has('d_o120') && mins > 120);
     };
-    const inAirline = (name: string) => { const s = new Set(this.airlineSel()); return !s.size || s.has(name); };
+    const inAirline = (name: string) => {
+      const selected = new Set(this.airlineSel().map((item) => this.canonicalAirlineName(item)));
+      if (!selected.size) return true;
+      return selected.has(this.canonicalAirlineName(name));
+    };
 
     let out = arr.filter(x => inPrice(x.price) && inTime(x.departTime) && inDur(x.durationMin) && inAirline(x.airline));
     const order = this.sortOrder();
@@ -961,7 +1009,8 @@ export class FlightSearchComponent {
   getInitials(name: string) { return (name || '').split(/\s+/).map(w => w[0]).join('').slice(0, 3).toUpperCase() || '??'; }
   displayAirlineName(f: Flight) {
     const airlineId = this.resolveAirlineIdFromFlight(f);
-    return airlineId ? (this.airlineNameById()[airlineId] || f.airline || 'Unknown') : (f.airline || 'Unknown');
+    const name = airlineId ? (this.airlineNameById()[airlineId] || f.airline || 'Unknown') : (f.airline || 'Unknown');
+    return this.canonicalAirlineName(name);
   }
   getCarrierCode(f: Flight) {
     const directCode = String((f as any)?.airlineCode || (f as any)?.details?.airline_code || '').trim().toUpperCase();
@@ -985,6 +1034,21 @@ export class FlightSearchComponent {
   oldPrice(f: Flight) { return this.hasPromo(f) ? Math.round((f.price * 1.1) / 1000) * 1000 : null; }
 
   timeHM(iso: string) { try { return new Date(iso).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false }); } catch { return ''; } }
+  airportSummary(code: string) {
+    const airport = this.airportApi.getAirportByCode(code);
+    if (airport?.name && airport?.code) {
+      return `${airport.name} (${airport.code})`;
+    }
+    return String(code || '').trim().toUpperCase();
+  }
+  dateDMY(dateOrIso: string | Date) {
+    const d = (dateOrIso instanceof Date) ? dateOrIso : new Date(dateOrIso);
+    if (isNaN(d.getTime())) return String(dateOrIso || '');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  }
   dateVN(dateOrIso: string | Date, long = false) {
     const d = (dateOrIso instanceof Date) ? dateOrIso : new Date(dateOrIso);
     const wd = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy'][d.getDay()];
