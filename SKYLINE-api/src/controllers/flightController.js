@@ -1,6 +1,16 @@
 const mongoose = require("mongoose");
 const Flight = require("../models/Flight");
 const Ticket = require("../models/Ticket");
+const Airline = require("../models/Airline");
+
+const KNOWN_AIRLINE_NAME_BY_CODE = {
+  VN: "Vietnam Airlines",
+  VJ: "Vietjet",
+  QH: "Bamboo Airways",
+  "0V": "VASCO",
+  VU: "Vietravel Airlines",
+  BL: "Pacific Airlines",
+};
 
 function normalizeDateTime(date, value) {
   const raw = String(value || "").trim();
@@ -112,7 +122,9 @@ function mapFlightDetails(raw, context) {
 
   return {
     ...rawDetails,
+    airline_id: context.airlineId,
     airline_code: context.airlineCode,
+    logo: context.logo || rawDetails?.logo || null,
     itinerary: { segments },
     perks: Array.isArray(rawDetails?.perks) ? rawDetails.perks : [],
     fare_options: fareOptions,
@@ -123,20 +135,37 @@ function mapFlightDetails(raw, context) {
   };
 }
 
-function mapFlightForClient(doc, requestedCabin = "") {
+function mapFlightForClient(doc, requestedCabin = "", airlineMeta = null) {
   const raw = typeof doc?.toObject === "function" ? doc.toObject() : doc;
   const date = String(raw?.date || "").trim();
   const from = String(raw?.from || "").trim().toUpperCase();
   const to = String(raw?.to || "").trim().toUpperCase();
-  const airlineCode = String(raw?.airlineCode || raw?.details?.airline_code || "").trim().toUpperCase();
+  const flightNo = String(raw?.flightNo || "");
+  const inferredAirlineCode = String(flightNo).trim().toUpperCase().slice(0, 2);
+  const airlineId = String(raw?.airlineId || raw?.details?.airline_id || airlineMeta?._id || "").trim();
+  const airlineCode = String(
+    raw?.airlineCode
+    || raw?.details?.airline_code
+    || airlineMeta?.airlineCode
+    || inferredAirlineCode
+    || ""
+  ).trim().toUpperCase();
+  const airlineName = String(
+    raw?.airline
+    || raw?.details?.airline
+    || airlineMeta?.airlineName
+    || KNOWN_AIRLINE_NAME_BY_CODE[airlineCode]
+    || "Unknown"
+  ).trim();
   const cabin = pickCabin(raw, requestedCabin);
   const departTime = normalizeDateTime(date, raw?.departTime);
   const arriveTime = normalizeDateTime(date, raw?.arriveTime);
-  const flightNo = String(raw?.flightNo || "");
 
   return {
     id: String(raw?._id),
-    airline: String(raw?.airline || "Unknown"),
+    airlineId,
+    airlineCode,
+    airline: airlineName,
     flightNo,
     from,
     to,
@@ -153,7 +182,9 @@ function mapFlightForClient(doc, requestedCabin = "") {
     seatsLeft: pickSeatsLeft(raw, cabin),
     cabin,
     details: mapFlightDetails(raw, {
+      airlineId,
       airlineCode,
+      logo: String(airlineMeta?.img || airlineMeta?.logo || "").trim(),
       from,
       to,
       date,
@@ -210,9 +241,19 @@ exports.getFlightById = async (req, res) => {
       });
     }
 
+    const airlineCodeFromFlightNo = String(flight?.flightNo || "").trim().toUpperCase().slice(0, 2);
+    const airlineLookup = {
+      _id: flight?.airlineId,
+      airlineCode: flight?.airlineCode || flight?.details?.airline_code || airlineCodeFromFlightNo,
+    };
+    const airlineMeta =
+      (airlineLookup._id && await Airline.findById(airlineLookup._id, { airlineName: 1, airlineCode: 1, img: 1, logo: 1 }).lean())
+      || (airlineLookup.airlineCode && await Airline.findOne({ airlineCode: airlineLookup.airlineCode }, { airlineName: 1, airlineCode: 1, img: 1, logo: 1 }).lean())
+      || null;
+
     res.json({
       success: true,
-      flight: mapFlightForClient(flight, requestedCabin)
+      flight: mapFlightForClient(flight, requestedCabin, airlineMeta)
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

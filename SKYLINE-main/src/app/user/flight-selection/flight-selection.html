@@ -7,7 +7,7 @@
       <div class="rc2-grid rc2-no-price">
         <div class="rc2-logo">
           <ng-container *ngIf="logoOf(f) as logo; else initials">
-            <img [src]="logo" [alt]="f.airline || getCarrierCode(f)" loading="lazy">
+            <img [src]="logo" [alt]="displayAirlineName(f) || getCarrierCode(f)" loading="lazy">
           </ng-container>
           <ng-template #initials>
             <span class="logo-text">{{ getCarrierCode(f) }}</span>
@@ -36,7 +36,7 @@
 
           <div class="rc2-meta-row">
             <div class="rc2-meta-left text-muted">
-              {{ f.airline }} • {{ f.flightNo }}
+              {{ displayAirlineName(f) }} • {{ f.flightNo }}
             </div>
             <div class="rc2-meta-right text-muted">
               {{ dateVN(f.departTime) }}
@@ -97,7 +97,7 @@
         <ul class="notes">
           <li>Giá hiển thị có thể chưa bao gồm phí chọn chỗ và hành lý ký gửi (nếu có).</li>
           <li>Nên có mặt tại sân bay trước giờ khởi hành tối thiểu 120 phút (chuyến nội địa).</li>
-          <li>Giấy tờ tuỳ thân (CCCD/Hộ chiếu) phải còn hiệu lực và trùng khớp với thông tin đặt vé.</li>
+          <li>Giấy tờ tùy thân (CCCD/Hộ chiếu) phải còn hiệu lực và trùng khớp với thông tin đặt vé.</li>
           <li>Điều kiện đổi/hoàn vé phụ thuộc hãng bay và hạng vé đã chọn.</li>
         </ul>
       </div>

@@ -257,7 +257,7 @@
     <div class="fs-notice-badge">
       <i class="bi bi-exclamation-circle"></i>
     </div>
-    <div class="fs-notice-title" id="fs-notice-title">Thông báo</div>
+    <div class="fs-notice-title" id="fs-notice-title">LƯU Ý</div>
     <div class="fs-notice-message">{{ formNotice() }}</div>
     <div class="fs-notice-actions">
       <button type="button" class="btn fs-notice-btn" (click)="formNotice.set(null)">Đã hiểu</button>
@@ -375,8 +375,11 @@
           </div>
         </div>
 
-        <div class="d-flex justify-content-center my-3" *ngIf="resultsOut().length > othersOut().length">
-          <button class="btn btn-secondary px-4 rounded-pill" (click)="showMoreOut()">Xem thêm</button>
+        <div class="results-scroll-hint" *ngIf="hasMoreOut()">
+          <span class="results-scroll-pill">
+            <i class="bi bi-arrow-down-circle"></i>
+            <span>Cuộn xuống để xem thêm chuyến bay</span>
+          </span>
         </div>
 
         <div *ngIf="!isLoading() && !loadError() && resultsOut().length===0" class="empty-state">
@@ -443,8 +446,11 @@
           </div>
         </div>
 
-        <div class="d-flex justify-content-center my-3" *ngIf="resultsOut().length > othersOut().length">
-          <button class="btn btn-secondary px-4 rounded-pill" (click)="showMoreOut()">Xem thêm</button>
+        <div class="results-scroll-hint" *ngIf="hasMoreOut()">
+          <span class="results-scroll-pill">
+            <i class="bi bi-arrow-down-circle"></i>
+            <span>Cuộn xuống để xem thêm chuyến bay</span>
+          </span>
         </div>
 
         <div *ngIf="!isLoading() && !loadError() && resultsOut().length===0" class="empty-state">
@@ -504,8 +510,11 @@
           </div>
         </div>
 
-        <div class="d-flex justify-content-center my-3" *ngIf="resultsBack().length > othersBack().length">
-          <button class="btn btn-secondary px-4 rounded-pill" (click)="showMoreBack()">Xem thêm</button>
+        <div class="results-scroll-hint" *ngIf="hasMoreBack()">
+          <span class="results-scroll-pill">
+            <i class="bi bi-arrow-down-circle"></i>
+            <span>Cuộn xuống để xem thêm chuyến bay</span>
+          </span>
         </div>
 
         <div *ngIf="!isLoading() && !loadError() && returnDate() && resultsBack().length===0" class="empty-state">

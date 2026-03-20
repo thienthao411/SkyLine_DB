@@ -13,6 +13,8 @@ type Cabin = 'Economy' | 'Premium Economy' | 'Business';
 
 export interface Flight {
   id: string;
+  airlineId?: string;
+  airlineCode?: string;
   airline: string;
   flightNo: string;
   from: string;
@@ -31,6 +33,7 @@ export interface Flight {
 }
 
 interface ApiAirlineLogo {
+  _id?: string;
   airlineCode?: string;
   airlineName?: string;
   img?: string;
@@ -52,6 +55,8 @@ export class FlightSelectionComponent {
   private readonly apiBaseUrl = 'http://localhost:5000/api';
   private airlineLogoByCode = signal<Record<string, string>>({});
   private airlineLogoByName = signal<Record<string, string>>({});
+  private airlineNameByCode = signal<Record<string, string>>({});
+  private airlineNameById = signal<Record<string, string>>({});
 
   isLoading = signal(true);
   loadError = signal<string | null>(null);
@@ -79,11 +84,22 @@ export class FlightSelectionComponent {
       map((airlines) => {
         const lookupByCode: Record<string, string> = {};
         const lookupByName: Record<string, string> = {};
+        const nameByCode: Record<string, string> = {};
+        const nameById: Record<string, string> = {};
 
         (Array.isArray(airlines) ? airlines : []).forEach((airline) => {
+          const id = String(airline?._id || '').trim();
           const code = String(airline?.airlineCode || '').trim().toUpperCase();
           const name = String(airline?.airlineName || '').trim();
           const img = String(airline?.img || '').trim();
+
+          if (id && name) {
+            nameById[id] = name;
+          }
+
+          if (code && name) {
+            nameByCode[code] = name;
+          }
 
           if (code && img) {
             lookupByCode[code] = img;
@@ -99,17 +115,21 @@ export class FlightSelectionComponent {
           }
         });
 
-        return { lookupByCode, lookupByName };
+        return { lookupByCode, lookupByName, nameByCode, nameById };
       })
     ).subscribe({
-      next: ({ lookupByCode, lookupByName }) => {
+      next: ({ lookupByCode, lookupByName, nameByCode, nameById }) => {
         this.airlineLogoByCode.set(lookupByCode);
         this.airlineLogoByName.set(lookupByName);
+        this.airlineNameByCode.set(nameByCode);
+        this.airlineNameById.set(nameById);
       },
       error: (err) => {
         console.warn('Khong tai duoc logo airline tu API:', err);
         this.airlineLogoByCode.set({});
         this.airlineLogoByName.set({});
+        this.airlineNameByCode.set({});
+        this.airlineNameById.set({});
       }
     });
   }
@@ -121,17 +141,56 @@ export class FlightSelectionComponent {
   private canonicalAirlineName(value: string): string {
     const normalized = this.normalizeAirlineKey(value);
     const aliases: Record<string, string> = {
-      'vasco': 'VASCO Airlines',
-      'vasco airlines': 'VASCO Airlines',
-      'vasco airline': 'VASCO Airlines',
+      'vasco': 'VASCO',
+      'vasco airlines': 'VASCO',
+      'vasco airline': 'VASCO',
       'vietnam airlines': 'Vietnam Airlines',
-      'vietjet': 'Vietjet',
+      'vietjet': 'Vietjet Air',
       'bamboo airways': 'Bamboo Airways',
       'vietravel airlines': 'Vietravel Airlines',
       'pacific airlines': 'Pacific Airlines'
     };
 
     return aliases[normalized] || String(value || '').trim();
+  }
+
+  displayAirlineName(f: Flight | null): string {
+    if (!f) return 'Unknown';
+
+    const airlineId = String((f as any)?.airlineId || (f as any)?.details?.airline_id || '').trim();
+    if (airlineId && this.airlineNameById()[airlineId]) {
+      return this.canonicalAirlineName(this.airlineNameById()[airlineId]);
+    }
+
+    const code = this.resolveAirlineCode(f);
+    if (code && this.airlineNameByCode()[code]) {
+      return this.canonicalAirlineName(this.airlineNameByCode()[code]);
+    }
+
+    const rawName = String(f.airline || (f as any)?.details?.airline || '').trim();
+    if (rawName && rawName.toLowerCase() !== 'unknown') {
+      return this.canonicalAirlineName(rawName);
+    }
+
+    const fallbackByCode: Record<string, string> = {
+      VN: 'Vietnam Airlines',
+      VJ: 'Vietjet Air',
+      QH: 'Bamboo Airways',
+      '0V': 'VASCO',
+      VU: 'Vietravel Airlines',
+      BL: 'Pacific Airlines'
+    };
+
+    return fallbackByCode[code] || 'Unknown';
+  }
+
+  private resolveAirlineCode(f: Flight | null): string {
+    if (!f) return '';
+
+    const explicitCode = String((f as any)?.airlineCode || (f as any)?.details?.airline_code || '').trim().toUpperCase();
+    if (explicitCode) return explicitCode;
+
+    return String(f.flightNo || '').trim().toUpperCase().slice(0, 2);
   }
 
   goBack() {
@@ -150,9 +209,9 @@ export class FlightSelectionComponent {
   }
 
   getCarrierCode(f: Flight) {
-    const code = (f as any)?.details?.airline_code?.toUpperCase?.();
+    const code = this.resolveAirlineCode(f);
     if (code) return code;
-    const initials = (f.airline ?? '').split(/\s+/).filter(Boolean).map(w => w[0]).join('').slice(0, 3).toUpperCase();
+    const initials = this.displayAirlineName(f).split(/\s+/).filter(Boolean).map(w => w[0]).join('').slice(0, 3).toUpperCase();
     return initials || '??';
   }
 
@@ -275,15 +334,14 @@ export class FlightSelectionComponent {
     if ((f as any)?._logoError) return null;
     const byData = f?.details?.logo?.trim?.();
     if (byData) return byData;
-    const code = (f?.details?.airline_code || f?.airline_code || '').toUpperCase();
+    const code = this.resolveAirlineCode(f);
     const byCode = this.airlineLogoByCode()[code];
     if (byCode) return byCode;
 
-    const rawName = String(f?.airline || f?.details?.airline || '').trim();
+    const rawName = this.displayAirlineName(f);
     const normalizedName = this.normalizeAirlineKey(rawName);
     const canonicalName = this.normalizeAirlineKey(this.canonicalAirlineName(rawName));
 
     return this.airlineLogoByName()[normalizedName] || this.airlineLogoByName()[canonicalName] || null;
   }
 }
-

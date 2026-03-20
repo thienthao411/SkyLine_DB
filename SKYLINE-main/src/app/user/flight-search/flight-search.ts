@@ -1,4 +1,4 @@
-import { Component, computed, signal, inject } from '@angular/core';
+import { Component, computed, signal, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -352,7 +352,7 @@ export class FlightSearchComponent {
     if (v <= 0) return; m[k].set(v - 1);
   }
 
-  airlines = ['Vietnam Airlines', 'Vietjet', 'Bamboo Airways', 'VASCO Airlines', 'Vietravel Airlines'];
+  airlines = ['Vietnam Airlines', 'Vietjet Air', 'Bamboo Airways', 'VASCO', 'Vietravel Airlines'];
   airlineSel = signal<string[]>([]);
   priceSel = signal<string[]>([]);
   timeSel = signal<string[]>([]);
@@ -453,6 +453,27 @@ export class FlightSearchComponent {
   listLimitBack = signal(3);
   showMoreOut() { const total = this.resultsOut().length; this.listLimitOut.set(Math.min(this.listLimitOut() + 3, total)); }
   showMoreBack() { const total = this.resultsBack().length; this.listLimitBack.set(Math.min(this.listLimitBack() + 3, total)); }
+  hasMoreOut = computed(() => this.othersOut().length < this.resultsOut().length);
+  hasMoreBack = computed(() => this.othersBack().length < this.resultsBack().length);
+
+  @HostListener('window:scroll')
+  onWindowScroll() {
+    if (!this.hasSearched() || this.isLoading()) return;
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+    const threshold = 240;
+    const scrolledToBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - threshold;
+    if (!scrolledToBottom) return;
+
+    if (this.hasMoreOut()) {
+      this.showMoreOut();
+      return;
+    }
+
+    if (this.tripType() === 'round' && this.hasMoreBack()) {
+      this.showMoreBack();
+    }
+  }
 
   search(updateUrl = true) {
     this.autoDateMsg.set(null);
@@ -929,12 +950,12 @@ export class FlightSearchComponent {
     const aliases: Record<string, string> = {
       'vietnam airlines': 'Vietnam Airlines',
       'vietnam airline': 'Vietnam Airlines',
-      'vietjet': 'Vietjet',
-      'vietjet air': 'Vietjet',
+      'vietjet': 'Vietjet Air',
+      'vietjet air': 'Vietjet Air',
       'bamboo airways': 'Bamboo Airways',
-      'vasco': 'VASCO Airlines',
-      'vasco airlines': 'VASCO Airlines',
-      'vasco airline': 'VASCO Airlines',
+      'vasco': 'VASCO',
+      'vasco airlines': 'VASCO',
+      'vasco airline': 'VASCO',
       'vietravel airlines': 'Vietravel Airlines',
       'vietravel airline': 'Vietravel Airlines',
       'pacific airlines': 'Pacific Airlines',

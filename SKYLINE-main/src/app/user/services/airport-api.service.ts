@@ -45,7 +45,7 @@ const AUTHORITATIVE_BY_CODE = new Map(
 
 @Injectable({ providedIn: 'root' })
 export class AirportApiService {
-  private readonly API_BASE = 'http://localhost:5000/api';
+  private API_BASE = 'http://localhost:5000/api';
 
   constructor(private http: HttpClient) {}
 

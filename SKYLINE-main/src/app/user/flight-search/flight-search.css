@@ -267,6 +267,43 @@
   background: #eef4ff;
 }
 
+.results-scroll-hint {
+  margin: 18px 0 22px;
+  text-align: center;
+}
+
+.results-scroll-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(96, 109, 236, 0.16);
+  background: linear-gradient(135deg, rgba(238, 243, 255, 0.92) 0%, rgba(229, 237, 255, 0.98) 100%);
+  color: #61789a;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  box-shadow: 0 10px 24px rgba(55, 85, 120, 0.08);
+  animation: resultsHintFloat 1.8s ease-in-out infinite;
+}
+
+.results-scroll-pill i {
+  color: var(--primary);
+  font-size: 16px;
+}
+
+@keyframes resultsHintFloat {
+  0%, 100% {
+    transform: translateY(0);
+    box-shadow: 0 10px 24px rgba(55, 85, 120, 0.08);
+  }
+  50% {
+    transform: translateY(2px);
+    box-shadow: 0 14px 28px rgba(96, 109, 236, 0.12);
+  }
+}
+
 .fs-stepper-value {
   min-width: 18px;
   text-align: center;
@@ -321,7 +358,7 @@
   border: 1px solid rgba(151, 176, 255, 0.95);
   background: linear-gradient(180deg, #ffffff 0%, #f3f7ff 100%);
   box-shadow: 0 20px 44px rgba(55, 85, 120, 0.2);
-  text-align: left;
+  text-align: center;
 }
 
 .fs-notice-badge {
@@ -336,6 +373,7 @@
   background: rgba(96, 109, 236, 0.18);
   box-shadow: inset 0 0 0 1px rgba(96, 109, 236, 0.12);
   font-size: 22px;
+  margin-inline: auto;
 }
 
 .fs-notice-title {
@@ -870,14 +908,18 @@ aside {
   }
 
   .results-toolbar {
-    width: calc(100% - 40px);
-    margin-inline: 20px;
+    width: auto;
+    margin-inline: 10px;
     padding-right: 0;
     box-sizing: border-box;
     gap: 12px;
     flex-wrap: wrap;
     flex-direction: column-reverse;
     align-items: flex-start !important;
+  }
+
+  .rc2-card {
+    margin: 10px;
   }
 
   .results-leg-summary {
