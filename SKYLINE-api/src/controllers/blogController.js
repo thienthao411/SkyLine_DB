@@ -6,15 +6,17 @@ const DEFAULT_BLOGS = [
     slug: 'san-ve-gia-tot-cho-nguoi-moi',
     category: 'Kinh nghiệm',
     author: 'Skyline Editorial Team',
-    readTime: '6 phút đọc',
+    readTime: '10 phút đọc',
     excerpt:
-      'Từ việc chọn khung giờ bay đến cách tận dụng mã ưu đãi theo mùa, bài viết này giúp bạn tiết kiệm chi phí mà vẫn giữ lịch trình linh hoạt.',
+      'Từ việc chọn thời điểm đặt vé đến cách kết hợp điểm thưởng, bài viết này tổng hợp 7 mẹo thực tế để người mới săn giá tốt mà vẫn giữ lịch trình linh hoạt.',
     coverImage: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1200&q=80',
     coverTone: 'sunrise',
     highlights: [
       'Đặt cảnh báo giá theo tuyến bay',
       'Ưu tiên bay giữa tuần để tiết kiệm',
-      'Kết hợp mã giảm và điểm thưởng đúng thời điểm'
+      'So sánh tổng chi phí thay vì chỉ nhìn giá gốc',
+      'Linh hoạt ngày đi để bắt được khung giảm sâu',
+      'Đặt sớm với chặng cao điểm để tránh tăng giá cuối kỳ'
     ],
     sections: [
       {
@@ -29,6 +31,41 @@ const DEFAULT_BLOGS = [
         paragraphs: [
           'Cảnh báo giá giúp bạn không bỏ lỡ khung giảm sâu, đặc biệt vào các đợt ưu đãi theo mùa. Tạo nhiều alert cho các khung giờ bay khác nhau để có thêm lựa chọn.',
           'Ngoài giá vé cơ bản, hãy kiểm tra kỹ điều kiện đi kèm như hành lý, đổi vé hoặc hoàn vé để tránh phát sinh chi phí ngoài dự tính.'
+        ]
+      },
+      {
+        heading: '3) Linh hoạt ngày bay và giờ bay',
+        paragraphs: [
+          'Nếu lịch trình cho phép, hãy thử dịch ngày đi hoặc ngày về sớm/muộn 1-2 ngày. Chênh lệch giá có thể rất lớn giữa cuối tuần và giữa tuần.',
+          'Các chuyến sáng sớm hoặc đêm muộn thường có mức giá dễ chịu hơn khung giờ đẹp. Đây là mẹo đơn giản nhưng rất hiệu quả cho người mới.'
+        ]
+      },
+      {
+        heading: '4) So sánh tổng chi phí sau cùng',
+        paragraphs: [
+          'Đừng chỉ nhìn con số giá vé ban đầu. Hãy cộng thêm phí hành lý, chọn chỗ, thanh toán và các phụ phí khác để ra tổng tiền thực trả.',
+          'Nhiều trường hợp vé nhìn rẻ hơn nhưng tổng hóa đơn lại cao hơn do phát sinh. So sánh theo tổng chi phí sẽ giúp bạn chọn đúng phương án tiết kiệm.'
+        ]
+      },
+      {
+        heading: '5) Tận dụng điểm thưởng và mã ưu đãi đúng lúc',
+        paragraphs: [
+          'Bạn nên ưu tiên dùng mã giảm giá khi chặng bay không có biến động lớn, và dùng điểm thưởng cho giai đoạn cao điểm để tối đa giá trị quy đổi.',
+          'Trước khi thanh toán, hãy thử lần lượt các mã còn hiệu lực và kiểm tra điều kiện tối thiểu. Chỉ một bước nhỏ cũng có thể giảm được khoản đáng kể.'
+        ]
+      },
+      {
+        heading: '6) Đặt vé tách chiều khi cần',
+        paragraphs: [
+          'Với một số hành trình, đặt 2 vé một chiều có thể rẻ hơn đáng kể so với vé khứ hồi. Đồng thời bạn cũng linh hoạt hơn nếu cần đổi một chiều bay.',
+          'Khi áp dụng cách này, hãy kiểm tra kỹ giờ nối chuyến và điều kiện đổi/hoàn riêng của từng chiều để tránh rủi ro khi lịch thay đổi.'
+        ]
+      },
+      {
+        heading: '7) Tránh đặt quá sát giờ bay trong mùa cao điểm',
+        paragraphs: [
+          'Các dịp lễ, Tết hoặc cuối tuần dài ngày thường tăng giá rất nhanh ở giai đoạn cận ngày. Đặt sớm giúp bạn có nhiều lựa chọn và mức giá dễ chịu hơn.',
+          'Nếu bắt buộc đi gấp, hãy mở rộng khung giờ và sân bay gần kề để tăng khả năng tìm được vé phù hợp ngân sách.'
         ]
       }
     ],
@@ -138,6 +175,26 @@ const ensureDefaultBlogs = async () => {
       { slug: item.slug, $or: [{ coverImage: { $exists: false } }, { coverImage: '' }, { coverImage: null }] },
       { $set: { coverImage: item.coverImage } }
     );
+
+    // Backfill old seeded content that still has the short 2-tip version.
+    if (item.slug === 'san-ve-gia-tot-cho-nguoi-moi') {
+      const existing = await Blog.findOne({ slug: item.slug }).select('sections highlights').lean();
+      const sectionCount = Array.isArray(existing?.sections) ? existing.sections.length : 0;
+
+      if (sectionCount < item.sections.length) {
+        await Blog.updateOne(
+          { slug: item.slug },
+          {
+            $set: {
+              readTime: item.readTime,
+              excerpt: item.excerpt,
+              highlights: item.highlights,
+              sections: item.sections,
+            },
+          }
+        );
+      }
+    }
   }
 
   isSeedChecked = true;
@@ -192,6 +249,7 @@ exports.getAllBlogs = async (req, res) => {
 
 exports.getBlogBySlug = async (req, res) => {
   try {
+    await ensureDefaultBlogs();
     const blog = await Blog.findOne({ slug: req.params.slug }).lean();
     if (!blog) return res.status(404).json({ message: 'Blog not found' });
     return res.json(blog);
