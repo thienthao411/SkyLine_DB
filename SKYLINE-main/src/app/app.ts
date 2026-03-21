@@ -54,6 +54,7 @@ export const routes: Routes = [
   { path: '', redirectTo: 'checkticket', pathMatch: 'full' },
   { path: 'checkticket', component: CheckTicket },
   { path: 'checkticket2', component: CheckTicket2 },
+  { path: 'checkticket2/:code', component: CheckTicket2 },
   { path: 'flight-selection/:id', component: FlightSelection },
   { path: 'seat-selection/:flightId', component: SeatSelection },
   { path: 'baggage-selection', component: BaggageSelection },

@@ -1,388 +1,396 @@
 .checkticket-container {
-  max-width: 1100px;
-  margin: 30px auto;
-  padding: 30px;
-  background: #f8f9fb;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  color: #333;
-  font-family: "Segoe UI", sans-serif;
-  transition: all 0.3s ease;
+  max-width: 860px;
+  margin: 16px auto;
+  padding: 18px;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e5ebf5;
+  box-shadow: 0 8px 24px rgba(15, 38, 79, 0.06);
+  color: #1f2937;
 }
 
 .ticket-detail-card-content {
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 14px;
 }
 
-/* --- THÔNG TIN VÉ --- */
+.ticket-summary-area {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+
 .ticket-summary-area h3 {
-  color: #375578;
-  font-weight: 600;
-  margin-bottom: 15px;
+  margin: 0 0 10px;
+  color: #274c77;
+  font-weight: 700;
+  font-size: 18px;
 }
 
 .ticket-summary-grid {
   display: grid;
-  grid-template-columns: 1.2fr 1.2fr 1fr 1fr 1fr;
-  gap: 10px;
+  grid-template-columns: 1.1fr 1.2fr 1fr 1fr 1fr;
+  gap: 8px;
   align-items: center;
-  word-wrap: break-word;
-  white-space: normal;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .grid-header-row {
-  font-weight: 600;
-  color: #375578;
-  background: #eaf0fa;
-  padding: 10px;
-  border-radius: 8px;
+  background: #eef3fb;
+  color: #355a86;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-weight: 700;
 }
 
 .summary-data-row {
-  background: #fff;
-  padding: 12px;
+  background: #f9fbff;
+  border: 1px solid #edf1f7;
   border-radius: 8px;
-  line-height: 1.4;
+  padding: 10px;
 }
 
 .summary-line {
-  margin: 15px 0;
   border: none;
   height: 1px;
-  background: #ddd;
+  background: #e6edf8;
+  margin: 12px 0;
+}
+
+.code-value {
+  font-weight: 700;
+  color: #24486f;
 }
 
 .status-value-summary {
-  font-weight: 600;
-  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 700;
 }
 
 .status-value-summary.paid {
-  color: #2b8a3e;
+  background: #e9f8ef;
+  color: #19713a;
 }
 
 .status-value-summary.unpaid {
-  color: #d6336c;
+  background: #ffeef2;
+  color: #b4234f;
 }
 
-/* --- CHI TIẾT CHUYẾN BAY --- */
 .flight-detail-block {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  background: transparent;
+  border-radius: 0;
+  border: none;
+  border-top: 1px solid #e6edf8;
+  padding: 14px 0 0;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  max-width: 100%;
-  transition: all 0.3s ease;
+  gap: 14px;
 }
 
 .flight-main-info {
   display: grid;
-  grid-template-columns: 100px 1fr 0.5fr 1fr 0.6fr;
+  grid-template-columns: 86px 1fr auto 1fr 110px;
+  gap: 10px;
   align-items: center;
   text-align: center;
-  gap: 10px;
 }
 
-/* Ô QR code */
 .qr-placeholder {
-  width: 100px;
-  height: 100px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 15px;
-  flex-shrink: 0;
+  width: 78px;
+  height: 78px;
+  margin: 0 auto;
 }
 
 .qr-placeholder img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  border-radius: 0;
-  border: none;
+  border-radius: 8px;
+  border: 1px solid #edf1f7;
 }
 
-/* Thời gian & thành phố */
 .time-col .time {
-  font-size: 18px;
+  font-size: 22px;
+  line-height: 1.15;
+  font-weight: 700;
+  color: #1e4068;
+}
+
+.time-col .city {
+  margin-top: 4px;
+  font-size: 14px;
+  color: #58708f;
   font-weight: 600;
 }
 
-.city {
-  font-size: 14px;
-  color: #666;
+.time-col .date {
+  margin-top: 2px;
+  font-size: 13px;
+  color: #6f8198;
+}
+
+.duration-col {
+  display: flex;
+  justify-content: center;
 }
 
 .duration-label {
-  background: #eaf0fa;
-  color: #375578;
-  padding: 5px 10px;
-  border-radius: 8px;
-  font-size: 14px;
+  display: inline-block;
+  background: #eef4ff;
+  border: 1px solid #dbe7ff;
+  color: #315788;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.seat-col {
+  border-left: 1px dashed #d9e4f2;
+  padding-left: 10px;
 }
 
 .seat-label {
-  font-size: 13px;
-  color: #777;
+  font-size: 12px;
+  color: #7a8da5;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .seat-value {
-  font-weight: 600;
-  color: #375578;
+  margin-top: 4px;
+  font-size: 24px;
+  font-weight: 800;
+  color: #274c77;
 }
 
-/* --- NÚT HÀNH ĐỘNG --- */
 .flight-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
   flex-wrap: wrap;
+  gap: 10px;
 }
 
 .link-action {
-  text-decoration: none;
-  color: #375578;
-  font-weight: 500;
-  transition: 0.2s;
+  background: transparent;
   border: none;
-  background: none;
+  color: #2f5885;
+  font-weight: 600;
   cursor: pointer;
+  padding: 8px 2px;
 }
 
 .link-action:hover {
+  color: #1e4068;
   text-decoration: underline;
 }
 
 .btn-swap,
-.btn-cancel {
+.btn-cancel,
+.home-btn,
+.modal-actions .btn-confirm,
+.modal-actions .btn-cancel,
+.info-popup-actions .btn-ok {
   border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
+  border-radius: 10px;
+  padding: 10px 18px;
   cursor: pointer;
-  font-weight: 600;
-  transition: 0.25s;
+  font-weight: 700;
+  transition: transform 0.15s ease, filter 0.15s ease;
 }
 
-.btn-swap {
-  background: #4dabf7;
+.btn-swap,
+.modal-actions .btn-confirm,
+.info-popup-actions .btn-ok {
+  background: #3182ce;
   color: #fff;
 }
 
-.btn-swap:hover {
-  background: #1c7ed6;
-}
-
-.btn-cancel {
-  background: #f03e3e;
+.btn-cancel,
+.modal-actions .btn-cancel {
+  background: #e53e3e;
   color: #fff;
 }
 
-.btn-cancel:hover {
-  background: #c92a2a;
-}
-
-/* --- NÚT QUAY LẠI --- */
 .home-btn {
   align-self: center;
-  background: #375578;
+  min-width: 120px;
+  background: #274c77;
   color: #fff;
-  border: none;
-  padding: 12px 28px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: 0.25s;
 }
 
-.home-btn:hover {
-  background: #2c4463;
+.btn-swap:hover,
+.btn-cancel:hover,
+.home-btn:hover,
+.modal-actions .btn-confirm:hover,
+.modal-actions .btn-cancel:hover,
+.info-popup-actions .btn-ok:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.95);
 }
 
-/* --- PHẦN KHÔNG TÌM THẤY --- */
 .not-found {
   text-align: center;
-  padding: 50px;
+  background: #fff;
+  border: 1px dashed #c9d7eb;
+  border-radius: 12px;
+  padding: 36px 20px;
+  color: #607289;
   font-size: 16px;
-  color: #888;
 }
 
-/* --- MODAL & POPUP --- */
-.modal-backdrop {
+.modal-backdrop,
+.info-popup-backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 999;
 }
 
-.modal-box {
+.info-popup-backdrop {
+  z-index: 1001;
+}
+
+.modal-box,
+.info-popup-box {
+  width: min(92vw, 460px);
   background: #fff;
-  padding: 20px 25px;
-  border-radius: 12px;
-  min-width: 280px;
-  max-width: 400px;
-  text-align: center;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  animation: fadeIn 0.25s ease-out;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 16px 36px rgba(16, 24, 40, 0.18);
+}
+
+.modal-box {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.info-popup-box {
+  animation: popupFadeIn 0.2s ease-out;
 }
 
 .modal-box p {
-  margin-bottom: 20px;
-  font-weight: 500;
+  margin: 0 0 16px;
+  color: #334155;
+  font-weight: 600;
 }
 
-.modal-actions {
+.modal-actions,
+.info-popup-actions {
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
   gap: 10px;
-}
-
-.modal-actions .btn-confirm {
-  background: #4dabf7;
-  color: #fff;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.modal-actions .btn-cancel {
-  background: #f03e3e;
-  color: #fff;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.modal-actions .btn-confirm:hover {
-  background: #1c7ed6;
-}
-
-.modal-actions .btn-cancel:hover {
-  background: #c92a2a;
 }
 
 .feedback-popup {
   position: fixed;
-  bottom: 30px;
   left: 50%;
+  bottom: 24px;
   transform: translateX(-50%);
-  background: #333;
+  z-index: 1002;
+  background: #1f2937;
   color: #fff;
-  padding: 12px 25px;
   border-radius: 10px;
-  font-weight: 500;
-  z-index: 1000;
-  animation: slideUp 0.3s ease-out;
-}
-
-/* --- POPUP KHUYẾN MÃI / LỢI ÍCH --- */
-.info-popup-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1001;
-}
-
-.info-popup-box {
-  background: #fff;
-  padding: 25px 30px;
-  border-radius: 12px;
-  max-width: 450px;
-  width: 90%;
-  text-align: center;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-  animation: popupFadeIn 0.3s ease-out;
+  padding: 11px 18px;
+  font-weight: 600;
+  animation: slideUp 0.2s ease-out;
 }
 
 .info-popup-box h4 {
+  margin: 0 0 10px;
+  color: #274c77;
   font-size: 18px;
-  color: #375578;
-  margin-bottom: 15px;
-  font-weight: 600;
-}
-
-.info-popup-box p {
-  font-size: 14px;
-  color: #555;
-  margin-bottom: 20px;
-  line-height: 1.5;
-}
-
-.info-popup-actions {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-}
-
-.info-popup-actions .btn-ok,
-.info-popup-actions .btn-close {
-  border: none;
-  padding: 10px 22px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.25s;
-}
-
-.info-popup-actions .btn-ok {
-  background: #4dabf7;
-  color: #fff;
-}
-
-.info-popup-actions .btn-ok:hover {
-  background: #1c7ed6;
-}
-
-.info-popup-actions .btn-close {
-  background: #f03e3e;
-  color: #fff;
-}
-
-.info-popup-actions .btn-close:hover {
-  background: #c92a2a;
+  font-weight: 700;
 }
 
 .info-list {
   list-style: none;
-  padding-left: 0;
-  margin: 0;
+  margin: 0 0 16px;
+  padding: 0;
+  text-align: left;
 }
 
 .info-list li {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
+  color: #334155;
   margin-bottom: 8px;
 }
 
-/* Animations */
+@media (max-width: 992px) {
+  .checkticket-container {
+    max-width: 92%;
+    padding: 14px;
+    margin: 12px auto;
+  }
+
+  .ticket-summary-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .grid-header-row {
+    display: none;
+  }
+
+  .summary-data-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    row-gap: 8px;
+  }
+
+  .flight-main-info {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .seat-col {
+    border-left: none;
+    border-top: 1px dashed #d9e4f2;
+    padding: 10px 0 0;
+  }
+
+  .duration-col {
+    order: 3;
+  }
+}
+
+@media (max-width: 576px) {
+  .ticket-summary-area,
+  .flight-detail-block {
+    padding: 14px;
+  }
+
+  .summary-data-row {
+    grid-template-columns: 1fr;
+  }
+
+  .flight-actions {
+    justify-content: stretch;
+  }
+
+  .btn-swap,
+  .btn-cancel,
+  .home-btn {
+    width: 100%;
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.97);
   }
-
   to {
     opacity: 1;
     transform: scale(1);
@@ -392,9 +400,8 @@
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translate(-50%, 20px);
+    transform: translate(-50%, 8px);
   }
-
   to {
     opacity: 1;
     transform: translate(-50%, 0);
@@ -404,9 +411,8 @@
 @keyframes popupFadeIn {
   from {
     opacity: 0;
-    transform: scale(0.8);
+    transform: scale(0.96);
   }
-
   to {
     opacity: 1;
     transform: scale(1);

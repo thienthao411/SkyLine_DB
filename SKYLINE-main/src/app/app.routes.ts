@@ -116,6 +116,7 @@ export const routes: Routes = [
       { path: 'notifications', component: Notifications },
       { path: 'checkticket', component: CheckTicket },
       { path: 'checkticket2', component: CheckTicket2 },
+      { path: 'checkticket2/:code', component: CheckTicket2 },
       { path: '', redirectTo: 'checkticket', pathMatch: 'full' },
       { path: 'contact', component: Contact },
       { path: '', redirectTo: 'checkticket', pathMatch: 'full' },

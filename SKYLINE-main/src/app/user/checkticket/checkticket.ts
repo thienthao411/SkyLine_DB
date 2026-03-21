@@ -12,6 +12,7 @@ interface Ticket {
   status: string;
   route: string;
   email: string;
+  sourceRecord: BookingRecord;
 }
 
 @Component({
@@ -72,11 +73,15 @@ export class CheckTicket implements OnInit {
       status: statusText,
       route: `${record.flight.from} - ${record.flight.to}`,
       email,
+      sourceRecord: record,
     };
   }
 
   goToDetail(ticket: Ticket) {
-    this.router.navigate(['/checkticket2'], { queryParams: { code: ticket.code } });
+    this.router.navigate(['/checkticket2'], {
+      queryParams: { code: ticket.code },
+      state: { ticketRecord: ticket.sourceRecord }
+    });
   }
 
   searchTicket() {

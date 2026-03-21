@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 import { TicketApiService, BookingRecord } from '../services/ticket-api.service';
+import { combineLatest, map } from 'rxjs';
 
 interface Ticket {
   code: string;
@@ -50,10 +51,20 @@ export class CheckTicket2 implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
-      const code = params['code'];
+    combineLatest([
+      this.route.queryParamMap.pipe(map((params) => params.get('code') || '')),
+      this.route.paramMap.pipe(map((params) => params.get('code') || '')),
+    ])
+      .pipe(map(([queryCode, paramCode]) => (queryCode || paramCode || '').trim()))
+      .subscribe((code) => {
       if (!code) {
         this.ticketDetail = undefined;
+        return;
+      }
+
+      const navTicket = (this.router.getCurrentNavigation()?.extras?.state?.['ticketRecord'] || history.state?.ticketRecord) as BookingRecord | undefined;
+      if (navTicket && navTicket.ticketCode === code) {
+        this.ticketDetail = this.toTicketDetail(navTicket);
         return;
       }
 
