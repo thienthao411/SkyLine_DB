@@ -3,11 +3,7 @@
     <!-- Phần nội dung chính -->
     <main class="content">
       <section class="notification-inbox">
-        <h2>Thông báo gần đây</h2>
-
-        <div class="inbox-empty" *ngIf="!inbox.length">
-          Chưa có thông báo nào được ghi nhận cho tài khoản này.
-        </div>
+        
 
         <div class="inbox-list" *ngIf="inbox.length">
           <article class="inbox-card" *ngFor="let item of inbox">

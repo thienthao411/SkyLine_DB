@@ -16,7 +16,17 @@
     
           <div class="form-group">
             <label><i class="fa fa-phone"></i> Số điện thoại</label>
-            <input [(ngModel)]="user.phone" name="phone" [readonly]="!isEditing" />
+            <input
+              [(ngModel)]="user.phone"
+              name="phone"
+              [readonly]="!isEditing"
+              inputmode="numeric"
+              maxlength="10"
+              placeholder="Nhập 10 chữ số"
+            />
+            <small class="field-error" *ngIf="isEditing && user.phone && !isPhoneValid">
+              Số điện thoại phải đúng 10 chữ số.
+            </small>
           </div>
     
           <div class="form-group half">
@@ -34,8 +44,18 @@
           </div>
     
           <div class="form-group">
-            <label><i class="fa fa-id-card"></i> CMND/Passport</label>
-            <input [(ngModel)]="user.passport" name="passport" [readonly]="!isEditing" />
+            <label><i class="fa fa-id-card"></i> Số CCCD</label>
+            <input
+              [(ngModel)]="user.passport"
+              name="passport"
+              [readonly]="!isEditing"
+              inputmode="numeric"
+              maxlength="12"
+              placeholder="Nhập 12 chữ số"
+            />
+            <small class="field-error" *ngIf="isEditing && user.passport && !isPassportValid">
+              Số CCCD phải đúng 12 chữ số.
+            </small>
           </div>
     
           <div class="form-group half">

@@ -68,6 +68,13 @@ select[disabled] {
   color: #555;
 }
 
+.field-error {
+  display: block;
+  margin-top: 6px;
+  color: #dc2626;
+  font-size: 12px;
+}
+
 /* --- ACTIONS --- */
 .actions {
   width: 100%;

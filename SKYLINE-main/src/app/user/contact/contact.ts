@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-contact',
@@ -10,14 +11,44 @@ import { FormsModule } from '@angular/forms';
 })
 export class Contact {
   submitted = false;
+  submitError = '';
+  isSubmitting = false;
+  form = {
+    fullName: '',
+    email: '',
+    topic: '',
+    message: '',
+  };
+
+  constructor(private http: HttpClient) {}
 
   onSubmit(event: Event) {
     event.preventDefault();
-    this.submitted = true;
+    if (this.isSubmitting) return;
 
-    // Hiện thông báo 3 giây rồi ẩn
-    setTimeout(() => {
-      this.submitted = false;
-    }, 3000);
+    this.submitError = '';
+    this.isSubmitting = true;
+
+    this.http.post<{ success: boolean }>('http://localhost:5000/api/notifications/support-request', this.form).subscribe({
+      next: () => {
+        this.submitted = true;
+        this.isSubmitting = false;
+
+        this.form = {
+          fullName: '',
+          email: '',
+          topic: '',
+          message: '',
+        };
+
+        setTimeout(() => {
+          this.submitted = false;
+        }, 3000);
+      },
+      error: (error) => {
+        this.isSubmitting = false;
+        this.submitError = error?.error?.message || 'Không thể gửi yêu cầu lúc này. Vui lòng thử lại.';
+      }
+    });
   }
 }

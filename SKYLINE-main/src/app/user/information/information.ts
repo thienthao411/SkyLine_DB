@@ -21,6 +21,22 @@ export class Information implements OnInit {
   savePopupMessage = '';
   private popupTimer: ReturnType<typeof setTimeout> | null = null;
 
+  get phoneDigits(): string {
+    return String(this.user?.phone || '').replace(/\D/g, '');
+  }
+
+  get passportDigits(): string {
+    return String(this.user?.passport || '').replace(/\D/g, '');
+  }
+
+  get isPhoneValid(): boolean {
+    return this.phoneDigits.length === 10;
+  }
+
+  get isPassportValid(): boolean {
+    return this.passportDigits.length === 12;
+  }
+
   // danh sách quốc gia gợi ý
   countries: string[] = [
     'Việt Nam',
@@ -122,8 +138,20 @@ export class Information implements OnInit {
       return;
     }
 
+    if (!this.isPhoneValid) {
+      this.showPopup('error', 'Số điện thoại chưa hợp lệ', 'Số điện thoại phải gồm đúng 10 chữ số.');
+      return;
+    }
+
+    if (!this.isPassportValid) {
+      this.showPopup('error', 'CCCD chưa hợp lệ', 'Số CCCD phải gồm đúng 12 chữ số.');
+      return;
+    }
+
     const payload: User = {
       ...this.user,
+      phone: this.phoneDigits,
+      passport: this.passportDigits,
       birthday: this.normalizeDateInput(this.user.birthday),
       passportExpiry: this.normalizeDateInput(this.user.passportExpiry)
     };

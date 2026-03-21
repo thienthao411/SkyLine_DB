@@ -269,6 +269,114 @@ function generateTemporaryPassword() {
   return `Sky${Math.random().toString(36).slice(2, 8)}!`;
 }
 
+function calculateRewardPoints(ticket) {
+  const payment = ticket?.payment && typeof ticket.payment === "object" ? ticket.payment : {};
+  const rawTicketCount = Number(payment.ticketCount || payment.passengerCount || ticket?.passengerInfo?.ticketCount || 1);
+  const ticketCount = Number.isFinite(rawTicketCount) && rawTicketCount > 0 ? Math.floor(rawTicketCount) : 1;
+
+  const totalAmount = Number(ticket?.totalAmount || ticket?.totalPrice || ticket?.price || 0);
+  const amountPoints = Number.isFinite(totalAmount) && totalAmount > 0 ? Math.floor(totalAmount / 10000) : 0;
+  const ticketPoints = ticketCount * 100;
+  const totalPoints = amountPoints + ticketPoints;
+
+  return {
+    totalPoints,
+    ticketCount,
+    ticketPoints,
+    amountPoints,
+    totalAmount: Number.isFinite(totalAmount) ? totalAmount : 0,
+  };
+}
+
+function computeRankProgress(points) {
+  const safePoints = Math.max(0, Number(points || 0));
+
+  if (safePoints >= 5000) {
+    return {
+      currentRank: "Bạch Kim",
+      nextRank: "Bạch Kim",
+      nextThreshold: 5000,
+    };
+  }
+
+  if (safePoints >= 2000) {
+    return {
+      currentRank: "Vàng",
+      nextRank: "Bạch Kim",
+      nextThreshold: 5000,
+    };
+  }
+
+  if (safePoints >= 500) {
+    return {
+      currentRank: "Bạc",
+      nextRank: "Vàng",
+      nextThreshold: 2000,
+    };
+  }
+
+  return {
+    currentRank: "Đồng",
+    nextRank: "Bạc",
+    nextThreshold: 500,
+  };
+}
+
+async function applyRewardPointsForSuccessfulBooking(ticket) {
+  const payment = ticket?.payment && typeof ticket.payment === "object" ? ticket.payment : {};
+  if (payment.rewardPointsGranted === true) {
+    return { skipped: true, reason: "already-granted" };
+  }
+
+  const email = normalizeEmail(ticket?.email || ticket?.passengerInfo?.email);
+  if (!email) {
+    return { skipped: true, reason: "missing-email" };
+  }
+
+  const user = await User.findOne({ email: new RegExp(`^${escapeRegex(email)}$`, "i") });
+  if (!user) {
+    return { skipped: true, reason: "user-not-found", email };
+  }
+
+  const reward = calculateRewardPoints(ticket);
+  if (!reward.totalPoints || reward.totalPoints <= 0) {
+    return { skipped: true, reason: "zero-points", email };
+  }
+
+  const nextPoints = Math.max(0, Number(user.points || 0)) + reward.totalPoints;
+  const rankProgress = computeRankProgress(nextPoints);
+
+  user.points = nextPoints;
+  user.currentRank = rankProgress.currentRank;
+  user.nextRank = rankProgress.nextRank;
+  user.nextThreshold = rankProgress.nextThreshold;
+  await user.save();
+
+  ticket.payment = {
+    ...payment,
+    rewardPointsGranted: true,
+    rewardPointsGrantedAt: new Date().toISOString(),
+    rewardPointsAwarded: reward.totalPoints,
+    rewardPointsBreakdown: {
+      ticketCount: reward.ticketCount,
+      ticketPoints: reward.ticketPoints,
+      amountPoints: reward.amountPoints,
+      totalAmount: reward.totalAmount,
+    },
+    rewardUserEmail: email,
+  };
+
+  await ticket.save();
+
+  return {
+    skipped: false,
+    email,
+    awarded: reward.totalPoints,
+    pointsAfterAward: nextPoints,
+    rankAfterAward: rankProgress.currentRank,
+  };
+}
+
 async function ensurePassengerAccountForTicket(ticket) {
   const email = normalizeEmail(ticket?.email || ticket?.passengerInfo?.email);
   if (!email) {
@@ -566,6 +674,18 @@ exports.updateBookingStatus = async (req, res) => {
         };
         await ticket.save();
       }
+
+      try {
+        await applyRewardPointsForSuccessfulBooking(ticket);
+      } catch (rewardError) {
+        const safePayment = ticket.payment && typeof ticket.payment === "object" ? ticket.payment : {};
+        ticket.payment = {
+          ...safePayment,
+          rewardPointsGranted: Boolean(safePayment.rewardPointsGranted),
+          rewardPointsError: String(rewardError?.message || "reward-points-failed"),
+        };
+        await ticket.save();
+      }
     }
 
     return res.json({ success: true, booking: toBookingResponse(ticket) });
@@ -642,6 +762,18 @@ exports.updatePaymentStatusByAdmin = async (req, res) => {
           emailSent: false,
           emailError: emailError.message,
           emailSentAt: safePayment.emailSentAt,
+        };
+        await ticket.save();
+      }
+
+      try {
+        await applyRewardPointsForSuccessfulBooking(ticket);
+      } catch (rewardError) {
+        const safePayment = ticket.payment && typeof ticket.payment === "object" ? ticket.payment : {};
+        ticket.payment = {
+          ...safePayment,
+          rewardPointsGranted: Boolean(safePayment.rewardPointsGranted),
+          rewardPointsError: String(rewardError?.message || "reward-points-failed"),
         };
         await ticket.save();
       }
