@@ -117,7 +117,17 @@
                 <td>{{ t.booking_date }}</td>
                 <td>{{ t.price | number }}</td>
                 <td>
-                  <span [ngStyle]="getStatusStyle(t.status)">{{ t.status }}</span>
+                  <span
+                    class="status"
+                    [class.status-completed]="t.status.toLowerCase() === 'hoàn thành'"
+                    [class.status-paid]="t.status.toLowerCase() === 'đã thanh toán'"
+                    [class.status-pending]="t.status.toLowerCase() === 'chờ thanh toán'"
+                    [class.status-processing]="t.status.toLowerCase() === 'đang chờ đối soát'"
+                    [class.status-failed]="t.status.toLowerCase() === 'thất bại'"
+                    [class.status-cancelled]="t.status.toLowerCase() === 'hủy'"
+                  >
+                    {{ t.status }}
+                  </span>
                 </td>
                 <td class="actions">
                   <button title="Xem" class="action-btn view" (click)="onView(t)">

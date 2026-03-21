@@ -203,11 +203,42 @@
   justify-content: center;
   min-width: 120px;
   padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid transparent;
+  border-radius: 4px; /* Bo góc vuông nhẹ */
   font-size: 12px;
   font-weight: 700;
   line-height: 1.3;
+  color: #fff; /* Màu chữ trắng */
+  border: none; /* Loại bỏ đường viền */
+}
+
+/* Trạng thái hoàn thành */
+.status-completed {
+  background-color: #16a34a; /* Màu xanh lá */
+}
+
+/* Trạng thái đã thanh toán */
+.status-paid {
+  background-color: #2563eb; /* Màu xanh dương */
+}
+
+/* Trạng thái đang chờ */
+.status-pending {
+  background-color: #f59e0b; /* Màu vàng cam */
+}
+
+/* Trạng thái đã hủy */
+.status-cancelled {
+  background-color: #dc2626; /* Màu đỏ */
+}
+
+/* Trạng thái đang xử lý */
+.status-processing {
+  background-color: #d97706; /* Màu cam đậm */
+}
+
+/* Trạng thái thất bại */
+.status-failed {
+  background-color: #991b1b; /* Màu đỏ đậm */
 }
 
 .status-completed {
