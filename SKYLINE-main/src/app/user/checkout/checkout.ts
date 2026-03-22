@@ -182,7 +182,7 @@ export class Checkout implements OnInit, OnDestroy {
     return this.bookingStatus === 'pending'
       && this.remainingSeconds() > 0
       && !this.isUpdatingStatus
-      && ref.length >= 6
+      && ref.length > 0
       && payer.length >= 3
       && this.hasConfirmedTransfer;
   }
@@ -204,7 +204,7 @@ export class Checkout implements OnInit, OnDestroy {
 
   confirmPaid(): void {
     if (!this.canConfirmPayment) {
-      this.statusMessage = 'Vui lòng nhập đủ thông tin và xác nhận bạn đã chuyển khoản.';
+      this.statusMessage = 'Vui lòng nhập mã tham chiếu, tên người chuyển khoản và xác nhận bạn đã chuyển khoản.';
       return;
     }
 
