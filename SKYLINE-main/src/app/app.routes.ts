@@ -82,6 +82,11 @@ export const routes: Routes = [
   },
 
   {
+    path: 'tuyen-dung',
+    loadComponent: () => import('./user/recruitment/recruitment').then(m => m.RecruitmentComponent)
+  },
+
+  {
     path: 'promotion/:promotionItemId',
     loadComponent: () => import('./user/promotion-detail/promotion-detail').then(m => m.PromotionDetailComponent)
   },
@@ -104,6 +109,10 @@ export const routes: Routes = [
   {
     path: 'admin/blog-management',
     loadComponent: () => import('./admin/blog-management/blog-management').then(m => m.BlogManagementComponent)
+  },
+  {
+    path: 'admin/recruitment-management',
+    loadComponent: () => import('./admin/recruitment-management/recruitment-management').then(m => m.RecruitmentManagementComponent)
   },
 
   // Các trang trong layout chính

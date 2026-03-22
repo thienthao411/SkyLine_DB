@@ -16,6 +16,7 @@ const blogRoutes = require("./routes/blogRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const ticketRoutes = require("./routes/ticketRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const recruitmentRoutes = require("./routes/recruitmentRoutes");
 
 const notificationRoutes = require("./routes/notificationRoutes");
 const notificationUserRoutes = require("./routes/notificationUserRoutes");
@@ -42,6 +43,7 @@ app.use("/api/blogs", blogRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/recruitment", recruitmentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/notifications-user", notificationUserRoutes);
 

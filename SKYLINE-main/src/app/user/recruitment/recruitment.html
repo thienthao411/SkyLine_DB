@@ -1,0 +1,135 @@
+<app-header></app-header>
+
+<main class="recruitment-page">
+  <section class="hero">
+    <div class="hero-pattern"></div>
+    <div class="hero-inner">
+      <p class="hero-kicker">Skyline Careers</p>
+      <h1>Bay cùng đội ngũ đang xây nên hệ sinh thái đặt vé thông minh</h1>
+      <p class="hero-subtitle">
+        Chúng tôi tìm kiếm những người yêu sản phẩm, thích làm việc nhanh và luôn đặt trải nghiệm khách hàng làm trung tâm.
+      </p>
+      <a class="hero-cta" href="#ung-tuyen">Ứng tuyển ngay</a>
+    </div>
+  </section>
+
+  <section class="content-shell">
+    <div class="section-header">
+      <h2>Vị trí đang mở</h2>
+      <p>Cập nhật theo nhu cầu mở rộng đội ngũ trong quý hiện tại.</p>
+    </div>
+
+    <div class="jobs-grid" *ngIf="!isLoadingJobs && jobs.length > 0">
+      <article class="job-card" *ngFor="let job of jobs">
+        <div class="job-meta">
+          <span>{{ job.team }}</span>
+          <span>{{ job.type }}</span>
+        </div>
+        <h3>{{ job.title }}</h3>
+        <p class="job-info">{{ job.location }} | {{ job.level }}</p>
+        <p class="job-salary">Mức lương: <strong>{{ job.salaryRange || 'Thỏa thuận' }}</strong></p>
+        <p class="job-summary">{{ job.summary }}</p>
+        <div class="tags">
+          <span *ngFor="let skill of job.skills">{{ skill }}</span>
+        </div>
+      </article>
+    </div>
+
+    <p class="empty-state" *ngIf="isLoadingJobs">Đang tải danh sách tuyển dụng...</p>
+    <p class="empty-state" *ngIf="!isLoadingJobs && jobs.length === 0">Hiện chưa có vị trí mở. Vui lòng quay lại sau nhé.</p>
+  </section>
+
+  <section class="content-shell two-column">
+    <article class="panel">
+      <div class="section-header">
+        <h2>Quyền lợi tại Skyline</h2>
+      </div>
+      <ul class="benefits-list">
+        <li *ngFor="let benefit of benefits">
+          <h4>{{ benefit.title }}</h4>
+          <p>{{ benefit.detail }}</p>
+        </li>
+      </ul>
+    </article>
+
+    <article class="panel process-panel">
+      <div class="section-header">
+        <h2>Quy trình tuyển dụng</h2>
+      </div>
+      <ol class="process-list">
+        <li *ngFor="let step of processSteps; let index = index">
+          <span class="step-index">0{{ index + 1 }}</span>
+          <p>{{ step }}</p>
+        </li>
+      </ol>
+
+      <div class="contact-box">
+        <h4>Cần trao đổi nhanh?</h4>
+        <p>Email: recruitment@skyline.vn</p>
+        <p>Hotline nhân sự: 0909 888 360</p>
+      </div>
+    </article>
+  </section>
+
+  <section class="content-shell" id="ung-tuyen">
+    <article class="panel apply-panel">
+      <div class="section-header">
+        <h2>Gửi hồ sơ ứng tuyển</h2>
+        <p>Điền thông tin để ứng tuyển trực tiếp trên hệ thống Skyline.</p>
+      </div>
+
+      <form class="apply-form" (ngSubmit)="submitApplication()">
+        <div class="form-grid">
+          <label>
+            Vị trí ứng tuyển
+            <select name="jobId" [(ngModel)]="form.jobId" required>
+              <option value="" disabled>Chọn vị trí</option>
+              <option *ngFor="let job of jobs" [value]="job.id">{{ job.title }}</option>
+            </select>
+          </label>
+
+          <label>
+            Họ và tên
+            <input type="text" name="fullName" [(ngModel)]="form.fullName" placeholder="Nguyễn Văn A" required>
+          </label>
+
+          <label>
+            Email
+            <input type="email" name="email" [(ngModel)]="form.email" placeholder="email@domain.com" required>
+          </label>
+
+          <label>
+            Số điện thoại
+            <input type="text" name="phone" [(ngModel)]="form.phone" placeholder="09xx xxx xxx">
+          </label>
+        </div>
+
+        <label class="cover-letter">
+          Thư giới thiệu
+          <textarea
+            name="coverLetter"
+            [(ngModel)]="form.coverLetter"
+            rows="4"
+            placeholder="Giới thiệu ngắn về kinh nghiệm và lý do bạn muốn đồng hành cùng Skyline..."
+          ></textarea>
+        </label>
+
+        <label class="upload-row">
+          CV đính kèm (PDF/DOC/DOCX, tối đa 10MB)
+          <input type="file" accept=".pdf,.doc,.docx" (change)="onCvFileSelected($event)">
+          <span class="file-name" *ngIf="selectedCvFileName">Đã chọn: {{ selectedCvFileName }}</span>
+        </label>
+
+        <button class="submit-btn" type="submit" [disabled]="isSubmitting || jobs.length === 0">
+          {{ isSubmitting ? 'Đang gửi hồ sơ...' : 'Gửi hồ sơ ứng tuyển' }}
+        </button>
+      </form>
+
+      <p class="form-message" [class.success]="formMessageType === 'success'" [class.error]="formMessageType === 'error'" *ngIf="formMessage">
+        {{ formMessage }}
+      </p>
+    </article>
+  </section>
+</main>
+
+<app-footer></app-footer>

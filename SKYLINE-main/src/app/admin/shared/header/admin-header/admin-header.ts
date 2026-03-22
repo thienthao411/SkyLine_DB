@@ -122,12 +122,21 @@ export class AdminHeader implements OnInit, OnDestroy {
     event.stopPropagation();
 
     const goToTarget = () => {
-      this.router.navigate(['/admin/ticket-management'], {
-        queryParams: {
-          tab: 'transaction',
-          bookingId: item.bookingId
-        }
-      });
+      if (item.type === 'recruitment_application') {
+        this.router.navigate(['/admin/recruitment-management'], {
+          queryParams: {
+            tab: 'applications',
+            applicationId: item.bookingId
+          }
+        });
+      } else {
+        this.router.navigate(['/admin/ticket-management'], {
+          queryParams: {
+            tab: 'transaction',
+            bookingId: item.bookingId
+          }
+        });
+      }
       this.showNotificationDropdown = false;
     };
 

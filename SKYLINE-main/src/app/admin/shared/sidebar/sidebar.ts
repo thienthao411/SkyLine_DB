@@ -60,6 +60,12 @@ export class AdminSidebarComponent {
       icon: '/assets/icons/promotion.png',
       label: 'Quản lý bài viết',
       active: false
+    },
+    {
+      route: '/admin/recruitment-management',
+      icon: '/assets/icons/customer.png',
+      label: 'Quản lý tuyển dụng',
+      active: false
     }
   ];
 

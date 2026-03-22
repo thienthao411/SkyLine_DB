@@ -1,0 +1,278 @@
+<div class="admin-container">
+  <app-admin-sidebar [isOpen]="sidebarOpen"></app-admin-sidebar>
+
+  <main class="content">
+    <app-admin-header (toggleSidebarClicked)="toggleSidebar()"></app-admin-header>
+
+    <div class="header">
+      <h1>Quản lý tuyển dụng</h1>
+      <p class="subtitle">Theo dõi vị trí đang mở, xử lý hồ sơ ứng viên và lịch sử thao tác tuyển dụng.</p>
+    </div>
+
+    <div class="main-content-panel">
+      <div class="tab-header-row">
+        <div class="tabs">
+          <button [class.active]="activeTab === 'jobs'" (click)="switchTab('jobs')">Vị trí tuyển dụng</button>
+          <button [class.active]="activeTab === 'applications'" (click)="switchTab('applications')">Hồ sơ ứng tuyển</button>
+          <button [class.active]="activeTab === 'activities'" (click)="switchTab('activities')">Nhật ký tuyển dụng</button>
+        </div>
+      </div>
+
+      <div class="inline-alert" *ngIf="showRealtimeAlert">
+        <div>
+          <strong>Thông báo mới</strong>
+          <p>{{ realtimeAlertMessage }}</p>
+        </div>
+        <button type="button" (click)="dismissRealtimeAlert()">Đã hiểu</button>
+      </div>
+
+      <section class="list-container" *ngIf="activeTab === 'jobs'">
+        <div class="form-card">
+          <h3>{{ editingJobId ? 'Cập nhật vị trí' : 'Tạo vị trí mới' }}</h3>
+
+          <form class="job-form" (ngSubmit)="saveJob()">
+            <div class="grid">
+              <label>
+                Tiêu đề vị trí
+                <input type="text" name="title" [(ngModel)]="jobForm.title" required>
+              </label>
+
+              <label>
+                Phòng ban
+                <select name="team" [(ngModel)]="jobForm.team" required>
+                  <option value="" disabled>Chọn phòng ban</option>
+                  <option *ngFor="let option of teamOptions" [value]="option">{{ option }}</option>
+                </select>
+              </label>
+
+              <label>
+                Địa điểm
+                <select name="location" [(ngModel)]="jobForm.location" required>
+                  <option value="" disabled>Chọn địa điểm</option>
+                  <option *ngFor="let option of locationOptions" [value]="option">{{ option }}</option>
+                </select>
+              </label>
+
+              <label>
+                Hình thức
+                <select name="type" [(ngModel)]="jobForm.type" required>
+                  <option *ngFor="let option of typeOptions" [value]="option">{{ option }}</option>
+                </select>
+              </label>
+
+              <label>
+                Cấp độ
+                <select name="level" [(ngModel)]="jobForm.level" required>
+                  <option *ngFor="let option of levelOptions" [value]="option">{{ option }}</option>
+                </select>
+              </label>
+
+              <label>
+                Mức lương
+                <select name="salaryRange" [(ngModel)]="jobForm.salaryRange" required>
+                  <option *ngFor="let option of salaryRangeOptions" [value]="option">{{ option }}</option>
+                </select>
+              </label>
+
+              <label>
+                Trạng thái
+                <select name="status" [(ngModel)]="jobForm.status">
+                  <option value="open">Đang mở</option>
+                  <option value="closed">Đã đóng</option>
+                </select>
+              </label>
+            </div>
+
+            <label>
+              Kỹ năng (phân tách bằng dấu phẩy)
+              <input type="text" name="skills" [ngModel]="getJobFormSkillsText()" (ngModelChange)="setJobFormSkills($event)">
+            </label>
+
+            <label>
+              Mô tả công việc
+              <textarea name="summary" rows="3" [(ngModel)]="jobForm.summary"></textarea>
+            </label>
+
+            <div class="actions">
+              <button class="btn btn-save" type="submit">{{ editingJobId ? 'Lưu cập nhật' : 'Tạo vị trí' }}</button>
+              <button class="btn btn-cancel" type="button" (click)="resetJobForm()">Làm mới</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="table-wrapper" *ngIf="!isLoadingJobs; else loadingJobsTpl">
+          <table>
+            <thead>
+              <tr>
+                <th>Vị trí</th>
+                <th>Phòng ban</th>
+                <th>Địa điểm</th>
+                <th>Mức lương</th>
+                <th>Trạng thái</th>
+                <th>Kỹ năng</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let job of jobs">
+                <td>{{ job.title }}</td>
+                <td>{{ job.team }}</td>
+                <td>{{ job.location }}</td>
+                <td>{{ job.salaryRange || 'Thỏa thuận' }}</td>
+                <td>
+                  <span class="status" [class.status-open]="job.status === 'open'" [class.status-closed]="job.status === 'closed'">
+                    {{ job.status === 'open' ? 'Đang mở' : 'Đã đóng' }}
+                  </span>
+                </td>
+                <td>{{ getSkillText(job) }}</td>
+                <td class="table-actions">
+                  <button type="button" class="action-btn edit" (click)="editJob(job)">Sửa</button>
+                  <button type="button" class="action-btn delete" (click)="deleteJob(job)">Xóa</button>
+                </td>
+              </tr>
+              <tr *ngIf="jobs.length === 0">
+                <td colspan="7" class="no-data">Chưa có vị trí tuyển dụng.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="list-container" *ngIf="activeTab === 'applications'">
+        <div class="quick-filter-bar" *ngIf="!isLoadingApplications">
+          <button
+            type="button"
+            class="quick-filter-btn"
+            [class.active]="applicationStatusFilter === option.value"
+            (click)="setApplicationStatusFilter(option.value)"
+            *ngFor="let option of applicationStatusOptions">
+            <span>{{ option.label }}</span>
+            <strong>{{ getApplicationCountByStatus(option.value) }}</strong>
+          </button>
+        </div>
+
+        <div class="table-wrapper" *ngIf="!isLoadingApplications; else loadingAppsTpl">
+          <table>
+            <thead>
+              <tr>
+                <th>Ứng viên</th>
+                <th>Vị trí</th>
+                <th>Liên hệ</th>
+                <th>CV</th>
+                <th>Trạng thái</th>
+                <th>Cập nhật</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let app of getFilteredApplications(); trackBy: trackByApplicationId"
+                [attr.id]="'application-' + app._id"
+                [class.highlight-row]="highlightedApplicationId === app._id">
+                <td>
+                  <strong>{{ app.fullName }}</strong>
+                  <p class="muted">{{ app.coverLetter || 'Không có thư giới thiệu' }}</p>
+                </td>
+                <td>{{ getJobDisplayTitle(app) }}</td>
+                <td>
+                  <div>{{ app.email }}</div>
+                  <div>{{ app.phone || 'Chưa có SĐT' }}</div>
+                </td>
+                <td>
+                  <a [href]="app.cvUrl" target="_blank" rel="noopener noreferrer">{{ app.cvFileName || 'Xem CV' }}</a>
+                </td>
+                <td>
+                  <span
+                    class="status"
+                    [ngClass]="resolveApplicationStatusClass(app.status)">
+                    {{ resolveApplicationStatusLabel(app.status) }}
+                  </span>
+                </td>
+                <td>
+                  <select [ngModel]="app.status" (ngModelChange)="updateApplicationStatus(app, $event)">
+                    <option value="new">Mới nhận</option>
+                    <option value="reviewing">Đang xem</option>
+                    <option value="shortlisted">Đạt sơ tuyển</option>
+                    <option value="rejected">Không phù hợp</option>
+                  </select>
+                </td>
+              </tr>
+              <tr *ngIf="getFilteredApplications().length === 0">
+                <td colspan="6" class="no-data">Chưa có hồ sơ ứng tuyển.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="list-container" *ngIf="activeTab === 'activities'">
+        <div class="table-wrapper" *ngIf="!isLoadingActivities; else loadingActivitiesTpl">
+          <table>
+            <thead>
+              <tr>
+                <th>Thời gian</th>
+                <th>Hành động</th>
+                <th>Vị trí</th>
+                <th>Ứng viên</th>
+                <th>Trạng thái</th>
+                <th>Email</th>
+                <th>Thực hiện bởi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let activity of activities">
+                <td>{{ activity.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ resolveActionText(activity.action) }}</td>
+                <td>{{ getActivityJobTitle(activity) }}</td>
+                <td>
+                  <div>{{ activity.applicantName || 'N/A' }}</div>
+                  <div>{{ activity.applicantEmail || '' }}</div>
+                </td>
+                <td>{{ activity.previousStatus || '-' }} -> {{ activity.nextStatus || '-' }}</td>
+                <td>
+                  <span
+                    class="status"
+                    [ngClass]="resolveApplicationStatusClass(activity.nextStatus || activity.previousStatus)">
+                    {{ resolveStatusTransitionText(activity.previousStatus, activity.nextStatus) }}
+                  </span>
+                </td>
+                <td>
+                  <span [class.email-ok]="activity.emailSent" [class.email-fail]="activity.emailError">
+                    {{ activity.emailSent ? 'Đã gửi' : (activity.emailError ? 'Lỗi gửi' : '-') }}
+                  </span>
+                </td>
+                <td>{{ activity.updatedBy || 'admin' }}</td>
+              </tr>
+              <tr *ngIf="activities.length === 0">
+                <td colspan="7" class="no-data">Chưa có lịch sử tuyển dụng.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<ng-template #loadingJobsTpl>
+  <div class="list-container">
+    <div class="table-wrapper">
+      <div class="no-data">Đang tải dữ liệu vị trí tuyển dụng...</div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #loadingAppsTpl>
+  <div class="list-container">
+    <div class="table-wrapper">
+      <div class="no-data">Đang tải hồ sơ ứng tuyển...</div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #loadingActivitiesTpl>
+  <div class="list-container">
+    <div class="table-wrapper">
+      <div class="no-data">Đang tải nhật ký tuyển dụng...</div>
+    </div>
+  </div>
+</ng-template>

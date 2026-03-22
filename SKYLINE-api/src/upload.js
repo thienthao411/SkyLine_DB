@@ -2,12 +2,18 @@ const multer = require("multer");
 const { v2: cloudinary } = require("cloudinary");
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const MAX_DOCUMENT_SIZE = 10 * 1024 * 1024;
 const ALLOWED_IMAGE_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
   "image/gif",
   "image/svg+xml"
+]);
+const ALLOWED_DOCUMENT_MIME_TYPES = new Set([
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 ]);
 
 cloudinary.config({ secure: true });
@@ -20,6 +26,23 @@ const airlineUpload = multer({
   fileFilter: (_req, file, cb) => {
     if (!ALLOWED_IMAGE_MIME_TYPES.has(file.mimetype)) {
       const error = new Error("Only image files are allowed.");
+      error.statusCode = 400;
+      cb(error);
+      return;
+    }
+
+    cb(null, true);
+  }
+});
+
+const recruitmentUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: MAX_DOCUMENT_SIZE
+  },
+  fileFilter: (_req, file, cb) => {
+    if (!ALLOWED_DOCUMENT_MIME_TYPES.has(file.mimetype)) {
+      const error = new Error("Only PDF, DOC, DOCX files are allowed.");
       error.statusCode = 400;
       cb(error);
       return;
@@ -45,7 +68,7 @@ function uploadBufferToCloudinary(file, options = {}) {
       {
         folder: options.folder || "skyline/airlines",
         public_id: options.publicId,
-        resource_type: "image"
+        resource_type: options.resourceType || "image"
       },
       (error, result) => {
         if (error) {
@@ -63,5 +86,6 @@ function uploadBufferToCloudinary(file, options = {}) {
 
 module.exports = {
   airlineUpload,
+  recruitmentUpload,
   uploadBufferToCloudinary
 };
