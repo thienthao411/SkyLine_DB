@@ -28,18 +28,16 @@ export class HeaderComponent implements OnInit {
 
   toggleDropdown(): void {
     this.showDropdown = !this.showDropdown;
-    console.log('Dropdown state:', this.showDropdown);
   }
 
   @HostListener('document:click', ['$event'])
   closeDropdown(event: Event): void {
     const target = event.target as HTMLElement;
-    const userMenu = target.closest('.user-menu');
+    const isInsideHeaderMenu = target.closest('.user-menu-wrapper');
     
     // Chỉ đóng nếu click outside và dropdown đang mở
-    if (!userMenu && this.showDropdown) {
+    if (!isInsideHeaderMenu && this.showDropdown) {
       this.showDropdown = false;
-      console.log('Dropdown closed');
     }
   }
 
