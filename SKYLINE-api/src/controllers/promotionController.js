@@ -1,4 +1,7 @@
 const Promotion = require("../models/Promotion");
+const NotificationUser = require("../models/NotificationUser");
+const User = require("../models/User");
+const { getIO } = require("../socket");
 
 const parseDateSafely = (value) => {
   if (!value) return null;
@@ -81,6 +84,80 @@ const getFeaturedItemsFromPromotions = (promotions, now) => {
   return featuredItems;
 };
 
+const pickPromotionHighlight = (promotionDoc) => {
+  const items = Array.isArray(promotionDoc?.items) ? promotionDoc.items : [];
+  if (items.length === 0) {
+    return null;
+  }
+
+  const featuredItem = items.find((item) => item && item.isFeatured === true);
+  return featuredItem || items[0];
+};
+
+async function broadcastPromotionNotification(promotionDoc, mode = "created") {
+  const promotionId = String(promotionDoc?._id || "").trim();
+  if (!promotionId) {
+    return;
+  }
+
+  const users = await User.find({
+    email: { $exists: true, $ne: "" },
+    status: { $ne: "inactive" }
+  })
+    .select("email")
+    .lean();
+
+  const emails = users
+    .map((user) => String(user?.email || "").trim().toLowerCase())
+    .filter(Boolean);
+
+  if (emails.length === 0) {
+    return;
+  }
+
+  const highlight = pickPromotionHighlight(promotionDoc);
+  const promoTitle = String(highlight?.label || promotionDoc?.title || "Khuyến mãi Skyline").trim();
+  const promoCode = String(highlight?.promoCode || "").trim();
+  const title = mode === "updated" ? "Khuyến mãi vừa cập nhật" : "Khuyến mãi mới";
+  const messagePrefix = mode === "updated" ? "Skyline vừa cập nhật" : "Skyline vừa có";
+  const message = promoCode
+    ? `${messagePrefix} khuyến mãi ${promoTitle} (mã: ${promoCode}).`
+    : `${messagePrefix} khuyến mãi ${promoTitle}.`;
+
+  const docs = emails.map((email) => ({
+    userEmail: email,
+    title,
+    message,
+    bookingId: promotionId,
+    type: "promotion",
+    paymentStatus: mode,
+    isRead: false,
+    createdAt: new Date()
+  }));
+
+  let createdNotifications = [];
+  try {
+    createdNotifications = await NotificationUser.insertMany(docs, { ordered: false });
+  } catch (error) {
+    if (Array.isArray(error?.insertedDocs)) {
+      createdNotifications = error.insertedDocs;
+    } else {
+      throw error;
+    }
+  }
+
+  const io = getIO();
+  if (!io) {
+    return;
+  }
+
+  for (const notification of createdNotifications) {
+    const email = String(notification?.userEmail || "").trim().toLowerCase();
+    if (!email) continue;
+    io.to(`user:${email}`).emit("user_notification_created", notification.toObject ? notification.toObject() : notification);
+  }
+}
+
 exports.getFeaturedPromotions = async (req, res) => {
   try {
     const sortBy = req.query.sortBy === "highestDiscount" ? "highestDiscount" : "newest";
@@ -137,6 +214,13 @@ exports.createPromotion = async (req, res) => {
   try {
     const promotion = new Promotion(req.body);
     const saved = await promotion.save();
+
+    try {
+      await broadcastPromotionNotification(saved, "created");
+    } catch (notifyError) {
+      console.error("Failed to broadcast promotion notifications:", notifyError);
+    }
+
     res.status(201).json(saved);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -147,6 +231,13 @@ exports.updatePromotion = async (req, res) => {
   try {
     const updated = await Promotion.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!updated) return res.status(404).json({ message: 'Promotion not found' });
+
+    try {
+      await broadcastPromotionNotification(updated, "updated");
+    } catch (notifyError) {
+      console.error("Failed to broadcast promotion update notifications:", notifyError);
+    }
+
     res.json(updated);
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -70,11 +70,15 @@
                             <img src="assets/icons/calendar.png" alt="Date" width="16" height="16">
                         </label>
                         <input 
-                            type="date" 
+                            type="text" 
                             class="search-input" 
                             [(ngModel)]="travelDate"
                             name="travelDate"
-                            placeholder="Ngày đi"
+                            placeholder="dd/mm/yyyy"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}$"
+                            title="Vui lòng nhập ngày theo định dạng dd/mm/yyyy"
                             required>
                     </div>                   
                     <button type="submit" class="search-btn">Tìm kiếm</button>
@@ -149,6 +153,67 @@
         </div>
     </div>
 </section>
+
+<button
+    type="button"
+    class="ai-chat-toggle"
+    (click)="toggleAiChat()"
+    [attr.aria-expanded]="isAiChatOpen"
+    aria-label="Mở trợ lý AI">
+    <span class="ai-chat-toggle-icon">AI</span>
+    <span>Trợ lý Skyline</span>
+</button>
+
+@if (isAiChatOpen) {
+    <section class="ai-chat-panel" aria-label="Trợ lý AI Skyline">
+        <header class="ai-chat-header">
+            <div>
+                <h3>Trợ lý AI Skyline</h3>
+                <p>Hỏi về chuyến bay, vé, đặt vé hoặc ưu đãi</p>
+            </div>
+            <div class="ai-chat-header-actions">
+                <button type="button" class="ai-chat-suggestion-toggle" (click)="toggleQuickQuestions()">
+                    {{ showQuickQuestions ? 'Ẩn gợi ý' : 'Hiện gợi ý' }}
+                </button>
+                <button type="button" class="ai-chat-reset" (click)="clearChatContext()">Bắt đầu đoạn chat mới</button>
+                <button type="button" class="ai-chat-close" (click)="toggleAiChat()" aria-label="Đóng chat">×</button>
+            </div>
+        </header>
+
+        <div class="ai-chat-messages">
+            @for (message of chatMessages; track $index) {
+                <article class="ai-message" [class.user-message]="message.role === 'user'">
+                    <p>{{ message.content }}</p>
+                </article>
+            }
+
+            @if (isAiTyping) {
+                <article class="ai-message typing-message">
+                    <p>Trợ lý đang trả lời...</p>
+                </article>
+            }
+        </div>
+
+        @if (showQuickQuestions) {
+            <div class="ai-chat-quick-questions">
+                @for (question of quickQuestions; track question) {
+                    <button type="button" (click)="askQuickQuestion(question)">{{ question }}</button>
+                }
+            </div>
+        }
+
+        <div class="ai-chat-composer">
+            <input
+                type="text"
+                [(ngModel)]="chatInput"
+                (keydown.enter)="sendChatMessage()"
+                [disabled]="isAiTyping"
+                placeholder="Nhập câu hỏi của bạn..."
+                aria-label="Nhập nội dung chat">
+            <button type="button" (click)="sendChatMessage()" [disabled]="isAiTyping">Gửi</button>
+        </div>
+    </section>
+}
 
 <!-- Footer -->
 <app-footer></app-footer>

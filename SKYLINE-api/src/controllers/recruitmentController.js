@@ -2,6 +2,7 @@ const RecruitmentJob = require('../models/RecruitmentJob');
 const JobApplication = require('../models/JobApplication');
 const RecruitmentActivity = require('../models/RecruitmentActivity');
 const Notification = require('../models/Notification');
+const NotificationUser = require('../models/NotificationUser');
 const { uploadBufferToCloudinary } = require('../upload');
 const { getIO } = require('../socket');
 const {
@@ -157,6 +158,54 @@ async function createAdminRecruitmentNotification({ applicationId, applicantName
     }
   } catch (error) {
     console.error('Lỗi tạo thông báo tuyển dụng cho admin:', error);
+  }
+}
+
+function toRecruitmentStatusLabel(status) {
+  const normalized = String(status || '').trim().toLowerCase();
+  if (normalized === 'reviewing') return 'đang được xem xét';
+  if (normalized === 'shortlisted') return 'đã được duyệt vào vòng tiếp theo';
+  if (normalized === 'rejected') return 'chưa phù hợp ở đợt tuyển dụng này';
+  return 'đã được cập nhật';
+}
+
+async function createApplicantStatusNotification(application, nextStatus) {
+  try {
+    const userEmail = String(application?.email || '').trim().toLowerCase();
+    if (!userEmail) {
+      return null;
+    }
+
+    const statusLabel = toRecruitmentStatusLabel(nextStatus);
+    const title = 'Cập nhật hồ sơ ứng tuyển';
+    const jobTitle = String(application?.jobId?.title || '').trim() || 'vị trí bạn đã ứng tuyển';
+    const message = `Hồ sơ ứng tuyển cho ${jobTitle} ${statusLabel}.`;
+
+    const duplicate = await NotificationUser.findOne({
+      userEmail,
+      bookingId: String(application?._id || ''),
+      type: 'recruitment_status',
+      paymentStatus: String(nextStatus || '').trim().toLowerCase(),
+      isRead: false
+    });
+
+    if (duplicate) {
+      return duplicate;
+    }
+
+    return NotificationUser.create({
+      userEmail,
+      title,
+      message,
+      bookingId: String(application?._id || ''),
+      type: 'recruitment_status',
+      paymentStatus: String(nextStatus || '').trim().toLowerCase(),
+      isRead: false,
+      createdAt: new Date()
+    });
+  } catch (error) {
+    console.error('Lỗi tạo thông báo trạng thái hồ sơ cho ứng viên:', error);
+    return null;
   }
 }
 
@@ -417,6 +466,17 @@ exports.updateApplicationStatus = async (req, res) => {
       updateExistingByApplication: true,
       updatedBy: req.body?.updatedBy || 'admin'
     });
+
+    if (previousStatus !== status) {
+      const userNotification = await createApplicantStatusNotification(updated, status);
+      const userEmail = String(updated.email || '').trim().toLowerCase();
+      if (userNotification && userEmail) {
+        const io = getIO();
+        if (io) {
+          io.to(`user:${userEmail}`).emit('user_notification_created', userNotification.toObject());
+        }
+      }
+    }
 
     res.json({
       ...updated,

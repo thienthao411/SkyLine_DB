@@ -43,4 +43,13 @@ export class UserNotificationApiService {
       )
       .pipe(map((res) => res.notification));
   }
+
+  markAllAsRead(email: string): Observable<boolean> {
+    return this.http
+      .patch<{ success: boolean }>(
+        `${this.apiUrl}/read-all`,
+        { email: String(email || '').trim().toLowerCase() }
+      )
+      .pipe(map((res) => Boolean(res.success)));
+  }
 }

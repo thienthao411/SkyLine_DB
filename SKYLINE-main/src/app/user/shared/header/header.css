@@ -140,6 +140,117 @@
     text-align: left;
 }
 
+.dropdown-badge {
+    margin-left: auto;
+    min-width: 22px;
+    height: 20px;
+    border-radius: 999px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+}
+
+.notification-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    width: 360px;
+    max-width: min(360px, calc(100vw - 24px));
+    max-height: 420px;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #dbe4ee;
+    border-radius: 14px;
+    box-shadow: 0 12px 28px rgba(14, 30, 58, 0.16);
+    z-index: 1100;
+}
+
+.notification-dropdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.notification-dropdown-header strong {
+    color: #223751;
+}
+
+.mark-read-all {
+    border: none;
+    background: transparent;
+    color: #2563eb;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.notification-dropdown-body {
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #f1f5f9;
+    background: #fff;
+    text-align: left;
+    cursor: pointer;
+    padding: 12px 14px;
+}
+
+.notification-item.unread {
+    background: #f8fbff;
+}
+
+.notification-item:hover {
+    background: #eef5ff;
+}
+
+.item-title {
+    margin: 0;
+    color: #1f2937;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.item-message {
+    margin: 4px 0 8px;
+    color: #4b5563;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.item-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #6b7280;
+}
+
+.unread-pill {
+    color: #1d4ed8;
+    background: #dbeafe;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 700;
+}
+
+.notification-empty {
+    margin: 0;
+    padding: 16px 14px;
+    color: #6b7280;
+    font-size: 13px;
+}
+
 .dropdown-item:hover {
     background: #f6f7ff;
     color: #4f46e5;
@@ -237,6 +348,11 @@
     .dropdown-menu {
         right: 0;
         min-width: 172px;
+    }
+
+    .notification-dropdown {
+        width: min(320px, calc(100vw - 16px));
+        right: -4px;
     }
 }
 

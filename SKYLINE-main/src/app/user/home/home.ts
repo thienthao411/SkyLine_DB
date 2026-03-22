@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { Router} from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { HeaderComponent } from '../shared/header/header';
 import { FooterComponent } from '../shared/footer/footer';
@@ -10,6 +10,7 @@ import { PromotionListComponent } from './components/promotion-list/promotion-li
 import { FeaturedPromotionItem, PromotionApiService } from '../../services/promotion-api.service';
 import { AirlineApiModel, AirlineApiService } from '../../services/airline-api.service';
 import { AirportApiService, Airport } from '../../services/airport-api.service';
+import { AiChatApiService } from '../services/ai-chat-api.service';
 
 interface Review {
   id: number;
@@ -27,6 +28,12 @@ interface AirlinePartner {
   logo: string;
 }
 
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: Date;
+}
+
 @Component({
   selector: 'app-home',
   imports: [CommonModule, FormsModule, HeaderComponent, FooterComponent, PromotionListComponent],
@@ -34,15 +41,17 @@ interface AirlinePartner {
   styleUrl: './home.css',
 })
 export class Home implements OnInit {
+  private readonly aiSessionStorageKey = 'skyline_ai_chat_session_id';
+  private readonly aiSuggestionStorageKey = 'skyline_ai_chat_show_suggestions';
+
   reviews: Review[] = [];
   displayedReviews: Review[] = [];
-  reviewsToShow: number = 3;
+  reviewsToShow = 3;
   featuredPromotions: FeaturedPromotionItem[] = [];
   isLoadingFeaturedPromotions = true;
   airlines: AirlinePartner[] = [];
   isLoadingAirlines = true;
 
-  // Flight search data
   airports: Airport[] = [];
   departureSuggestions: Airport[] = [];
   arrivalSuggestions: Airport[] = [];
@@ -51,9 +60,28 @@ export class Home implements OnInit {
   departureQuery = '';
   arrivalQuery = '';
 
-  departureCity: string = '';
-  arrivalCity: string = '';
-  travelDate: string = '';
+  departureCity = '';
+  arrivalCity = '';
+  travelDate = '';
+
+  isAiChatOpen = false;
+  isAiTyping = false;
+  showQuickQuestions = true;
+  chatInput = '';
+  aiSessionId = '';
+  chatMessages: ChatMessage[] = [
+    {
+      role: 'assistant',
+      content: 'Xin chào. Mình là trợ lý AI của Skyline. Bạn có thể hỏi về chuyến bay, giá vé, cách đặt vé, đổi/hoàn vé hoặc khuyến mãi.',
+      createdAt: new Date()
+    }
+  ];
+  quickQuestions: string[] = [
+    'Cách đặt vé máy bay?',
+    'Làm sao tìm chuyến bay phù hợp?',
+    'Tôi muốn tra cứu vé đã đặt',
+    'Có khuyến mãi nào hiện tại không?'
+  ];
 
   constructor(
     private authService: AuthService,
@@ -61,15 +89,42 @@ export class Home implements OnInit {
     private http: HttpClient,
     private promotionApi: PromotionApiService,
     private airlineApi: AirlineApiService,
-    private airportApi: AirportApiService
+    private airportApi: AirportApiService,
+    private aiChatApi: AiChatApiService
   ) {}
 
   ngOnInit(): void {
-    // Load reviews from JSON
     this.loadReviews();
     this.loadFeaturedPromotions();
     this.loadAirlines();
     this.loadAirports();
+    this.restoreAiSessionId();
+    this.restoreSuggestionPreference();
+  }
+
+  private restoreSuggestionPreference(): void {
+    const stored = localStorage.getItem(this.aiSuggestionStorageKey);
+    if (stored === null) {
+      this.showQuickQuestions = true;
+      return;
+    }
+    this.showQuickQuestions = stored !== 'false';
+  }
+
+  private persistSuggestionPreference(): void {
+    localStorage.setItem(this.aiSuggestionStorageKey, this.showQuickQuestions ? 'true' : 'false');
+  }
+
+  private restoreAiSessionId(): void {
+    const stored = localStorage.getItem(this.aiSessionStorageKey);
+    this.aiSessionId = String(stored || '').trim();
+  }
+
+  private persistAiSessionId(sessionId: string): void {
+    const value = String(sessionId || '').trim();
+    if (!value) return;
+    this.aiSessionId = value;
+    localStorage.setItem(this.aiSessionStorageKey, value);
   }
 
   loadAirports(): void {
@@ -252,7 +307,6 @@ export class Home implements OnInit {
     }
   }
 
-  // Handle search
   onSearch(): void {
     if (!this.departureCity) {
       const resolvedDeparture = this.resolveAirportFromInput(this.departureQuery, this.arrivalCity);
@@ -268,14 +322,47 @@ export class Home implements OnInit {
       }
     }
 
-    if (this.departureCity && this.arrivalCity && this.travelDate) {
+    const normalizedTravelDate = this.normalizeTravelDate(this.travelDate);
+
+    if (this.departureCity && this.arrivalCity && normalizedTravelDate) {
       this.router.navigate(['/tim-chuyen-bay'], {
-      queryParams: {
-        from: this.departureCity.toUpperCase(),
-        to: this.arrivalCity.toUpperCase(),
-        date: this.travelDate,}
-    });
+        queryParams: {
+          from: this.departureCity.toUpperCase(),
+          to: this.arrivalCity.toUpperCase(),
+          date: normalizedTravelDate,
+        }
+      });
     }
+  }
+
+  private normalizeTravelDate(value: string): string {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+
+    // Already ISO format from other screens: yyyy-mm-dd
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+      return raw;
+    }
+
+    // Home search accepts dd/mm/yyyy and converts it to ISO.
+    const match = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (!match) return '';
+
+    const day = Number(match[1]);
+    const month = Number(match[2]);
+    const year = Number(match[3]);
+    const candidate = new Date(year, month - 1, day);
+
+    const isValidDate =
+      candidate.getFullYear() === year &&
+      candidate.getMonth() === month - 1 &&
+      candidate.getDate() === day;
+
+    if (!isValidDate) return '';
+
+    const mm = String(month).padStart(2, '0');
+    const dd = String(day).padStart(2, '0');
+    return `${year}-${mm}-${dd}`;
   }
 
   loadReviews(): void {
@@ -283,7 +370,6 @@ export class Home implements OnInit {
       .subscribe({
         next: (data) => {
           this.reviews = data.reviews;
-          // Display only first 3 reviews initially
           this.displayedReviews = this.reviews.slice(0, this.reviewsToShow);
         },
         error: (error) => {
@@ -316,5 +402,152 @@ export class Home implements OnInit {
 
   getInitials(name: string): string {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  }
+
+  toggleAiChat(): void {
+    this.isAiChatOpen = !this.isAiChatOpen;
+  }
+
+  askQuickQuestion(question: string): void {
+    this.chatInput = question;
+    this.sendChatMessage();
+  }
+
+  toggleQuickQuestions(): void {
+    this.showQuickQuestions = !this.showQuickQuestions;
+    this.persistSuggestionPreference();
+  }
+
+  sendChatMessage(): void {
+    const question = this.chatInput.trim();
+    if (!question || this.isAiTyping) {
+      return;
+    }
+
+    this.chatMessages.push({
+      role: 'user',
+      content: question,
+      createdAt: new Date()
+    });
+    this.chatInput = '';
+    this.isAiTyping = true;
+
+    this.aiChatApi.sendMessage({
+      message: question,
+      sessionId: this.aiSessionId,
+    }).subscribe({
+      next: (response) => {
+        this.persistAiSessionId(response.sessionId);
+        const assistantReply = String(response.reply || '').trim() || this.generateAiReply(question);
+        this.chatMessages.push({
+          role: 'assistant',
+          content: assistantReply,
+          createdAt: new Date()
+        });
+        this.isAiTyping = false;
+      },
+      error: () => {
+        const fallbackResponse = this.generateAiReply(question);
+        this.chatMessages.push({
+          role: 'assistant',
+          content: fallbackResponse,
+          createdAt: new Date()
+        });
+        this.isAiTyping = false;
+      }
+    });
+  }
+
+  clearChatContext(): void {
+    this.chatMessages = [
+      {
+        role: 'assistant',
+        content: 'Đã bắt đầu đoạn chat mới. Bạn có thể đặt câu hỏi mới về chuyến bay, giá vé, đặt vé hoặc tra cứu vé.',
+        createdAt: new Date()
+      }
+    ];
+    this.aiSessionId = '';
+    localStorage.removeItem(this.aiSessionStorageKey);
+  }
+
+  private generateAiReply(message: string): string {
+    const normalized = this.normalizeText(message);
+
+    if (normalized.includes('dat ve') || normalized.includes('mua ve')) {
+      return [
+        'Bạn có thể đặt vé nhanh theo 4 bước:',
+        '1) Tại trang chủ, nhập điểm đi, điểm đến và ngày bay rồi bấm "Tìm kiếm".',
+        '2) Tại trang Tìm chuyến bay, chọn chuyến phù hợp.',
+        '3) Điền thông tin hành khách, chọn hành lý/ghế (nếu cần).',
+        '4) Thanh toán và nhận mã vé điện tử.',
+        'Mẹo: Nên đặt sớm 2-4 tuần để có giá tốt hơn.'
+      ].join('\n');
+    }
+
+    if (normalized.includes('tim chuyen bay') || normalized.includes('chuyen bay')) {
+      if (this.airports.length > 0) {
+        const topAirports = this.airports
+          .filter((airport) => String(airport.code || '').trim())
+          .slice(0, 6)
+          .map((airport) => `${airport.code} - ${airport.name}`)
+          .join(', ');
+
+        return [
+          'Bạn có thể tìm chuyến bay ngay trên form ở đầu trang chủ.',
+          'Nhập mã sân bay (ví dụ: SGN, HAN, DAD) hoặc tên sân bay, chọn ngày bay và bấm "Tìm kiếm".',
+          `Gợi ý một số sân bay phổ biến: ${topAirports}.`,
+          'Sau đó hệ thống sẽ chuyển sang trang kết quả để bạn lọc và chọn chuyến phù hợp.'
+        ].join('\n');
+      }
+
+      return 'Bạn chỉ cần nhập điểm đi, điểm đến và ngày bay ở form tìm kiếm trên trang chủ, sau đó bấm "Tìm kiếm" để xem danh sách chuyến bay.';
+    }
+
+    if (normalized.includes('gia ve') || normalized.includes('bao nhieu tien') || normalized.includes('chi phi')) {
+      return [
+        'Giá vé thay đổi theo hành trình, ngày bay, hãng bay và thời điểm đặt.',
+        'Để xem giá chính xác, bạn vui lòng tìm chuyến bay theo ngày cụ thể.',
+        'Mẹo tiết kiệm: linh hoạt ngày bay, đặt sớm và theo dõi mục Khuyến mãi để có giá tốt hơn.'
+      ].join('\n');
+    }
+
+    if (normalized.includes('tra cuu ve') || normalized.includes('ma ve') || normalized.includes('kiem tra ve')) {
+      return [
+        'Bạn có thể tra cứu vé tại mục "Tra cứu vé".',
+        'Chỉ cần nhập mã vé hoặc thông tin liên quan để xem trạng thái thanh toán và chi tiết hành trình.',
+        'Nếu cần đổi/hoàn vé, hãy vào chi tiết vé để xem tùy chọn khả dụng.'
+      ].join('\n');
+    }
+
+    if (normalized.includes('doi ve') || normalized.includes('hoan ve') || normalized.includes('huy ve')) {
+      return [
+        'Đổi/hoàn vé phụ thuộc vào điều kiện của hãng bay và hạng vé đã đặt.',
+        'Bạn hãy vào "Tra cứu vé" để mở chi tiết vé, sau đó chọn thao tác đổi/hủy nếu được hỗ trợ.',
+        'Nếu không thấy tùy chọn, bạn nên liên hệ bộ phận hỗ trợ để được xử lý nhanh.'
+      ].join('\n');
+    }
+
+    if (normalized.includes('khuyen mai') || normalized.includes('ma giam') || normalized.includes('uu dai')) {
+      return [
+        'Bạn có thể xem ưu đãi mới nhất ở mục "Khuyến mãi" ngay trên thanh điều hướng.',
+        'Khi thanh toán, hãy nhập mã giảm giá (nếu có) để áp dụng ưu đãi.',
+        'Nên kiểm tra điều kiện sử dụng mã: thời gian, hành trình và giá trị đơn hàng tối thiểu.'
+      ].join('\n');
+    }
+
+    if (normalized.includes('lien he') || normalized.includes('ho tro') || normalized.includes('tong dai')) {
+      return [
+        'Bạn có thể gửi yêu cầu ở trang "Liên hệ" nếu cần hỗ trợ.',
+        'Skyline hỗ trợ các vấn đề phổ biến: đặt vé, thanh toán, thay đổi hành trình, hành lý và thông tin vé.'
+      ].join('\n');
+    }
+
+    return [
+      'Mình có thể hỗ trợ bạn về:',
+      '- Tìm chuyến bay và đặt vé',
+      '- Tra cứu, đổi/hoàn vé',
+      '- Khuyến mãi và hướng dẫn thanh toán',
+      'Bạn muốn mình hướng dẫn mục nào trước?'
+    ].join('\n');
   }
 }

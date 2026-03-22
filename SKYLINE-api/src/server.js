@@ -17,6 +17,7 @@ const bookingRoutes = require("./routes/bookingRoutes");
 const ticketRoutes = require("./routes/ticketRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const recruitmentRoutes = require("./routes/recruitmentRoutes");
+const aiChatRoutes = require("./routes/aiChatRoutes");
 
 const notificationRoutes = require("./routes/notificationRoutes");
 const notificationUserRoutes = require("./routes/notificationUserRoutes");
@@ -46,6 +47,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/recruitment", recruitmentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/notifications-user", notificationUserRoutes);
+app.use("/api/ai", aiChatRoutes);
 
 app.get("/", (req, res) => {
   res.send("Skyline API running");

@@ -36,3 +36,20 @@ exports.markAsRead = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+exports.markAllAsRead = async (req, res) => {
+  try {
+    const email = String(req.body?.email || req.query?.email || "")
+      .trim()
+      .toLowerCase();
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "email is required" });
+    }
+
+    await NotificationUser.updateMany({ userEmail: email, isRead: false }, { isRead: true });
+    return res.json({ success: true });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
