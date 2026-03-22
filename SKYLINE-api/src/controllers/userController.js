@@ -77,6 +77,31 @@ function isStrongPassword(password) {
   return String(password || "").length >= 6;
 }
 
+function normalizeEmail(email) {
+  return String(email || "").trim().toLowerCase();
+}
+
+function escapeRegex(value) {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function buildEmailLookupRegex(email) {
+  return new RegExp(`^${escapeRegex(email)}$`, "i");
+}
+
+function isBcryptHash(value) {
+  return /^\$2[aby]\$\d{2}\$/.test(String(value || ""));
+}
+
+async function findUserByEmail(rawEmail) {
+  const normalized = normalizeEmail(rawEmail);
+  if (!normalized) {
+    return null;
+  }
+
+  return User.findOne({ email: buildEmailLookupRegex(normalized) });
+}
+
 function escapeHtml(value) {
   return String(value || "")
     .replace(/&/g, "&amp;")
@@ -183,6 +208,10 @@ async function sendForgotPasswordOtpEmail({ toEmail, fullName, otpCode, expireMi
 
 exports.createUser = async (req, res) => {
   try {
+    if (req.body.email) {
+      req.body.email = normalizeEmail(req.body.email);
+    }
+
     // Hash password nếu có trong request body
     if (req.body.password) {
       req.body.password = await bcrypt.hash(req.body.password, 10);
@@ -228,8 +257,9 @@ exports.getUserById = async (req, res) => {
 
 exports.getUserByEmail = async (req, res) => {
   try {
-    console.log('Fetching user by email:', req.params.email);
-    const user = await User.findOne({ email: req.params.email });
+    const normalizedEmail = normalizeEmail(req.params.email);
+    console.log('Fetching user by email:', normalizedEmail);
+    const user = await findUserByEmail(normalizedEmail);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -245,10 +275,18 @@ exports.getUserByEmail = async (req, res) => {
 
 exports.register = async (req, res) => {
   try {
-    const { fullName, email, password } = req.body;
+    const { fullName, password } = req.body;
+    const email = normalizeEmail(req.body?.email);
+
+    if (!fullName || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vui lòng nhập đầy đủ họ tên, email và mật khẩu!'
+      });
+    }
 
     // Kiểm tra email đã tồn tại
-    const existingUser = await User.findOne({ email });
+    const existingUser = await findUserByEmail(email);
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -262,7 +300,7 @@ exports.register = async (req, res) => {
     // Tạo user mới với các giá trị mặc định
     const user = new User({
       fullName: fullName,
-      email: email,
+      email,
       password: hashedPassword,
       avatar: 'assets/img/AVT1.jpg',
       currentRank: 'Đồng',
@@ -305,10 +343,18 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = normalizeEmail(req.body?.email);
+    const password = String(req.body?.password || "");
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vui lòng nhập đầy đủ email và mật khẩu!'
+      });
+    }
 
     // Tìm user theo email
-    const user = await User.findOne({ email });
+    const user = await findUserByEmail(email);
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -317,12 +363,32 @@ exports.login = async (req, res) => {
     }
 
     // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    let isPasswordValid = false;
+    const storedPassword = String(user.password || "");
+
+    if (isBcryptHash(storedPassword)) {
+      isPasswordValid = await bcrypt.compare(password, storedPassword);
+    } else {
+      // Backward-compatible login for legacy seeded users with plaintext password.
+      isPasswordValid = password === storedPassword;
+      if (isPasswordValid) {
+        user.password = await bcrypt.hash(password, 10);
+      }
+    }
+
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
         message: 'Email hoặc mật khẩu không đúng!'
       });
+    }
+
+    if (user.email !== email) {
+      user.email = email;
+    }
+
+    if (!isBcryptHash(storedPassword) || user.email !== email) {
+      await user.save();
     }
 
     // Tạo JWT token
@@ -349,13 +415,13 @@ exports.login = async (req, res) => {
 
 exports.forgotPassword = async (req, res) => {
   try {
-    const email = String(req.body?.email || "").trim().toLowerCase();
+    const email = normalizeEmail(req.body?.email);
 
     if (!email) {
       return res.status(400).json({ success: false, message: "Vui lòng nhập email." });
     }
 
-    const user = await User.findOne({ email });
+    const user = await findUserByEmail(email);
     if (!user) {
       return res.status(404).json({ success: false, message: "Email không tồn tại trong hệ thống." });
     }
@@ -404,14 +470,14 @@ exports.forgotPassword = async (req, res) => {
 
 exports.verifyOtp = async (req, res) => {
   try {
-    const email = String(req.body?.email || "").trim().toLowerCase();
+    const email = normalizeEmail(req.body?.email);
     const otp = String(req.body?.otp || "").trim();
 
     if (!email || !otp) {
       return res.status(400).json({ success: false, message: "Email và OTP là bắt buộc." });
     }
 
-    const user = await User.findOne({ email });
+    const user = await findUserByEmail(email);
     if (!user) {
       return res.status(404).json({ success: false, message: "Email không tồn tại trong hệ thống." });
     }
@@ -488,7 +554,7 @@ exports.verifyOtp = async (req, res) => {
 
 exports.resetPassword = async (req, res) => {
   try {
-    const email = String(req.body?.email || "").trim().toLowerCase();
+    const email = normalizeEmail(req.body?.email);
     const resetToken = String(req.body?.resetToken || "").trim();
     const newPassword = String(req.body?.newPassword || "");
     const confirmPassword = String(req.body?.confirmPassword || "");
@@ -505,7 +571,7 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ success: false, message: "Mật khẩu xác nhận không khớp." });
     }
 
-    const user = await User.findOne({ email });
+    const user = await findUserByEmail(email);
     if (!user) {
       return res.status(404).json({ success: false, message: "Email không tồn tại trong hệ thống." });
     }
@@ -550,6 +616,10 @@ exports.updateUser = async (req, res) => {
   try {
     const payload = { ...req.body };
     delete payload._id;
+
+    if (payload.email !== undefined) {
+      payload.email = normalizeEmail(payload.email);
+    }
 
     if (payload.birthday === "") payload.birthday = null;
     if (payload.passportExpiry === "") payload.passportExpiry = null;
