@@ -93,11 +93,13 @@
                     <div class="form-group">
                         <label for="idNumber">Số CCCD</label>
                         <input type="text" id="idNumber" formControlName="idNumber" placeholder="Số CCCD"
+                            inputmode="numeric" maxlength="12" autocomplete="off" (input)="onIdNumberInput($event)"
                             [class.invalid-field]="f['idNumber'].invalid && (f['idNumber'].dirty || f['idNumber'].touched)">
 
                         <div *ngIf="f['idNumber'].invalid && (f['idNumber'].dirty || f['idNumber'].touched)"
                             class="error-message">
                             <span *ngIf="f['idNumber'].errors?.['required']">Vui lòng nhập số CCCD.</span>
+                            <span *ngIf="f['idNumber'].errors?.['pattern']">Số CCCD phải gồm đúng 12 chữ số.</span>
                         </div>
                     </div>
                 </div>
@@ -112,6 +114,7 @@
                     <div class="form-group">
                         <label for="phoneNumber">Số điện thoại</label>
                         <input type="tel" id="phoneNumber" formControlName="phoneNumber" placeholder="Số điện thoại"
+                            inputmode="numeric" maxlength="10" autocomplete="off" (input)="onPhoneNumberInput($event)"
                             [class.invalid-field]="f['phoneNumber'].invalid && (f['phoneNumber'].dirty || f['phoneNumber'].touched)">
 
                         <div *ngIf="f['phoneNumber'].invalid && (f['phoneNumber'].dirty || f['phoneNumber'].touched)"

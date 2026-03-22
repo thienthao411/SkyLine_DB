@@ -46,7 +46,7 @@ export class BaggageSelection implements OnInit {
       salutation: ['Quý Ông', Validators.required],
       fullName: ['', Validators.required],
       dob: ['', Validators.required],
-      idNumber: ['', Validators.required],
+      idNumber: ['', [Validators.required, Validators.pattern('^[0-9]{12}$')]],
       phoneNumber: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
       email: ['', [Validators.required, Validators.email]],
       address: ['', Validators.required]
@@ -168,6 +168,30 @@ export class BaggageSelection implements OnInit {
 
   get f() {
     return this.passengerForm.controls;
+  }
+
+  onIdNumberInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digitsOnly = input.value.replace(/\D/g, '').slice(0, 12);
+    if (input.value !== digitsOnly) {
+      input.value = digitsOnly;
+    }
+
+    this.f['idNumber'].setValue(digitsOnly, { emitEvent: false });
+    this.f['idNumber'].markAsDirty();
+    this.f['idNumber'].updateValueAndValidity({ emitEvent: false });
+  }
+
+  onPhoneNumberInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digitsOnly = input.value.replace(/\D/g, '').slice(0, 10);
+    if (input.value !== digitsOnly) {
+      input.value = digitsOnly;
+    }
+
+    this.f['phoneNumber'].setValue(digitsOnly, { emitEvent: false });
+    this.f['phoneNumber'].markAsDirty();
+    this.f['phoneNumber'].updateValueAndValidity({ emitEvent: false });
   }
 
   selectBaggage(option: BaggageOption | null): void {
