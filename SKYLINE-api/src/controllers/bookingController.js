@@ -418,14 +418,23 @@ async function ensurePassengerAccountForTicket(ticket) {
   };
 }
 
-async function sendTicketEmailForSuccessfulPayment(ticket) {
+async function ensurePassengerAccountEmail(ticket, options = {}) {
+  const { requestPayload = null, save = true } = options;
   const currentPayment = ticket.payment && typeof ticket.payment === "object" ? ticket.payment : {};
-  if (currentPayment.emailSent === true && currentPayment.accountEmailSent !== false) {
-    return { sent: true, skipped: true, reason: "already-sent" };
+  const nowIso = new Date().toISOString();
+
+  let nextPayment = {
+    ...currentPayment,
+    accountEmailUpdatedAt: nowIso,
+  };
+
+  if (requestPayload && typeof requestPayload === "object") {
+    nextPayment.accountEmailRequest = requestPayload;
   }
 
   const accountResult = await ensurePassengerAccountForTicket(ticket);
   let accountMailResult = { sent: false, reason: "not-required" };
+
   if (accountResult.status === "created") {
     accountMailResult = await sendAccountCredentialsEmail({
       recipient: accountResult.email,
@@ -434,25 +443,64 @@ async function sendTicketEmailForSuccessfulPayment(ticket) {
     });
   }
 
-  const ticketMailResult = await sendBookingIssuedEmail({ ticket });
+  const wasCreatedByFlow = Boolean(currentPayment.accountCreatedByBookingFlow);
+  const shouldKeepMissingAccountEmail = wasCreatedByFlow && currentPayment.accountEmailSent === false;
+  const isExistingSatisfied = accountResult.status === "existing" && !shouldKeepMissingAccountEmail;
+  const nextAccountEmailSent =
+    accountResult.status === "created"
+      ? Boolean(accountMailResult.sent)
+      : accountResult.status === "existing"
+        ? isExistingSatisfied
+        : false;
 
-  const nextPayment = {
-    ...currentPayment,
-    emailSent: Boolean(ticketMailResult.sent),
-    emailSentAt: ticketMailResult.sent ? new Date().toISOString() : currentPayment.emailSentAt,
-    emailMessageId: ticketMailResult.messageId || currentPayment.emailMessageId || "",
-    emailRecipient: ticketMailResult.recipient || normalizeEmail(ticket?.email),
-    emailError: ticketMailResult.sent ? "" : String(ticketMailResult.reason || "send-failed"),
-    accountEmailSent: accountResult.status === "created" ? Boolean(accountMailResult.sent) : true,
-    accountEmailSentAt: accountMailResult.sent ? new Date().toISOString() : currentPayment.accountEmailSentAt,
+  nextPayment = {
+    ...nextPayment,
+    accountStatus: accountResult.status,
+    accountEmail: accountResult.email,
+    accountCreatedByBookingFlow: accountResult.status === "created" ? true : wasCreatedByFlow,
+    accountEmailSent: nextAccountEmailSent,
+    accountEmailSentAt: accountMailResult.sent ? nowIso : currentPayment.accountEmailSentAt,
     accountEmailMessageId: accountMailResult.messageId || currentPayment.accountEmailMessageId || "",
     accountEmailError:
       accountResult.status === "created" && !accountMailResult.sent
         ? String(accountMailResult.reason || "send-account-email-failed")
-        : "",
-    accountStatus: accountResult.status,
-    accountEmail: accountResult.email,
-    accountCreatedByBookingFlow: accountResult.status === "created",
+        : isExistingSatisfied
+          ? ""
+          : String(currentPayment.accountEmailError || ""),
+  };
+
+  ticket.payment = nextPayment;
+
+  if (save) {
+    await ticket.save();
+  }
+
+  return {
+    accountResult,
+    accountMailResult,
+    payment: nextPayment,
+  };
+}
+
+async function sendTicketEmailForSuccessfulPayment(ticket) {
+  const currentPayment = ticket.payment && typeof ticket.payment === "object" ? ticket.payment : {};
+  if (currentPayment.emailSent === true) {
+    return { sent: true, skipped: true, reason: "already-sent" };
+  }
+
+  const accountEmailResult = await ensurePassengerAccountEmail(ticket, { save: false });
+
+  const ticketMailResult = await sendBookingIssuedEmail({ ticket });
+  const latestPayment = ticket.payment && typeof ticket.payment === "object" ? ticket.payment : currentPayment;
+  const ticketEmailSentAt = ticketMailResult.sent ? new Date().toISOString() : latestPayment.emailSentAt;
+
+  const nextPayment = {
+    ...latestPayment,
+    emailSent: Boolean(ticketMailResult.sent),
+    emailSentAt: ticketEmailSentAt,
+    emailMessageId: ticketMailResult.messageId || latestPayment.emailMessageId || "",
+    emailRecipient: ticketMailResult.recipient || normalizeEmail(ticket?.email),
+    emailError: ticketMailResult.sent ? "" : String(ticketMailResult.reason || "send-failed"),
   };
 
   ticket.payment = nextPayment;
@@ -461,8 +509,8 @@ async function sendTicketEmailForSuccessfulPayment(ticket) {
   return {
     sent: Boolean(ticketMailResult.sent),
     ticketMailResult,
-    accountMailResult,
-    accountResult,
+    accountMailResult: accountEmailResult.accountMailResult,
+    accountResult: accountEmailResult.accountResult,
   };
 }
 
@@ -631,6 +679,22 @@ exports.updateBookingStatus = async (req, res) => {
       if (adminNotification) {
         emitRealtime("admin_notification_created", adminNotification.toObject(), { room: "admins" });
       }
+
+      ticket.payment = mergedPayment;
+      try {
+        const accountEmailResult = await ensurePassengerAccountEmail(ticket, {
+          requestPayload: {
+            source: "user-payment-confirmation",
+            requestedAt: new Date().toISOString(),
+          },
+          save: false,
+        });
+        Object.assign(mergedPayment, accountEmailResult.payment);
+      } catch (accountEmailError) {
+        mergedPayment.accountEmailSent = false;
+        mergedPayment.accountEmailError = String(accountEmailError?.message || "send-account-email-failed");
+        mergedPayment.accountEmailUpdatedAt = new Date().toISOString();
+      }
     }
 
     if (nextStatus === "paid" || nextStatus === "issued") {
@@ -794,22 +858,16 @@ exports.sendAccountEmail = async (req, res) => {
       return res.status(404).json({ success: false, message: "Không tìm thấy booking." });
     }
 
-    const currentPayment = ticket.payment && typeof ticket.payment === "object" ? ticket.payment : {};
     const payload = req.body && typeof req.body === "object" ? req.body : {};
 
-    ticket.payment = {
-      ...currentPayment,
-      emailSent: false,
-      accountEmailRequest: payload,
-      accountEmailUpdatedAt: new Date().toISOString(),
-      emailPayload: {
-        accountStatus: payload.accountStatus || "unknown",
-        notificationCreated: Boolean(payload.notificationCreated),
+    await ensurePassengerAccountEmail(ticket, {
+      requestPayload: {
+        ...payload,
+        source: "manual-account-email-endpoint",
+        requestedAt: new Date().toISOString(),
       },
-      emailSentAt: new Date().toISOString(),
-    };
-
-    await ticket.save();
+      save: true,
+    });
 
     return res.json({ success: true, booking: toBookingResponse(ticket) });
   } catch (error) {
