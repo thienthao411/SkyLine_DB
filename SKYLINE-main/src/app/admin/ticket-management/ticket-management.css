@@ -288,10 +288,12 @@
 }
 
 .action-btn {
-  border: none;
+  border: 1px solid transparent;
   border-radius: 5px;
   cursor: pointer;
-  padding: 6px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
   color: #6B7280;
   background: none;
   display: flex;
@@ -302,6 +304,12 @@
 
 .action-btn:hover {
   background: #f0f4f8;
+}
+
+.action-btn:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+  opacity: 1;
 }
 
 .action-btn.view:hover {
@@ -317,21 +325,37 @@
 }
 
 .action-btn.approve {
-  color: #15803d;
+  color: #9CA3AF;
   font-weight: 700;
+  border-color: #E5E7EB;
+  background: #F9FAFB;
 }
 
-.action-btn.approve:hover {
+.action-btn.approve.review-ready {
+  color: #15803d;
+  border-color: #86efac;
   background: #dcfce7;
 }
 
-.action-btn.reject {
-  color: #b91c1c;
-  font-weight: 700;
+.action-btn.approve.review-ready:hover {
+  background: #bbf7d0;
 }
 
-.action-btn.reject:hover {
+.action-btn.reject {
+  color: #9CA3AF;
+  font-weight: 700;
+  border-color: #E5E7EB;
+  background: #F9FAFB;
+}
+
+.action-btn.reject.review-ready {
+  color: #b91c1c;
+  border-color: #fca5a5;
   background: #fee2e2;
+}
+
+.action-btn.reject.review-ready:hover {
+  background: #fecaca;
 }
 
 .form-container {

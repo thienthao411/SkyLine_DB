@@ -210,14 +210,16 @@
                   <button
                     title="Xác nhận thanh toán"
                     class="action-btn approve"
-                    *ngIf="canReviewPayment(tx)"
+                    [class.review-ready]="canReviewPayment(tx)"
+                    [disabled]="!canReviewPayment(tx)"
                     (click)="approvePayment(tx)">
                     ✓
                   </button>
                   <button
                     title="Từ chối thanh toán"
                     class="action-btn reject"
-                    *ngIf="canReviewPayment(tx)"
+                    [class.review-ready]="canReviewPayment(tx)"
+                    [disabled]="!canReviewPayment(tx)"
                     (click)="rejectPayment(tx)">
                     ✕
                   </button>
