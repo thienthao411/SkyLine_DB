@@ -15,6 +15,7 @@ import { BaggageSelection } from './user/baggage-selection/baggage-selection';
 import { Checkout } from './user/checkout/checkout';
 import { PaymentResult } from './user/payment-result/payment-result';
 import { Contact } from './user/contact/contact';
+import { SupportManagementComponent } from './admin/support-management/support-management';
 
 export const routes: Routes = [
   // Trang mặc định khi vào app
@@ -113,6 +114,10 @@ export const routes: Routes = [
   {
     path: 'admin/recruitment-management',
     loadComponent: () => import('./admin/recruitment-management/recruitment-management').then(m => m.RecruitmentManagementComponent)
+  },
+  {
+    path: 'admin/support-management',
+    component: SupportManagementComponent
   },
 
   // Các trang trong layout chính

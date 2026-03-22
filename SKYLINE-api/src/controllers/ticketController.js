@@ -67,7 +67,7 @@ exports.updateTicket = async (req, res) => {
       payload.seat = normalizeSeatCode(payload.seat);
     }
 
-    const updated = await Ticket.findByIdAndUpdate(req.params.id, payload, { new: true });
+    const updated = await Ticket.findByIdAndUpdate(req.params.id, payload, { returnDocument: 'after' });
     if (!updated) return res.status(404).json({ message: 'Ticket not found' });
     res.json(updated);
   } catch (error) {

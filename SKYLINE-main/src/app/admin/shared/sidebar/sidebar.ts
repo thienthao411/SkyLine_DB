@@ -66,6 +66,12 @@ export class AdminSidebarComponent {
       icon: '/assets/icons/customer.png',
       label: 'Quản lý tuyển dụng',
       active: false
+    },
+    {
+      route: '/admin/support-management',
+      icon: '/assets/icons/notification.png',
+      label: 'Liên hệ hỗ trợ',
+      active: false
     }
   ];
 

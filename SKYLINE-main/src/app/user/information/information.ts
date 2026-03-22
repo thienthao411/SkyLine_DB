@@ -20,6 +20,10 @@ export class Information implements OnInit {
   savePopupTitle = '';
   savePopupMessage = '';
   private popupTimer: ReturnType<typeof setTimeout> | null = null;
+  currentPassword = '';
+  newPassword = '';
+  confirmNewPassword = '';
+  isChangingPassword = false;
 
   get phoneDigits(): string {
     return String(this.user?.phone || '').replace(/\D/g, '');
@@ -155,6 +159,7 @@ export class Information implements OnInit {
       birthday: this.normalizeDateInput(this.user.birthday),
       passportExpiry: this.normalizeDateInput(this.user.passportExpiry)
     };
+    delete (payload as any).password;
 
     const updateById = (id: string) => {
       this.userApi.update(id, payload).subscribe({
@@ -187,6 +192,49 @@ export class Information implements OnInit {
       error: (err) => {
         console.error('❌ Failed to find user by email:', err);
         this.showPopup('error', 'Không thể lưu', 'Không tìm thấy tài khoản để lưu thông tin.');
+      }
+    });
+  }
+
+  onChangePassword(): void {
+    if (!this.user?.email) {
+      this.showPopup('error', 'Không thể đổi mật khẩu', 'Không tìm thấy email tài khoản hiện tại.');
+      return;
+    }
+
+    if (!this.currentPassword || !this.newPassword || !this.confirmNewPassword) {
+      this.showPopup('error', 'Thiếu thông tin', 'Vui lòng nhập đầy đủ mật khẩu hiện tại và mật khẩu mới.');
+      return;
+    }
+
+    if (this.newPassword.length < 6) {
+      this.showPopup('error', 'Mật khẩu mới chưa hợp lệ', 'Mật khẩu mới phải có ít nhất 6 ký tự.');
+      return;
+    }
+
+    if (this.newPassword !== this.confirmNewPassword) {
+      this.showPopup('error', 'Xác nhận mật khẩu không khớp', 'Vui lòng nhập lại phần xác nhận mật khẩu mới.');
+      return;
+    }
+
+    this.isChangingPassword = true;
+
+    this.userApi.changePassword({
+      email: this.user.email,
+      currentPassword: this.currentPassword,
+      newPassword: this.newPassword,
+      confirmPassword: this.confirmNewPassword,
+    }).subscribe({
+      next: (res) => {
+        this.isChangingPassword = false;
+        this.currentPassword = '';
+        this.newPassword = '';
+        this.confirmNewPassword = '';
+        this.showPopup('success', 'Đổi mật khẩu thành công', res.message || 'Bạn đã đổi mật khẩu thành công.');
+      },
+      error: (err) => {
+        this.isChangingPassword = false;
+        this.showPopup('error', 'Đổi mật khẩu thất bại', err?.error?.message || 'Vui lòng kiểm tra lại mật khẩu hiện tại.');
       }
     });
   }

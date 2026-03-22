@@ -1,0 +1,104 @@
+<div class="admin-container">
+  <app-admin-sidebar [isOpen]="sidebarOpen"></app-admin-sidebar>
+
+  <main class="content">
+    <app-admin-header (toggleSidebarClicked)="toggleSidebar()"></app-admin-header>
+
+    <div class="toast-wrap" *ngIf="toastVisible">
+      <div class="toast" [ngClass]="toastType">
+        <div class="toast-body">
+          <span class="toast-dot"></span>
+          <span>{{ toastMessage }}</span>
+        </div>
+        <button type="button" class="toast-close" (click)="hideToast()">x</button>
+      </div>
+    </div>
+
+    <div class="header">
+      <h1>Xử lý liên hệ hỗ trợ</h1>
+      <p class="subtitle">Theo dõi và cập nhật trạng thái cho các yêu cầu hỗ trợ từ khách hàng.</p>
+    </div>
+
+    <section class="main-content-panel">
+      <div class="list-container">
+        <div class="quick-filter-bar">
+          <button
+            type="button"
+            class="quick-filter-btn"
+            *ngFor="let option of statusOptions"
+            [class.active]="statusFilter === option.value"
+            (click)="setStatusFilter(option.value)">
+            {{ option.label }}
+          </button>
+        </div>
+
+        <div class="table-wrapper" *ngIf="!isLoading; else loadingTpl">
+          <table>
+            <thead>
+              <tr>
+                <th>Thời gian</th>
+                <th>Người gửi</th>
+                <th>Chủ đề</th>
+                <th>Nội dung</th>
+                <th>Trạng thái hiện tại</th>
+                <th>Cập nhật trạng thái</th>
+                <th>Ghi chú xử lý</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let item of requests"
+                [attr.id]="'support-' + item._id"
+                [class.highlight-row]="highlightedRequestId === item._id">
+                <td>{{ formattedTime(item.createdAt) }}</td>
+                <td>
+                  <div class="user-name">{{ item.supportRequest?.fullName || '--' }}</div>
+                  <div class="user-email">{{ item.supportRequest?.email || '--' }}</div>
+                </td>
+                <td>{{ displayTopic(item.supportRequest?.topic) }}</td>
+                <td>
+                  <div class="request-content">{{ item.supportRequest?.content || item.message }}</div>
+                </td>
+                <td>
+                  <span class="status-pill" [ngClass]="statusClass(item.supportRequest?.status)">
+                    {{ statusLabel(item.supportRequest?.status) }}
+                  </span>
+                </td>
+                <td>
+                  <select [(ngModel)]="statusDraftById[item._id]" [name]="'status-' + item._id">
+                    <option value="new">Chưa xử lý</option>
+                    <option value="in_progress">Đang xử lý</option>
+                    <option value="resolved">Đã xử lý</option>
+                  </select>
+                </td>
+                <td>
+                  <textarea
+                    rows="2"
+                    [(ngModel)]="noteDraftById[item._id]"
+                    [name]="'note-' + item._id"
+                    placeholder="Nhập ghi chú xử lý"></textarea>
+                  <div class="handled-at" *ngIf="item.supportRequest?.handledAt">
+                    Xử lý lúc: {{ formattedTime(item.supportRequest?.handledAt || undefined) }}
+                  </div>
+                </td>
+                <td>
+                  <button type="button" class="save-btn" [disabled]="isSaving" (click)="saveRequest(item)">
+                    Lưu
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="requests.length === 0">
+                <td colspan="8" class="no-data">Không có yêu cầu hỗ trợ phù hợp bộ lọc.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <ng-template #loadingTpl>
+          <div class="loading">Đang tải yêu cầu hỗ trợ...</div>
+        </ng-template>
+      </div>
+    </section>
+  </main>
+</div>

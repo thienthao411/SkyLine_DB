@@ -20,6 +20,7 @@ const recruitmentRoutes = require("./routes/recruitmentRoutes");
 const aiChatRoutes = require("./routes/aiChatRoutes");
 
 const notificationRoutes = require("./routes/notificationRoutes");
+const supportRoutes = require("./routes/supportRoutes");
 const notificationUserRoutes = require("./routes/notificationUserRoutes");
 const { initSocket } = require("./socket");
 
@@ -46,6 +47,7 @@ app.use("/api/tickets", ticketRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/recruitment", recruitmentRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/supports", supportRoutes);
 app.use("/api/notifications-user", notificationUserRoutes);
 app.use("/api/ai", aiChatRoutes);
 

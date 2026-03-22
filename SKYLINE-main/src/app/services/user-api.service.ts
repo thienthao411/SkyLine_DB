@@ -44,6 +44,11 @@ export interface ResetPasswordResponse {
   message: string;
 }
 
+export interface ChangePasswordResponse {
+  success: boolean;
+  message: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -68,8 +73,17 @@ export class UserApiService {
     return this.http.post<any>(`${this.apiUrl}/login`, { email, password });
   }
 
-  register(userData: { fullName: string; email: string; password: string }): Observable<any> {
+  register(userData: { fullName: string; email: string; password: string; avatar?: string }): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/register`, userData);
+  }
+
+  changePassword(payload: {
+    email: string;
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }): Observable<ChangePasswordResponse> {
+    return this.http.post<ChangePasswordResponse>(`${this.apiUrl}/change-password`, payload);
   }
 
   forgotPassword(email: string): Observable<ForgotPasswordResponse> {

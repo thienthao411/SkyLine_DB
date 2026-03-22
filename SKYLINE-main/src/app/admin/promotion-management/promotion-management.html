@@ -138,7 +138,7 @@
                           <input type="date" [(ngModel)]="currentPromotion.startDate" />
                       </div>
 
-                      <div class="form-group" *ngIf="isLimitedTime">
+                      <div class="form-group">
                           <label>Ngày kết thúc hiệu lực</label>
                           <input type="date" [(ngModel)]="currentPromotion.endDate" (ngModelChange)="updateFormValidity()" />
                       </div>
@@ -154,20 +154,6 @@
                                   {{ currentPromotion.isFeatured ? 'Đang bật' : 'Đang tắt' }}
                               </span>
                           </div>
-                      </div>
-                  </div>
-
-                  <div class="form-row three-cols time-group">
-                      <div class="form-group">
-                          <label for="limitedTime">Thời gian áp dụng</label>
-                          <select id="limitedTime" [(ngModel)]="isLimitedTime" (ngModelChange)="updateFormValidity()">
-                              <option [ngValue]="false">Hiệu lực vô thời hạn</option>
-                              <option [ngValue]="true">Hiệu lực đến</option>
-                          </select>
-                      </div>
-                      <div class="form-group time-detail-group" *ngIf="isLimitedTime">
-                          <label for="endTime">Khung giờ</label>
-                          <input id="endTime" type="text" [(ngModel)]="currentPromotion.endTime" placeholder="HH:mm:ss" />
                       </div>
                   </div>
 
@@ -469,11 +455,11 @@
                           
                           <div class="detail-item">
                               <label>Số lần áp dụng</label>
-                              <span>{{ formatApplyCount(rawData.applyCountType) }}</span>
+                              <span>{{ formatApplyCount(rawData.applyCountType || promoToView.applyCountType) }}</span>
                           </div>
                           <div class="detail-item">
                               <label>Kênh áp dụng</label>
-                              <span>{{ formatApplyChannel(rawData.applyChannel) }}</span>
+                              <span>{{ formatApplyChannel(rawData.applyChannel || promoToView.applyChannel) }}</span>
                           </div>
                           <div class="detail-item">
                               <label>Đối tượng khách hàng</label>

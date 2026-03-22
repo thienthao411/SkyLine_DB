@@ -24,8 +24,6 @@ export class UserManagement implements OnInit {
   selectedRank: string = 'all';
   selectedStatus: string = 'all';
   users: User[] = [];
-  currentPasswordDisplay: string = '';
-  showCurrentPassword: boolean = false;
 
   // modal
   showDeleteConfirm = false;
@@ -186,15 +184,11 @@ prevPage() {
     this.activeTab = tab;
     if (tab === 'form') {
       this.formUser = { ...this.emptyFormUser };
-      this.currentPasswordDisplay = '';
-      this.showCurrentPassword = false;
     }
   }
 
   navigateToAddForm() {
     this.formUser = { ...this.emptyFormUser };
-    this.currentPasswordDisplay = '';
-    this.showCurrentPassword = false;
     this.activeTab = 'form';
   }
 
@@ -215,19 +209,6 @@ prevPage() {
     this.formUser.password = '';
     this.formUser.birthday = this.toDateInput(this.formUser.birthday);
     this.formUser.passportExpiry = this.toDateInput(this.formUser.passportExpiry);
-    this.currentPasswordDisplay = 'Đang tải...';
-    this.showCurrentPassword = false;
-
-    this.userApi.getByEmail(user.email).subscribe({
-      next: (detail) => {
-        const value = String(detail?.password || '').trim();
-        this.currentPasswordDisplay = value || '(Chưa thiết lập)';
-      },
-      error: (err) => {
-        console.error(err);
-        this.currentPasswordDisplay = '(Không tải được)';
-      }
-    });
 
     this.activeTab = 'form';
   }
@@ -353,13 +334,7 @@ prevPage() {
   // ================= RESET =================
   cancelForm() {
     this.formUser = { ...this.emptyFormUser };
-    this.currentPasswordDisplay = '';
-    this.showCurrentPassword = false;
     this.activeTab = 'list';
-  }
-
-  toggleCurrentPasswordVisibility(): void {
-    this.showCurrentPassword = !this.showCurrentPassword;
   }
 
   formatDisplayDate(value: any): string {

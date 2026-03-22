@@ -258,17 +258,14 @@ exports.getUserById = async (req, res) => {
 exports.getUserByEmail = async (req, res) => {
   try {
     const normalizedEmail = normalizeEmail(req.params.email);
-    console.log('Fetching user by email:', normalizedEmail);
     const user = await findUserByEmail(normalizedEmail);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    console.log('User found:', user.fullName);
     res.json(user);
   } catch (error) {
-    console.log('Error fetching user:', error.message);
     res.status(500).json({ error: error.message });
   }
 };
@@ -632,7 +629,7 @@ exports.updateUser = async (req, res) => {
       payload.password = await bcrypt.hash(String(payload.password), 10);
     }
 
-    const updated = await User.findByIdAndUpdate(req.params.id, payload, { new: true });
+    const updated = await User.findByIdAndUpdate(req.params.id, payload, { returnDocument: 'after' });
     res.json(updated);
   } catch (error) {
     res.status(500).json({ error: error.message });

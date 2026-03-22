@@ -74,6 +74,36 @@
             <label><i class="fa fa-map-marker-alt"></i> Địa chỉ</label>
             <input [(ngModel)]="user.address" name="address" [readonly]="!isEditing" />
           </div>
+
+          <div class="form-group password-section" *ngIf="isEditing">
+            <label><i class="fa fa-lock"></i> Đổi mật khẩu</label>
+            <input
+              type="password"
+              [(ngModel)]="currentPassword"
+              name="currentPassword"
+              placeholder="Mật khẩu hiện tại"
+            />
+            <input
+              type="password"
+              [(ngModel)]="newPassword"
+              name="newPassword"
+              placeholder="Mật khẩu mới (ít nhất 6 ký tự)"
+            />
+            <input
+              type="password"
+              [(ngModel)]="confirmNewPassword"
+              name="confirmNewPassword"
+              placeholder="Xác nhận mật khẩu mới"
+            />
+            <button
+              type="button"
+              class="btn-change-password"
+              [disabled]="isChangingPassword"
+              (click)="onChangePassword()"
+            >
+              {{ isChangingPassword ? 'Đang đổi mật khẩu...' : 'Cập nhật mật khẩu' }}
+            </button>
+          </div>
     
           <div class="actions">
             <button type="button" class="btn-edit" *ngIf="!isEditing" (click)="onEdit()">Chỉnh sửa thông tin</button>

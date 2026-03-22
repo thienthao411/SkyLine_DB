@@ -278,7 +278,7 @@ exports.updateBlog = async (req, res) => {
       payload.slug = await ensureUniqueSlug(toSlug(payload.slug || payload.title), req.params.id);
     }
 
-    const updated = await Blog.findByIdAndUpdate(req.params.id, payload, { new: true });
+    const updated = await Blog.findByIdAndUpdate(req.params.id, payload, { returnDocument: 'after' });
     if (!updated) return res.status(404).json({ message: 'Blog not found' });
     res.json(updated);
   } catch (error) {

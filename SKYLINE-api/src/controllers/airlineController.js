@@ -100,7 +100,7 @@ exports.updateAirline = async (req, res) => {
     const updated = await Airline.findByIdAndUpdate(
       req.params.id,
       payload,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
 
     if (!updated) {

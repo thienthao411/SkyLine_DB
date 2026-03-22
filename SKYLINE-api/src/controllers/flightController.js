@@ -334,7 +334,7 @@ exports.createFlight = async (req, res) => {
 
 exports.updateFlight = async (req, res) => {
   try {
-    const updated = await Flight.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updated = await Flight.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' });
     if (!updated) return res.status(404).json({ message: 'Flight not found' });
     res.json(updated);
   } catch (error) {

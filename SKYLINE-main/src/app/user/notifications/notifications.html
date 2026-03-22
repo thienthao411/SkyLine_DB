@@ -2,23 +2,6 @@
   
     <!-- Phần nội dung chính -->
     <main class="content">
-      <section class="notification-inbox">
-        <div class="inbox-empty" *ngIf="!isLoading && filteredInbox.length === 0">
-          Hiện chưa có thông báo phù hợp với cài đặt của bạn.
-        </div>
-
-        <div class="inbox-list" *ngIf="filteredInbox.length > 0">
-          <article class="inbox-card" *ngFor="let item of filteredInbox">
-            <div class="inbox-meta">
-              <span class="inbox-type">{{ typeLabel(item.type) }}</span>
-              <span class="inbox-time">{{ item.createdAt | date:'HH:mm dd/MM/yyyy' }}</span>
-            </div>
-            <h3>{{ item.title }}</h3>
-            <p>{{ item.message }}</p>
-          </article>
-        </div>
-      </section>
-
       <h2>Cài đặt thông báo</h2>
   
       <div class="notification-settings">

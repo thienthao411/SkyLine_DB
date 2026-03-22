@@ -23,7 +23,6 @@ interface Promotion {
   endDate: string;
   status: 'active' | 'inactive';
   notes: string;
-  endTime: string;
   descriptionPlaceholder?: string;
   applyHour: string;
   applyDayOfWeek: string;
@@ -98,6 +97,8 @@ interface PromoListItem {
   endDate: string;
   type: string;
   applyTarget: string;
+    applyCountType: string;
+    applyChannel: string;
     isFeatured: boolean;
   status: 'active' | 'upcoming' | 'expired' | 'draft';
   jsonCategoryId: string;
@@ -131,7 +132,6 @@ export class PromotionManagement implements OnInit {
   selectedTypeFilter: string = 'all';
     currentPage = 1;
     pageSize = 10;
-  isLimitedTime: boolean = false;
   isFormInvalid: boolean = true;
   isDraftInvalid: boolean = true;
   showModalType: 'cancel' | 'draft' | 'activate' | 'view' | null = null; 
@@ -143,7 +143,7 @@ export class PromotionManagement implements OnInit {
   currentPromotion: Promotion = {
       promoId: '', promoName: '', promoCode: '', bannerImage: '', promotionCategory: 'special', isFeatured: false, promoType: 'percent', discountValue: null,
       maxDiscountAmount: null, startDate: new Date().toISOString().slice(0, 10), endDate: '', status: 'inactive', notes: '',
-      endTime: '', descriptionPlaceholder: '', applyHour: 'any', applyDayOfWeek: 'any',
+    descriptionPlaceholder: '', applyHour: 'any', applyDayOfWeek: 'any',
       applyDayOfMonth: 'any', applyMonth: 'any', applyYear: 'any', applyTimeframe: 'any',
       flightRoutes: '', ticketClass: '', minTickets: null, ruleType: '', additionalCondition: '',
       departureAirport: '', arrivalAirport: '', minOrderValue: null, territory: '',
@@ -261,6 +261,13 @@ export class PromotionManagement implements OnInit {
       return value || 'N/A';
   }
 
+  private normalizeApplyCountType(value: any): string {
+      const raw = String(value ?? '').trim().toLowerCase();
+      if (raw === 'multiple' || raw === 'multi' || raw === 'unlimited') return 'multiple';
+      if (raw === '1' || raw === 'once' || raw === 'single') return '1';
+      return '1';
+  }
+
   formatApplyChannel(value?: string): string {
       const map: Record<string, string> = {
           all: 'Toàn bộ hệ thống',
@@ -272,6 +279,14 @@ export class PromotionManagement implements OnInit {
           bank: 'Ngân hàng'
       };
       return value ? (map[value] || value) : 'N/A';
+  }
+
+  private normalizeApplyChannel(value: any): string {
+      const raw = String(value ?? '').trim().toLowerCase();
+      if (raw === 'specific') return 'specific';
+      // Legacy channel values (online/web/app/momo/bank) are folded into
+      // "all" because current edit form only has two options: all/specific.
+      return 'all';
   }
 
   formatDiscountValue(type: string, value?: number | null): string {
@@ -326,6 +341,8 @@ export class PromotionManagement implements OnInit {
                           endDate: to || 'Vô thời hạn',
                           type,
                           applyTarget: this.resolveCustomerTarget(item),
+                          applyCountType: String(item.applyCountType || '1'),
+                          applyChannel: String(item.applyChannel || 'all'),
                           isFeatured: Boolean(item.isFeatured ?? category.isFeatured),
                           status: this.getPromoStatus(item, to),
                           jsonCategoryId: categoryId,
@@ -407,12 +424,11 @@ export class PromotionManagement implements OnInit {
               arrivalAirport: rawData?.arrivalAirport || '',
               minOrderValue: rawData?.minOrderValue || 0,
               territory: rawData?.territory || '',
-              applyCountType: rawData?.applyCountType || '1',
-              applyChannel: rawData?.applyChannel || 'all',
+              applyCountType: this.normalizeApplyCountType(rawData?.applyCountType ?? promoItem.applyCountType),
+              applyChannel: this.normalizeApplyChannel(rawData?.applyChannel ?? promoItem.applyChannel),
               customerTargetType: rawData?.customerTargetType || 'all',
           };
           this.ensureCategoryOption(this.currentPromotion.promotionCategory);
-          this.isLimitedTime = promoItem.endDate !== 'Vô thời hạn';
           
           this.activeMainTab = 'create';
           this.activeStep = 'info';
@@ -428,7 +444,7 @@ export class PromotionManagement implements OnInit {
     return {
     promoId: '', promoName: '', promoCode: '', bannerImage: '', promotionCategory: 'special', isFeatured: false, promoType: 'percent', discountValue: null,
                 maxDiscountAmount: null, startDate: new Date().toISOString().slice(0, 10), endDate: '', status: 'inactive', notes: '',
-        endTime: '', descriptionPlaceholder: '', applyHour: 'any', applyDayOfWeek: 'any',
+        descriptionPlaceholder: '', applyHour: 'any', applyDayOfWeek: 'any',
         applyDayOfMonth: 'any', applyMonth: 'any', applyYear: 'any', applyTimeframe: 'any',
         flightRoutes: '', ticketClass: '', minTickets: null, ruleType: '', additionalCondition: '',
         departureAirport: '', arrivalAirport: '', minOrderValue: null, territory: '',
@@ -444,7 +460,6 @@ export class PromotionManagement implements OnInit {
           this.currentPromotion = this.createEmptyPromotion(); 
                     this.editingPromotionId = null;
           this.activeStep = 'info'; 
-          this.isLimitedTime = false;
           this.updateFormValidity();
       }
       // Khi chuyển sang tab 'manage', đóng modal xem chi tiết nếu có
@@ -477,11 +492,7 @@ export class PromotionManagement implements OnInit {
             requiredValid = false;
         }
 
-        if (requiredValid && this.isLimitedTime && (!p.endDate || p.endDate.trim() === '')) {
-            requiredValid = false;
-        }
-
-        if (requiredValid && this.isLimitedTime) {
+        if (requiredValid && p.endDate && p.endDate.trim() !== '') {
             const fromDate = this.parseDate(p.startDate);
             const toDate = this.parseDate(p.endDate);
             if (fromDate && toDate && toDate < fromDate) {
@@ -614,7 +625,6 @@ export class PromotionManagement implements OnInit {
           this.editingPromotionId = null;
           this.activeMainTab = 'manage';
           this.activeStep = 'info';
-          this.isLimitedTime = false;
       } else if (this.showModalType === 'draft' || this.showModalType === 'activate') {
           const isEditing = !!this.editingPromotionId;
           const status = this.showModalType === 'activate' ? 'active' : 'draft';
@@ -634,7 +644,6 @@ export class PromotionManagement implements OnInit {
                   this.activeMainTab = 'manage';
                   this.currentPromotion = this.createEmptyPromotion();
                   this.editingPromotionId = null;
-                  this.isLimitedTime = false;
                   this.loadPromoData();
               },
               error: (err) => {
@@ -747,7 +756,7 @@ export class PromotionManagement implements OnInit {
     private buildPromotionPayload(status: 'active' | 'draft'): PromotionApiModel {
         const fallbackDate = new Date().toISOString().slice(0, 10);
         const fromDate = this.currentPromotion.startDate || fallbackDate;
-        const toDate = this.isLimitedTime ? (this.currentPromotion.endDate || '') : '';
+        const toDate = this.currentPromotion.endDate || '';
 
         return {
             title: this.currentPromotion.promoName,
@@ -781,8 +790,8 @@ export class PromotionManagement implements OnInit {
                     arrivalAirport: this.currentPromotion.arrivalAirport,
                     minOrderValue: this.currentPromotion.minOrderValue,
                     territory: this.currentPromotion.territory,
-                    applyCountType: this.currentPromotion.applyCountType,
-                    applyChannel: this.currentPromotion.applyChannel,
+                    applyCountType: this.normalizeApplyCountType(this.currentPromotion.applyCountType),
+                    applyChannel: this.normalizeApplyChannel(this.currentPromotion.applyChannel),
                     customerTargetType: this.currentPromotion.customerTargetType
                 }
             ]

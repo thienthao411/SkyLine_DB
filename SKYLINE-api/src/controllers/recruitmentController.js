@@ -122,7 +122,7 @@ async function createActivityLog(payload = {}) {
       await RecruitmentActivity.findOneAndUpdate(
         { applicationId: normalizedPayload.applicationId },
         { $set: normalizedPayload },
-        { new: true, upsert: true, setDefaultsOnInsert: true }
+        { returnDocument: 'after', upsert: true, setDefaultsOnInsert: true }
       );
       return;
     }
@@ -256,7 +256,7 @@ exports.updateJob = async (req, res) => {
     }
 
     const updated = await RecruitmentJob.findByIdAndUpdate(req.params.id, payload, {
-      new: true,
+      returnDocument: 'after',
       runValidators: true
     });
 
@@ -426,7 +426,7 @@ exports.updateApplicationStatus = async (req, res) => {
     const updated = await JobApplication.findByIdAndUpdate(
       req.params.id,
       { status },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     )
       .populate('jobId', 'title team location')
       .lean();

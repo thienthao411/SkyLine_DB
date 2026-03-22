@@ -54,8 +54,8 @@ export class Notifications implements OnInit, OnDestroy {
     this.userEmail = String(currentUser?.email || '').trim().toLowerCase();
 
     this.loadPreferences();
-    this.loadNotifications();
-    this.initRealtimeNotifications();
+    this.inbox = [];
+    this.filteredInbox = [];
   }
 
   ngOnDestroy(): void {

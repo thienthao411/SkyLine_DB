@@ -5,7 +5,7 @@
     <div class="rewards-info">
       <p><strong>Hạng hiện tại:</strong> {{ currentRankLabel }}</p>
       <p><strong>Điểm tích lũy:</strong> {{ userData.points | number }}</p>
-      <p><strong>Progress:</strong> {{ userData.points }} / {{ userData.nextThreshold }} để lên {{ nextRankLabel }}</p>
+      <p><strong>Progress:</strong> {{ userData.points }} / {{ progressTargetThreshold }} để lên {{ nextRankLabel }}</p>
 
       <div class="progress-bar">
         <div class="progress" [style.width.%]="progressPercent"></div>

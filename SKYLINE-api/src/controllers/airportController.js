@@ -80,7 +80,7 @@ exports.updateAirport = async (req, res) => {
   try {
     const payload = normalizeAirportPayload(req.body);
     const updated = await Airport.findByIdAndUpdate(req.params.id, payload, {
-      new: true,
+      returnDocument: 'after',
       runValidators: true,
     });
 

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UserApiService, RankBenefitsConfig } from '../../services/user-api.service';
 
@@ -24,11 +24,30 @@ interface UserData {
   templateUrl: './rewards.html',
   styleUrls: ['./rewards.css'],
 })
-export class Rewards implements OnInit {
+export class Rewards implements OnInit, OnDestroy {
   userData: UserData | null = null;
   displayedRanks: Rank[] = [];
+  private refreshTimer: ReturnType<typeof setInterval> | null = null;
 
   private allRanks: Record<string, Rank> = {};
+  private readonly fallbackRanks: Record<string, Rank> = {
+    Bronze: {
+      name: 'Hạng Đồng',
+      benefits: ['Tích điểm cơ bản theo giao dịch.', 'Nhận thông báo ưu đãi định kỳ.']
+    },
+    Silver: {
+      name: 'Hạng Bạc',
+      benefits: ['Ưu tiên hỗ trợ khách hàng.', 'Tích điểm nhanh hơn hạng Đồng.']
+    },
+    Gold: {
+      name: 'Hạng Vàng',
+      benefits: ['Ưu tiên chọn chỗ và dịch vụ hỗ trợ.', 'Ưu đãi độc quyền theo chương trình.']
+    },
+    Platinum: {
+      name: 'Hạng Bạch Kim',
+      benefits: ['Đặc quyền cao nhất cho hội viên thân thiết.', 'Ưu tiên xử lý dịch vụ toàn diện.']
+    },
+  };
   private readonly rankOrder = ['Bronze', 'Silver', 'Gold', 'Platinum'];
   private readonly rankAliases: Record<string, string> = {
     dong: 'Bronze',
@@ -49,26 +68,8 @@ export class Rewards implements OnInit {
     if (saved) {
       this.userData = JSON.parse(saved);
 
-      if (this.userData?.email) {
-        this.userApiService.getByEmail(this.userData.email).subscribe({
-          next: (user) => {
-            this.userData = {
-              fullName: user.fullName,
-              email: user.email,
-              currentRank: user.currentRank,
-              points: user.points,
-              nextRank: user.nextRank,
-              nextThreshold: user.nextThreshold,
-              avatar: user.avatar,
-            };
-            localStorage.setItem('fullUserData', JSON.stringify(user));
-            this.updateDisplayedRanks();
-          },
-          error: () => {
-            this.updateDisplayedRanks();
-          },
-        });
-      }
+      this.refreshUserData();
+      this.refreshTimer = setInterval(() => this.refreshUserData(), 10000);
 
       this.fetchRankBenefits();
     } else {
@@ -76,33 +77,30 @@ export class Rewards implements OnInit {
     }
   }
 
-  get currentRankLabel(): string {
-    const key = this.getCanonicalRankKey(this.userData?.currentRank);
-    if (key) {
-      return this.getVietnameseRankName(key);
+  ngOnDestroy(): void {
+    if (this.refreshTimer) {
+      clearInterval(this.refreshTimer);
+      this.refreshTimer = null;
     }
-    return this.userData?.currentRank ?? '';
+  }
+
+  get currentRankLabel(): string {
+    return this.getVietnameseRankName(this.getEffectiveRankProgress().currentRank);
   }
 
   get nextRankLabel(): string {
-    if (!this.userData) return '';
-
-    const nextFromData = this.getCanonicalRankKey(this.userData.nextRank);
-    if (nextFromData && this.allRanks[nextFromData]) {
-      return this.getVietnameseRankName(nextFromData);
-    }
-
-    const current = this.getCanonicalRankKey(this.userData.currentRank);
-    if (!current) return this.userData.nextRank ?? '';
-
-    const next = this.getNextRank(current);
-    return next ? this.getVietnameseRankName(next) : 'Hạng cao nhất';
+    return this.getVietnameseRankName(this.getEffectiveRankProgress().nextRank);
   }
 
   get progressPercent(): number {
-    if (!this.userData?.nextThreshold || this.userData.nextThreshold <= 0) return 0;
-    const raw = (this.userData.points / this.userData.nextThreshold) * 100;
+    const progress = this.getEffectiveRankProgress();
+    if (!this.userData || !progress.nextThreshold || progress.nextThreshold <= 0) return 0;
+    const raw = (this.userData.points / progress.nextThreshold) * 100;
     return Math.max(0, Math.min(100, raw));
+  }
+
+  get progressTargetThreshold(): number {
+    return this.getEffectiveRankProgress().nextThreshold;
   }
 
   getRankClass(rankName: string): string {
@@ -145,35 +143,87 @@ export class Rewards implements OnInit {
   private fetchRankBenefits(): void {
     this.userApiService.getRankBenefits().subscribe({
       next: (config: RankBenefitsConfig) => {
-        this.allRanks = config?.ranks ?? {};
+        const mapped = this.normalizeRankConfig(config?.ranks ?? {});
+        this.allRanks = Object.keys(mapped).length > 0 ? mapped : this.fallbackRanks;
         this.updateDisplayedRanks();
       },
       error: () => {
-        this.allRanks = {};
+        this.allRanks = this.fallbackRanks;
         this.updateDisplayedRanks();
       },
     });
   }
 
+  private refreshUserData(): void {
+    if (!this.userData?.email) {
+      this.updateDisplayedRanks();
+      return;
+    }
+
+    this.userApiService.getByEmail(this.userData.email).subscribe({
+      next: (user) => {
+        this.userData = {
+          fullName: user.fullName,
+          email: user.email,
+          currentRank: user.currentRank,
+          points: user.points,
+          nextRank: user.nextRank,
+          nextThreshold: user.nextThreshold,
+          avatar: user.avatar,
+        };
+        localStorage.setItem('fullUserData', JSON.stringify(user));
+        this.updateDisplayedRanks();
+      },
+      error: () => {
+        this.updateDisplayedRanks();
+      },
+    });
+  }
+
+  private normalizeRankConfig(rawRanks: Record<string, Rank>): Record<string, Rank> {
+    const normalized: Record<string, Rank> = {};
+
+    Object.entries(rawRanks || {}).forEach(([key, value]) => {
+      const canonical = this.getCanonicalRankKey(key) || this.getCanonicalRankKey(value?.name);
+      if (!canonical) {
+        return;
+      }
+
+      normalized[canonical] = {
+        name: value?.name || this.getVietnameseRankName(canonical),
+        benefits: Array.isArray(value?.benefits) ? value.benefits : [],
+      };
+    });
+
+    return normalized;
+  }
+
   private updateDisplayedRanks(): void {
-    if (!this.userData || Object.keys(this.allRanks).length === 0) {
+    if (!this.userData) {
       this.displayedRanks = [];
       return;
     }
 
-    const current = this.getCanonicalRankKey(this.userData.currentRank);
-    if (!current || !this.allRanks[current]) {
-      this.displayedRanks = [];
-      return;
-    }
+    const progress = this.getEffectiveRankProgress();
+    const current = progress.currentRank;
+    const currentRankData = this.resolveRankData(current);
 
-    const nextFromUser = this.getCanonicalRankKey(this.userData.nextRank);
-    const next = nextFromUser ?? this.getNextRank(current);
+    const next = progress.nextRank;
+    const nextRankData = next ? this.resolveRankData(next) : null;
 
-    this.displayedRanks = [this.allRanks[current]];
-    if (next && this.allRanks[next]) {
-      this.displayedRanks.push(this.allRanks[next]);
+    this.displayedRanks = [currentRankData];
+    if (next && nextRankData) {
+      this.displayedRanks.push(nextRankData);
     }
+  }
+
+  private resolveRankData(rankKey: string): Rank {
+    return this.allRanks[rankKey]
+      || this.fallbackRanks[rankKey]
+      || {
+        name: this.getVietnameseRankName(rankKey),
+        benefits: ['Quyền lợi đang được cập nhật.']
+      };
   }
 
   private getCanonicalRankKey(rank: string | undefined): string | null {
@@ -201,5 +251,23 @@ export class Rewards implements OnInit {
     const index = this.rankOrder.indexOf(current);
     if (index < 0 || index >= this.rankOrder.length - 1) return null;
     return this.rankOrder[index + 1];
+  }
+
+  private getEffectiveRankProgress(): { currentRank: string; nextRank: string; nextThreshold: number } {
+    const safePoints = Math.max(0, Number(this.userData?.points || 0));
+
+    if (safePoints >= 5000) {
+      return { currentRank: 'Platinum', nextRank: 'Platinum', nextThreshold: 5000 };
+    }
+
+    if (safePoints >= 2000) {
+      return { currentRank: 'Gold', nextRank: 'Platinum', nextThreshold: 5000 };
+    }
+
+    if (safePoints >= 500) {
+      return { currentRank: 'Silver', nextRank: 'Gold', nextThreshold: 2000 };
+    }
+
+    return { currentRank: 'Bronze', nextRank: 'Silver', nextThreshold: 500 };
   }
 }

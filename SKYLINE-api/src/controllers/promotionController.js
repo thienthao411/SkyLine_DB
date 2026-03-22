@@ -229,7 +229,7 @@ exports.createPromotion = async (req, res) => {
 
 exports.updatePromotion = async (req, res) => {
   try {
-    const updated = await Promotion.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updated = await Promotion.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' });
     if (!updated) return res.status(404).json({ message: 'Promotion not found' });
 
     try {

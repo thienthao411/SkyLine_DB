@@ -129,6 +129,12 @@ export class AdminHeader implements OnInit, OnDestroy {
             applicationId: item.bookingId
           }
         });
+      } else if (item.type === 'support_request') {
+        this.router.navigate(['/admin/support-management'], {
+          queryParams: {
+            requestId: item._id
+          }
+        });
       } else {
         this.router.navigate(['/admin/ticket-management'], {
           queryParams: {
