@@ -85,7 +85,7 @@
 
           <div class="form-field">
             <input #cardNameInput type="text" name="nameOnCard" [(ngModel)]="nameOnCard" placeholder="Tên trên thẻ"
-              required #cardNameRef="ngModel"
+              required #cardNameRef="ngModel" (input)="onCardNameInput($event)"
               [class.invalid-field]="cardNameRef.invalid && (cardNameRef.dirty || cardNameRef.touched)" />
             <div *ngIf="cardNameRef.invalid && (cardNameRef.dirty || cardNameRef.touched)" class="error-message">
               <span *ngIf="cardNameRef.errors?.['required']">Tên trên thẻ là bắt buộc.</span>
@@ -94,7 +94,7 @@
 
           <div class="form-field">
             <input type="text" name="cardNumber" [(ngModel)]="cardNumber" placeholder="Số thẻ" required
-              pattern="^\d{10}$" #cardNumberRef="ngModel"
+              pattern="^\d{10}$" #cardNumberRef="ngModel" (input)="onCardNumberInput($event)"
               [class.invalid-field]="cardNumberRef.invalid && (cardNumberRef.dirty || cardNumberRef.touched)" />
             <div *ngIf="cardNumberRef.invalid && (cardNumberRef.dirty || cardNumberRef.touched)" class="error-message">
               <span *ngIf="cardNumberRef.errors?.['required']">Vui lòng nhập số thẻ.</span>

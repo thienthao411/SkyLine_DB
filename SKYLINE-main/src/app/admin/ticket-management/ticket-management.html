@@ -309,10 +309,10 @@
           <label>Phương thức thanh toán</label>
           <span *ngIf="!isEditMode">{{ modalData.payment_method }}</span>
           <select *ngIf="isEditMode" [(ngModel)]="modalData.payment_method">
+            <option value="QR Code">QR Code</option>
             <option value="VISA">VISA</option>
-            <option value="Google Pay">Google Pay</option>
             <option value="Apple Pay">Apple Pay</option>
-            <option value="Paypal">Paypal</option>
+            <option value="PayPal">PayPal</option>
           </select>
         </div>
         <div class="detail-item" *ngIf="modalType === 'transaction'">

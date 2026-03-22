@@ -371,6 +371,26 @@ export class Confirmation {
   focusCardName(event: Event) { this.cardNameInput?.nativeElement?.focus(); }
   selectMethod(method: 'credit' | 'qrcode' | 'apple' | 'paypal') { this.paymentMethod.set(method); }
 
+  onCardNameInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    // Only allow letters and spaces
+    const filtered = input.value.replace(/[^a-zA-Z\s]/g, '');
+    if (input.value !== filtered) {
+      input.value = filtered;
+      this.nameOnCard.set(filtered);
+    }
+  }
+
+  onCardNumberInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    // Only allow digits
+    const filtered = input.value.replace(/\D/g, '');
+    if (input.value !== filtered) {
+      input.value = filtered;
+      this.cardNumber.set(filtered);
+    }
+  }
+
   timeHM(iso?: string) {
     if (!iso) return '';
     try { return new Date(iso).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false }); }
