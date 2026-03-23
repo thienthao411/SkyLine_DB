@@ -4,6 +4,7 @@ import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { UserNotificationApiService, UserNotificationItem } from '../../services/user-notification-api.service';
 import { RealtimeService } from '../../../services/realtime.service';
+import { PromotionApiService } from '../../../services/promotion-api.service';
 
 @Component({
   selector: 'app-header',
@@ -28,7 +29,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private router: Router,
     private userNotificationApiService: UserNotificationApiService,
-    private realtimeService: RealtimeService
+    private realtimeService: RealtimeService,
+    private promotionApi: PromotionApiService
   ) {}
 
   ngOnInit(): void {
@@ -167,14 +169,16 @@ export class HeaderComponent implements OnInit, OnDestroy {
       if (type === 'payment_status') {
         const ticketCode = String(item.bookingId || '').trim();
         if (ticketCode) {
-          this.router.navigate(['/checkticket2', ticketCode]);
+          this.router.navigate(['/checkticket2'], {
+            queryParams: { code: ticketCode }
+          });
         } else {
           this.router.navigate(['/checkticket']);
         }
       } else if (type === 'recruitment_status') {
         this.router.navigate(['/tuyen-dung']);
       } else if (type === 'promotion') {
-        this.router.navigate(['/promotion']);
+        this.navigateToPromotionNotification(item);
       } else if (type === 'support_message') {
         this.router.navigate(['/contact']);
       } else {
@@ -200,6 +204,49 @@ export class HeaderComponent implements OnInit, OnDestroy {
       },
       error: () => {
         goToTarget();
+      }
+    });
+  }
+
+  private navigateToPromotionNotification(item: UserNotificationItem): void {
+    const ref = String(item.bookingId || '').trim();
+
+    if (!ref) {
+      this.router.navigate(['/promotion']);
+      return;
+    }
+
+    // New notifications store concrete itemId in form: <promotionId>_<itemIndex>.
+    if (ref.includes('_')) {
+      this.router.navigate(['/promotion'], {
+        queryParams: { itemId: ref }
+      });
+      return;
+    }
+
+    // Backward compatibility: old notifications only store promotionId.
+    this.promotionApi.getAll().subscribe({
+      next: (promotions) => {
+        const matchedPromotion = (promotions || []).find((promotion) => String(promotion._id || '') === ref);
+        if (!matchedPromotion) {
+          this.router.navigate(['/promotion']);
+          return;
+        }
+
+        const items = Array.isArray(matchedPromotion.items) ? matchedPromotion.items : [];
+        if (items.length === 0) {
+          this.router.navigate(['/promotion']);
+          return;
+        }
+
+        const featuredIndex = items.findIndex((promotionItem) => promotionItem?.isFeatured === true);
+        const itemIndex = featuredIndex >= 0 ? featuredIndex : 0;
+        this.router.navigate(['/promotion'], {
+          queryParams: { itemId: `${ref}_${itemIndex}` }
+        });
+      },
+      error: () => {
+        this.router.navigate(['/promotion']);
       }
     });
   }

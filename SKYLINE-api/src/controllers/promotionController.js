@@ -90,8 +90,18 @@ const pickPromotionHighlight = (promotionDoc) => {
     return null;
   }
 
-  const featuredItem = items.find((item) => item && item.isFeatured === true);
-  return featuredItem || items[0];
+  const featuredIndex = items.findIndex((item) => item && item.isFeatured === true);
+  if (featuredIndex >= 0) {
+    return {
+      item: items[featuredIndex],
+      itemIndex: featuredIndex
+    };
+  }
+
+  return {
+    item: items[0],
+    itemIndex: 0
+  };
 };
 
 async function broadcastPromotionNotification(promotionDoc, mode = "created") {
@@ -116,8 +126,12 @@ async function broadcastPromotionNotification(promotionDoc, mode = "created") {
   }
 
   const highlight = pickPromotionHighlight(promotionDoc);
-  const promoTitle = String(highlight?.label || promotionDoc?.title || "Khuyến mãi Skyline").trim();
-  const promoCode = String(highlight?.promoCode || "").trim();
+  const highlightItem = highlight?.item || null;
+  const promotionItemId = highlightItem
+    ? `${promotionId}_${Number(highlight?.itemIndex || 0)}`
+    : promotionId;
+  const promoTitle = String(highlightItem?.label || promotionDoc?.title || "Khuyến mãi Skyline").trim();
+  const promoCode = String(highlightItem?.promoCode || "").trim();
   const title = mode === "updated" ? "Khuyến mãi vừa cập nhật" : "Khuyến mãi mới";
   const messagePrefix = mode === "updated" ? "Skyline vừa cập nhật" : "Skyline vừa có";
   const message = promoCode
@@ -128,7 +142,7 @@ async function broadcastPromotionNotification(promotionDoc, mode = "created") {
     userEmail: email,
     title,
     message,
-    bookingId: promotionId,
+    bookingId: promotionItemId,
     type: "promotion",
     paymentStatus: mode,
     isRead: false,
