@@ -1,6 +1,6 @@
 {
   "framework": null,
-  "installCommand": "cd SKYLINE-main && npm install",
+  "installCommand": "npm install --prefix SKYLINE-api && npm install --prefix SKYLINE-main",
   "buildCommand": "cd SKYLINE-main && npm run build",
   "outputDirectory": "SKYLINE-main/dist/skyline/browser",
   "rewrites": [
