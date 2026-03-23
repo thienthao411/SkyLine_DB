@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
+import { getRealtimeServerUrl } from './api-endpoint';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RealtimeService {
-  private readonly serverUrl = 'http://localhost:5000';
+  private readonly serverUrl = getRealtimeServerUrl();
   private socket: Socket | null = null;
 
   private ensureConnected(): Socket {

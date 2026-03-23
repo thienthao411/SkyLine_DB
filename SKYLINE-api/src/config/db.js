@@ -16,6 +16,9 @@ module.exports = async () => {
     console.log('Current DB:', mongoose.connection.name);
   } catch (error) {
     console.error('MongoDB connection error:', error.message);
+    if (process.env.VERCEL) {
+      throw error;
+    }
     process.exit(1);
   }
 };

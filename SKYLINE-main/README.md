@@ -57,3 +57,19 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+## Deploy to Vercel
+
+This frontend can run on Vercel as a static Angular app.
+
+1. Deploy the backend folder `SKYLINE-api` to Vercel first.
+2. Deploy this folder `SKYLINE-main` as a separate Vercel project.
+3. If your backend is on a different domain, add this script in `src/index.html` before Angular scripts:
+
+```html
+<script>
+	window.__SKYLINE_API_ORIGIN__ = 'https://your-api-domain.vercel.app';
+</script>
+```
+
+When that variable is not provided, requests are sent to the same domain as the frontend.
