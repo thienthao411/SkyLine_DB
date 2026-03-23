@@ -1,0 +1,12 @@
+{
+  "framework": null,
+  "installCommand": "cd SKYLINE-main && npm install",
+  "buildCommand": "cd SKYLINE-main && npm run build",
+  "outputDirectory": "SKYLINE-main/dist/skyline/browser",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
