@@ -163,11 +163,20 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   openNotification(item: UserNotificationItem, event: MouseEvent): void {
     event.stopPropagation();
+    const wasUnread = !item.isRead;
+
+    if (wasUnread) {
+      this.notifications = this.notifications.map((n) =>
+        n._id === item._id ? { ...n, isRead: true } : n
+      );
+      this.unreadNotificationCount = Math.max(0, this.unreadNotificationCount - 1);
+    }
+
     const goToTarget = () => {
       const type = String(item.type || '').trim().toLowerCase();
 
       if (type === 'payment_status') {
-        const ticketCode = String(item.bookingId || '').trim();
+        const ticketCode = this.extractTicketCodeFromNotification(item);
         if (ticketCode) {
           this.router.navigate(['/checkticket2'], {
             queryParams: { code: ticketCode }
@@ -189,23 +198,44 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.showDropdown = false;
     };
 
-    if (item.isRead) {
+    if (!wasUnread) {
       goToTarget();
       return;
     }
 
     this.userNotificationApiService.markAsRead(item._id).subscribe({
       next: () => {
-        this.notifications = this.notifications.map((n) =>
-          n._id === item._id ? { ...n, isRead: true } : n
-        );
-        this.unreadNotificationCount = Math.max(0, this.unreadNotificationCount - 1);
         goToTarget();
       },
       error: () => {
         goToTarget();
       }
     });
+  }
+
+  private extractTicketCodeFromNotification(item: UserNotificationItem): string {
+    const candidates = [
+      String(item.bookingId || '').trim(),
+      String(item.message || '').trim(),
+      String(item.title || '').trim(),
+    ];
+
+    for (const value of candidates) {
+      if (!value) {
+        continue;
+      }
+
+      const matchedCode = value.match(/TCK[A-Z0-9]+/i)?.[0];
+      if (matchedCode) {
+        return matchedCode.toUpperCase();
+      }
+
+      if (/^[a-z0-9_-]+$/i.test(value)) {
+        return value.toUpperCase();
+      }
+    }
+
+    return '';
   }
 
   private navigateToPromotionNotification(item: UserNotificationItem): void {

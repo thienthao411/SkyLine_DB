@@ -5,7 +5,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { HeaderComponent } from '../shared/header/header';
 import { FooterComponent } from '../shared/footer/footer';
-import { PromotionApiModel, PromotionApiService } from '../../services/promotion-api.service';
+import { FeaturedPromotionItem, PromotionApiModel, PromotionApiService } from '../../services/promotion-api.service';
 
 interface Deal {
   id: string;
@@ -46,6 +46,7 @@ export class Promotion implements OnInit {
   searchTerm: string = ''; 
   copyStatusMessage: string | null = null; 
   pendingDealId: string | null = null;
+  private isResolvingPendingDeal = false;
 
   constructor(
     private promotionApi: PromotionApiService,
@@ -402,7 +403,7 @@ export class Promotion implements OnInit {
   }
 
   private tryOpenDealFromQuery(): void {
-    if (!this.pendingDealId || !this.sections.length) {
+    if (!this.pendingDealId) {
       return;
     }
 
@@ -413,7 +414,50 @@ export class Promotion implements OnInit {
     if (matched) {
       this.openPopup(matched);
       this.pendingDealId = null;
+      return;
     }
+
+    // Open popup immediately for deep-link from notification, even before list sync finishes.
+    if (!this.isResolvingPendingDeal && this.pendingDealId.includes('_')) {
+      const itemId = this.pendingDealId;
+      this.isResolvingPendingDeal = true;
+
+      this.promotionApi.getFeaturedById(itemId).subscribe({
+        next: (featuredItem) => {
+          this.selectedDeal = this.mapFeaturedItemToDeal(featuredItem);
+          this.pendingDealId = null;
+          this.isResolvingPendingDeal = false;
+        },
+        error: () => {
+          this.isResolvingPendingDeal = false;
+        }
+      });
+    }
+  }
+
+  private mapFeaturedItemToDeal(item: FeaturedPromotionItem): Deal {
+    return {
+      id: item.id,
+      image: this.getPromoImageSrc(item.image),
+      label: item.title,
+      periodText: this.buildPeriodText(item.startDate || '', item.endDate || '', '', '', ''),
+      date: '',
+      details: item.shortDescription || item.title,
+      target: this.formatTarget(item.target),
+      applyTime: this.buildPeriodText(item.startDate || '', item.endDate || '', '', '', ''),
+      promoCode: item.promoCode || '',
+      sectionTitle: this.resolveBucketTitle(item.category),
+      discountText: this.formatDiscount(item.discountRuleType, item.discountValueRaw),
+      channelText: this.formatChannel(item.applyChannel),
+      conditionText: 'Không có điều kiện bổ sung'
+    };
+  }
+
+  private resolveBucketTitle(category?: string): string {
+    const bucketId = this.resolveBucketId(category);
+    if (bucketId === 'payment') return 'Thanh toán & Trả sau';
+    if (bucketId === 'related') return 'Ưu đãi liên quan';
+    return 'Chiến dịch đặc biệt';
   }
 
   closePopup() {

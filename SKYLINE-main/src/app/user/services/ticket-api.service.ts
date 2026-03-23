@@ -205,7 +205,7 @@ export class TicketApiService {
     const query = normalizedEmail ? `?email=${encodeURIComponent(normalizedEmail)}` : '';
 
     return this.http
-      .get<{ success?: boolean; tickets?: BookingRecord[] } | BookingRecord[]>(`${this.baseUrl}/tickets${query}`)
+      .get<{ success?: boolean; tickets?: BookingRecord[] } | BookingRecord[]>(`${this.baseUrl}/bookings/tickets/list${query}`)
       .pipe(
         map((response) => {
           const records = this.toBookingRecordArray(response);
@@ -223,8 +223,10 @@ export class TicketApiService {
   }
 
   getTicket(ticketCode: string): Observable<BookingRecord> {
+    const normalizedTicketCode = String(ticketCode || '').trim();
+
     return this.http
-      .get<{ success: boolean; ticket: BookingRecord }>(`${this.baseUrl}/tickets/${encodeURIComponent(ticketCode)}`)
+      .get<{ success: boolean; ticket: BookingRecord }>(`${this.baseUrl}/bookings/tickets/${encodeURIComponent(normalizedTicketCode)}`)
       .pipe(map((response) => response.ticket));
   }
 

@@ -55,7 +55,7 @@ export class CheckTicket2 implements OnInit {
       this.route.queryParamMap.pipe(map((params) => params.get('code') || '')),
       this.route.paramMap.pipe(map((params) => params.get('code') || '')),
     ])
-      .pipe(map(([queryCode, paramCode]) => (queryCode || paramCode || '').trim()))
+      .pipe(map(([queryCode, paramCode]) => this.normalizeTicketCode(queryCode || paramCode || '')))
       .subscribe((code) => {
       if (!code) {
         this.ticketDetail = undefined;
@@ -63,7 +63,7 @@ export class CheckTicket2 implements OnInit {
       }
 
       const navTicket = (this.router.getCurrentNavigation()?.extras?.state?.['ticketRecord'] || history.state?.ticketRecord) as BookingRecord | undefined;
-      if (navTicket && navTicket.ticketCode === code) {
+      if (navTicket && this.normalizeTicketCode(navTicket.ticketCode) === code) {
         this.ticketDetail = this.toTicketDetail(navTicket);
         return;
       }
@@ -78,6 +78,16 @@ export class CheckTicket2 implements OnInit {
         }
       });
     });
+  }
+
+  private normalizeTicketCode(value: string): string {
+    const raw = String(value || '').trim();
+    if (!raw) {
+      return '';
+    }
+
+    const matchedCode = raw.match(/TCK[A-Z0-9]+/i)?.[0];
+    return String(matchedCode || raw).trim().toUpperCase();
   }
 
   private toTicketDetail(record: BookingRecord): Ticket {
