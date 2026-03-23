@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../services/auth.service';
@@ -16,11 +16,18 @@ export class CustomerSignInComponent {
   password: string = '';
   message: string = '';
   messageType: 'success' | 'error' = 'error';
+  private redirectTo = '';
+  private redirectCode = '';
 
   constructor(
     private authService: AuthService,
-    private router: Router
-  ) {}
+    private router: Router,
+    private route: ActivatedRoute,
+  ) {
+    this.email = (this.route.snapshot.queryParamMap.get('email') || '').trim();
+    this.redirectTo = (this.route.snapshot.queryParamMap.get('redirectTo') || '').trim();
+    this.redirectCode = (this.route.snapshot.queryParamMap.get('code') || '').trim();
+  }
 
   onSubmit(): void {
     // Validate inputs
@@ -40,6 +47,11 @@ export class CustomerSignInComponent {
         if (result.success) {
           this.showMessage(result.message, 'success');
           setTimeout(() => {
+            if (this.redirectTo === '/checkticket2' && this.redirectCode) {
+              this.router.navigate(['/checkticket2', this.redirectCode]);
+              return;
+            }
+
             this.router.navigate(['home']);
           }, 800);
         } else {

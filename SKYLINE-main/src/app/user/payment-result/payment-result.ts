@@ -271,7 +271,11 @@ export class PaymentResult implements OnInit, OnDestroy {
       return;
     }
 
-    this.router.navigate(['/checkticket2'], { queryParams: { code: this.ticketCode } });
+    this.router.navigate(['/checkticket2', this.ticketCode], {
+      state: {
+        ticketRecord: this.booking || undefined,
+      },
+    });
   }
 
   goToFlightSearch(): void {
