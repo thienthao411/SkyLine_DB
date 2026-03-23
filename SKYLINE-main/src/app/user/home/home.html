@@ -69,17 +69,38 @@
                         <label>
                             <img src="assets/icons/calendar.png" alt="Date" width="16" height="16">
                         </label>
-                        <input 
-                            type="text" 
-                            class="search-input" 
-                            [(ngModel)]="travelDate"
-                            name="travelDate"
-                            placeholder="dd/mm/yyyy"
-                            inputmode="numeric"
-                            autocomplete="off"
-                            pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}$"
-                            title="Vui lòng nhập ngày theo định dạng dd/mm/yyyy"
-                            required>
+                        <div class="date-input-wrap">
+                            <input 
+                                type="text"
+                                class="search-input"
+                                [ngModel]="travelDate"
+                                (ngModelChange)="onTravelDateManualInput($event)"
+                                (blur)="onTravelDateManualBlur()"
+                                name="travelDate"
+                                placeholder="dd/mm/yyyy"
+                                inputmode="numeric"
+                                autocomplete="off"
+                                pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}$"
+                                title="Vui lòng nhập ngày theo định dạng dd/mm/yyyy"
+                                required>
+
+                            <button
+                                type="button"
+                                class="date-picker-trigger"
+                                (click)="openTravelDatePicker(travelDatePicker)">
+                                <img src="assets/icons/calendar.png" alt="Open calendar" width="16" height="16">
+                            </button>
+
+                            <input
+                                #travelDatePicker
+                                type="date"
+                                class="date-picker-native"
+                                [ngModel]="travelDatePickerValue"
+                                (ngModelChange)="onTravelDatePickerChange($event)"
+                                name="travelDatePicker"
+                                tabindex="-1"
+                                aria-hidden="true">
+                        </div>
                     </div>                   
                     <button type="submit" class="search-btn">Tìm kiếm</button>
                 </div>

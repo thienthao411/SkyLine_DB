@@ -63,6 +63,7 @@ export class Home implements OnInit {
   departureCity = '';
   arrivalCity = '';
   travelDate = '';
+  travelDatePickerValue = '';
 
   isAiChatOpen = false;
   isAiTyping = false;
@@ -322,7 +323,7 @@ export class Home implements OnInit {
       }
     }
 
-    const normalizedTravelDate = this.normalizeTravelDate(this.travelDate);
+    const normalizedTravelDate = this.normalizeTravelDate(this.travelDate || this.travelDatePickerValue);
 
     if (this.departureCity && this.arrivalCity && normalizedTravelDate) {
       this.router.navigate(['/tim-chuyen-bay'], {
@@ -333,6 +334,41 @@ export class Home implements OnInit {
         }
       });
     }
+  }
+
+  onTravelDateManualInput(value: string): void {
+    this.travelDate = String(value || '');
+    this.travelDatePickerValue = this.normalizeTravelDate(this.travelDate);
+  }
+
+  onTravelDateManualBlur(): void {
+    const normalized = this.normalizeTravelDate(this.travelDate);
+    if (!normalized) return;
+
+    this.travelDatePickerValue = normalized;
+    this.travelDate = this.formatDisplayDate(normalized);
+  }
+
+  onTravelDatePickerChange(value: string): void {
+    const normalized = this.normalizeTravelDate(value);
+    this.travelDatePickerValue = normalized;
+    this.travelDate = normalized ? this.formatDisplayDate(normalized) : '';
+  }
+
+  openTravelDatePicker(input: HTMLInputElement): void {
+    const picker = input as HTMLInputElement & { showPicker?: () => void };
+    if (typeof picker.showPicker === 'function') {
+      picker.showPicker();
+      return;
+    }
+
+    input.click();
+  }
+
+  private formatDisplayDate(iso: string): string {
+    const match = String(iso || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return String(iso || '').trim();
+    return `${match[3]}/${match[2]}/${match[1]}`;
   }
 
   private normalizeTravelDate(value: string): string {

@@ -231,6 +231,10 @@ textarea {
   color: #375578;
 }
 
+.table-wrapper thead tr {
+  background: #99bbff;
+}
+
 .table-wrapper th,
 .table-wrapper td {
   padding: 12px 15px;
@@ -240,7 +244,7 @@ textarea {
 }
 
 .table-wrapper th {
-  background: #99bbff;
+  background: transparent;
   color: #375578;
   font-weight: bold;
   white-space: nowrap;
