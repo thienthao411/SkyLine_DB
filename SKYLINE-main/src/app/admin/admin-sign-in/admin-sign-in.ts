@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import { UserApiService } from '../../services/user-api.service';
 
 @Component({
   selector: 'app-admin-sign-in',
@@ -14,32 +16,62 @@ export class AdminSignIn {
   password: string = '';
   message: string = '';
   messageType: 'success' | 'error' = 'success';
+  isSubmitting = false;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private userApiService: UserApiService
+  ) {}
 
-  onSubmit() {
+  async onSubmit() {
+    if (this.isSubmitting) {
+      return;
+    }
+
+    const normalizedEmail = String(this.email || '').trim().toLowerCase();
+    const normalizedPassword = String(this.password || '').trim();
+
     // Validate inputs
-    if (!this.email || !this.password) {
+    if (!normalizedEmail || !normalizedPassword) {
       this.showMessage('Vui lòng điền đầy đủ thông tin', 'error');
       return;
     }
 
-    // Simple admin login check (you can enhance this with backend API)
-    if (this.email === 'admin@skyline.com' && this.password === 'admin123') {
-      // Store admin user
+    this.isSubmitting = true;
+
+    try {
+      const response = await firstValueFrom(this.userApiService.login(normalizedEmail, normalizedPassword));
+
+      if (!response?.success || !response?.user) {
+        this.showMessage(response?.message || 'Đăng nhập thất bại', 'error');
+        return;
+      }
+
       const adminUser = {
-        email: this.email,
-        name: 'Admin',
+        ...response.user,
+        email: normalizedEmail,
+        name: response.user?.fullName || 'Admin',
         isAdmin: true
       };
+
+      if (response?.token) {
+        localStorage.setItem('authToken', response.token);
+      }
+
       localStorage.setItem('currentUser', JSON.stringify(adminUser));
-      
       this.showMessage('Đăng nhập thành công!', 'success');
+
       setTimeout(() => {
         this.router.navigate(['/admin-home']);
-      }, 1000);
-    } else {
-      this.showMessage('Email hoặc mật khẩu không đúng', 'error');
+      }, 600);
+    } catch (error: any) {
+      const apiMessage =
+        error?.error?.message ||
+        error?.message ||
+        'Không thể đăng nhập. Vui lòng kiểm tra backend và tài khoản.';
+      this.showMessage(apiMessage, 'error');
+    } finally {
+      this.isSubmitting = false;
     }
   }
 
